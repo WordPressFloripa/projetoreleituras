@@ -1,0 +1,28 @@
+# ignora TUDO na "wp-content" 
+wp-content/*
+wp-config.php
+wp-content/cache
+wp-content/ewww
+wp-content/mu-plugins
+wp-content/uploads/*
+wp-content/w3tc-config
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+
+# NÃO IGNORADOS :
+!wp-content/plugins
+!wp-content/themes
+!wp-content/languages
+
+# ignora os plugins: 
+wp-content/plugins/hello.php
+
+# ignora os log e databases
+*.log
+*.sql
+*.sqlite
+./vscode
+./vscode/*
+.vscode/ftp-kr.json
+.vscode/ftp-kr.sync.cache.json
+
