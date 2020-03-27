@@ -19,7 +19,7 @@ wp-content/plugins/hello.php
 
 # ignora os log e databases
 *.log
-*.sql
+
 *.sqlite
 ./vscode
 ./vscode/*
