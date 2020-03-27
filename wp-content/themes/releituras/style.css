@@ -7,3 +7,22 @@ Author URI:
 Template:       onepress
 Version:        0.1.0
 */
+
+/*cores de fundo*/
+.bg-cinza {
+    background-color: #ececea;
+}
+
+/*hero*/
+.hero-slideshow-normal .container {
+    padding: 5% 0px;
+    padding-top: 5% !important;
+    position: relative;
+    z-index: 80;
+}
+
+/*depoimentos*/
+
+.slick-slide img {
+    width: 100%;
+}
