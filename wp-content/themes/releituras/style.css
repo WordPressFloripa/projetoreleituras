@@ -21,8 +21,53 @@ Version:        0.1.0
     z-index: 80;
 }
 
+.list-group-horizontal {
+    -ms-flex-direction: row;
+    flex-direction: row;
+}
+
+.list-group {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    padding-left: 0;
+    margin-bottom: 0;
+}
+
 /*depoimentos*/
 
 .slick-slide img {
     width: 100%;
+}
+
+/*seja um doador*/
+
+#seja-um-doador h2 {
+    padding: 2em 0;
+    font-size: 30px;
+}
+
+#seja-um-doador figure {
+    padding-bottom: 0;
+}
+
+/*blog*/
+
+.blog-entry article {
+    display: inline-block;
+    max-width: 250px;
+    border-top: none !important;
+    padding: 0 !important;
+    float: left;
+    padding: 0 10px !important;
+    margin-right: 30px;
+}
+
+.blog-entry article:last-child {
+    margin-right: 0;
+}
+
+.blog-entry article .list-article-thumb {
+    float: none;
 }

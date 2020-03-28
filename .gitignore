@@ -4,7 +4,7 @@ wp-config.php
 wp-content/cache
 wp-content/ewww
 wp-content/mu-plugins
-wp-content/uploads/*
+!wp-content/uploads/*
 wp-content/w3tc-config
 wp-content/advanced-cache.php
 wp-content/wp-cache-config.php

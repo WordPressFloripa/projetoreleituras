@@ -24,7 +24,7 @@ if ( $onepress_contact_cf7 || $onepress_contact_text || $onepress_contact_addres
 		<section id="<?php if ( $onepress_contact_id != '' ) {
 			echo esc_attr( $onepress_contact_id );
 }; ?>" <?php do_action( 'onepress_section_atts', 'counter' ); ?>
-				 class="<?php echo esc_attr( apply_filters( 'onepress_section_class', 'section-contact section-padding  section-meta onepage-section', 'contact' ) ); ?>">
+				 class="<?php echo esc_attr( apply_filters( 'onepress_section_class', 'section-contact bg-cinza section-padding  section-meta onepage-section', 'contact' ) ); ?>">
 		<?php } ?>
 			<?php do_action( 'onepress_section_before_inner', 'contact' ); ?>
 			<div class="<?php echo esc_attr( apply_filters( 'onepress_section_container_class', 'container', 'contact' ) ); ?>">
@@ -39,14 +39,14 @@ if ( $onepress_contact_cf7 || $onepress_contact_text || $onepress_contact_addres
 } ?>
 				</div>
 				<?php } ?>
-				<div class="row">
+				<div class="row ">
 					<?php if ( $onepress_contact_cf7_disable != '1' ) : ?>
 						<?php if ( isset( $onepress_contact_cf7 ) && $onepress_contact_cf7 != '' ) { ?>
-							<div class="contact-form col-sm-6 wow slideInUp">
+							<div class="contact-form col-sm-4 wow slideInUp">
 								<?php echo do_shortcode( wp_kses_post( $onepress_contact_cf7 ) ); ?>
 							</div>
-						<?php } else { ?>
-							<div class="contact-form col-sm-6 wow slideInUp">
+						<?php } else { ?>							
+							<div class="contact-form col-sm-4 wow slideInUp">
 								<br>
 								<small>
 									<i><?php printf( esc_html__( 'You can install %1$s plugin and go to Customizer &rarr; Section: Contact &rarr; Section Content to show a working contact form here.', 'onepress' ), '<a href="' . esc_url( 'https://wordpress.org/plugins/pirate-forms/', 'onepress' ) . '" target="_blank">Contact Form 7</a>' ); ?></i>
@@ -54,8 +54,10 @@ if ( $onepress_contact_cf7 || $onepress_contact_text || $onepress_contact_addres
 							</div>
 						<?php } ?>
 					<?php endif; ?>
-
-					<div class="col-sm-6 wow slideInUp">
+					<div class="col-sm-4 text-center">
+						<img src="/wp-content/uploads/2020/03/livro_rodape-min.png" alt="livro escutando musica">
+					</div>					
+					<div class="col-sm-4 wow slideInUp">
 						<?php
 						if ( $onepress_contact_text != '' ) {
 							echo apply_filters( 'onepress_the_content', wp_kses_post( trim( $onepress_contact_text ) ) );
