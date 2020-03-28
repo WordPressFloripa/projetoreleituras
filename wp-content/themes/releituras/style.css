@@ -8,6 +8,21 @@ Template:       onepress
 Version:        0.1.0
 */
 
+/*listas*/
+ul.lista-inline {
+    display: inline-flex;
+    margin: 0 auto;
+}
+
+ul.lista-inline li {
+    margin-right: 30px;
+}
+
+ul.lista-inline li:last-child {
+    margin-right: 0px;
+}
+
+
 /*cores de fundo*/
 .bg-cinza {
     background-color: #ececea;
@@ -19,20 +34,6 @@ Version:        0.1.0
     padding-top: 5% !important;
     position: relative;
     z-index: 80;
-}
-
-.list-group-horizontal {
-    -ms-flex-direction: row;
-    flex-direction: row;
-}
-
-.list-group {
-    display: -ms-flexbox;
-    display: flex;
-    -ms-flex-direction: column;
-    flex-direction: column;
-    padding-left: 0;
-    margin-bottom: 0;
 }
 
 /*depoimentos*/
