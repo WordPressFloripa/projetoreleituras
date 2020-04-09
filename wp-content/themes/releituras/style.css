@@ -136,7 +136,7 @@ ul.lista-inline li:last-child {
 /*seja um doador*/
 
 #doacoes {
-    margin-top: 60px;
+    margin-top: 100px;
 }
 
 #seja-um-doador h2 {
@@ -171,5 +171,5 @@ ul.lista-inline li:last-child {
 /* Contato */
 
 #contato {
-    margin-top: 60px;
+    margin-top: 80px;
 }
