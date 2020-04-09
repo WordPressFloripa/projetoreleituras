@@ -8,7 +8,18 @@ Template:       onepress
 Version:        0.1.0
 */
 
+
+.site-content {
+    border-top: 0;
+    margin-top: 0;
+}
+
 /* header */
+
+.header-section {
+    margin-bottom: 30px;
+}
+
 .site-header {
     line-height: 35px;
 }
@@ -30,6 +41,10 @@ Version:        0.1.0
     color: #fff;
     line-height: 30px;
     background: #663366;
+}
+
+.onepress-menu > li:last-child > a {
+    padding-right: 16px;
 }
 
 /*menu social*/
@@ -82,11 +97,14 @@ ul.lista-inline li:last-child {
 }
 
 /*hero*/
-.hero-slideshow-normal .container {
-    padding: 5% 0px;
+
+#o-projeto {
+    margin-bottom: 20px;
+}
+
+.hero-slideshow-normal > .container {
     padding-top: 5% !important;
-    position: relative;
-    z-index: 80;
+    padding-bottom: 0 !important;
 }
 
 .list-group-horizontal {
@@ -103,6 +121,12 @@ ul.lista-inline li:last-child {
     margin-bottom: 0;
 }
 
+/* seja voluntario */
+
+#seja-voluntario {
+    margin-top: 80px;
+}
+
 /*depoimentos*/
 
 .slick-slide img {
@@ -110,6 +134,10 @@ ul.lista-inline li:last-child {
 }
 
 /*seja um doador*/
+
+#doacoes {
+    margin-top: 60px;
+}
 
 #seja-um-doador h2 {
     padding: 2em 0;
@@ -139,8 +167,9 @@ ul.lista-inline li:last-child {
 .blog-entry article .list-article-thumb {
     float: none;
 }
- /*menu social superior*/
 
- /* .nav-link {
-    display: inline;
-} */
+/* Contato */
+
+#contato {
+    margin-top: 60px;
+}
