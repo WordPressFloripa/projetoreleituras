@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS `wp_actionscheduler_claims` (
   `date_created_gmt` datetime NOT NULL DEFAULT '0000-00-00 00:00:00',
   PRIMARY KEY (`claim_id`),
   KEY `date_created_gmt` (`date_created_gmt`)
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=96 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 -- Copiando dados para a tabela releituras.wp_actionscheduler_claims: ~0 rows (aproximadamente)
 /*!40000 ALTER TABLE `wp_actionscheduler_claims` DISABLE KEYS */;
@@ -1047,7 +1047,7 @@ CREATE TABLE IF NOT EXISTS `wp_options` (
   PRIMARY KEY (`option_id`),
   UNIQUE KEY `option_name` (`option_name`),
   KEY `autoload` (`autoload`)
-) ENGINE=InnoDB AUTO_INCREMENT=1992 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2040 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
 -- Copiando dados para a tabela releituras.wp_options: ~213 rows (aproximadamente)
 /*!40000 ALTER TABLE `wp_options` DISABLE KEYS */;
@@ -1158,12 +1158,12 @@ INSERT INTO `wp_options` (`option_id`, `option_name`, `option_value`, `autoload`
 	(105, 'widget_media_video', 'a:1:{s:12:"_multiwidget";i:1;}', 'yes'),
 	(106, 'widget_tag_cloud', 'a:1:{s:12:"_multiwidget";i:1;}', 'yes'),
 	(107, 'widget_nav_menu', 'a:1:{s:12:"_multiwidget";i:1;}', 'yes'),
-	(108, 'cron', 'a:11:{i:1586468408;a:1:{s:26:"action_scheduler_run_queue";a:1:{s:32:"0d04ed39571b55704c122d726248bbac";a:3:{s:8:"schedule";s:12:"every_minute";s:4:"args";a:1:{i:0;s:7:"WP Cron";}s:8:"interval";i:60;}}}i:1586468473;a:1:{s:34:"wp_privacy_delete_old_export_files";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:6:"hourly";s:4:"args";a:0:{}s:8:"interval";i:3600;}}}i:1586475091;a:3:{s:16:"wp_version_check";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:10:"twicedaily";s:4:"args";a:0:{}s:8:"interval";i:43200;}}s:17:"wp_update_plugins";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:10:"twicedaily";s:4:"args";a:0:{}s:8:"interval";i:43200;}}s:16:"wp_update_themes";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:10:"twicedaily";s:4:"args";a:0:{}s:8:"interval";i:43200;}}}i:1586475285;a:1:{s:19:"wp_scheduled_delete";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}}i:1586475673;a:2:{s:32:"recovery_mode_clean_expired_keys";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}s:25:"delete_expired_transients";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}}i:1586476833;a:1:{s:19:"wpseo-reindex-links";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}}i:1586531971;a:1:{s:30:"wp_scheduled_auto_draft_delete";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}}i:1586649632;a:1:{s:16:"wpseo_ryte_fetch";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:6:"weekly";s:4:"args";a:0:{}s:8:"interval";i:604800;}}}i:1586797200;a:1:{s:28:"wpforms_email_summaries_cron";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:30:"wpforms_email_summaries_weekly";s:4:"args";a:0:{}s:8:"interval";i:604800;}}}i:1587055669;a:1:{s:30:"wp_site_health_scheduled_check";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:6:"weekly";s:4:"args";a:0:{}s:8:"interval";i:604800;}}}s:7:"version";i:2;}', 'yes'),
+	(108, 'cron', 'a:11:{i:1586471888;a:1:{s:26:"action_scheduler_run_queue";a:1:{s:32:"0d04ed39571b55704c122d726248bbac";a:3:{s:8:"schedule";s:12:"every_minute";s:4:"args";a:1:{i:0;s:7:"WP Cron";}s:8:"interval";i:60;}}}i:1586472073;a:1:{s:34:"wp_privacy_delete_old_export_files";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:6:"hourly";s:4:"args";a:0:{}s:8:"interval";i:3600;}}}i:1586475091;a:3:{s:16:"wp_version_check";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:10:"twicedaily";s:4:"args";a:0:{}s:8:"interval";i:43200;}}s:17:"wp_update_plugins";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:10:"twicedaily";s:4:"args";a:0:{}s:8:"interval";i:43200;}}s:16:"wp_update_themes";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:10:"twicedaily";s:4:"args";a:0:{}s:8:"interval";i:43200;}}}i:1586475285;a:1:{s:19:"wp_scheduled_delete";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}}i:1586475673;a:2:{s:32:"recovery_mode_clean_expired_keys";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}s:25:"delete_expired_transients";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}}i:1586476833;a:1:{s:19:"wpseo-reindex-links";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}}i:1586531971;a:1:{s:30:"wp_scheduled_auto_draft_delete";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:5:"daily";s:4:"args";a:0:{}s:8:"interval";i:86400;}}}i:1586649632;a:1:{s:16:"wpseo_ryte_fetch";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:6:"weekly";s:4:"args";a:0:{}s:8:"interval";i:604800;}}}i:1586797200;a:1:{s:28:"wpforms_email_summaries_cron";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:30:"wpforms_email_summaries_weekly";s:4:"args";a:0:{}s:8:"interval";i:604800;}}}i:1587055669;a:1:{s:30:"wp_site_health_scheduled_check";a:1:{s:32:"40cd750bba9870f18aada2478b24840a";a:3:{s:8:"schedule";s:6:"weekly";s:4:"args";a:0:{}s:8:"interval";i:604800;}}}s:7:"version";i:2;}', 'yes'),
 	(109, 'theme_mods_twentyseventeen', 'a:2:{s:18:"custom_css_post_id";i:-1;s:16:"sidebars_widgets";a:2:{s:4:"time";i:1584833872;s:4:"data";a:4:{s:19:"wp_inactive_widgets";a:0:{}s:9:"sidebar-1";a:6:{i:0;s:8:"search-2";i:1;s:14:"recent-posts-2";i:2;s:17:"recent-comments-2";i:3;s:10:"archives-2";i:4;s:12:"categories-2";i:5;s:6:"meta-2";}s:9:"sidebar-2";a:0:{}s:9:"sidebar-3";a:0:{}}}}', 'yes'),
 	(120, 'widget_custom_html', 'a:1:{s:12:"_multiwidget";i:1;}', 'yes'),
 	(138, 'current_theme', 'Releituras', 'yes'),
 	(139, 'theme_switched', '', 'yes'),
-	(140, 'theme_mods_releituras', 'a:97:{s:18:"custom_css_post_id";i:-1;i:0;b:0;s:20:"onepress_contact_cf7";s:53:"[wpforms id="1431" title="false" description="false"]";s:21:"onepress_contact_text";s:305:"\n<p>Universidade Federal de Santa Catarina <br>Campo Universitário Reitor João David <br>Ferreira Lima, Acesso Trindade - Sn<br>Carvoeira, SC, CEP 88040-900<p>\n\n<p>___________________________________<p>\n\n<p>HORÁRIO DAS OFICINAS<p>\n\n<p>Seg - Sex 8:00 - 23:00<br>Sab 10:00 - 23:00<br>Dom 12:00 - 23:00<p>";s:30:"onepress_contact_address_title";s:0:"";s:24:"onepress_contact_address";s:0:"";s:22:"onepress_contact_phone";s:0:"";s:22:"onepress_contact_email";s:0:"";s:20:"onepress_contact_fax";s:0:"";s:23:"onepress_social_disable";i:1;s:23:"onepress_social_twitter";s:1:"#";s:24:"onepress_social_facebook";s:1:"#";s:22:"onepress_social_google";s:1:"#";s:25:"onepress_social_instagram";s:1:"#";s:27:"onepress_newsletter_disable";i:1;s:29:"onepress_newsletter_mailchimp";s:94:"//famethemes.us8.list-manage.com/subscribe/post?u=521c400d049a59a4b9c0550c2&#038;id=83187e0006";s:21:"onepress_team_members";a:4:{i:0;a:2:{s:7:"user_id";a:2:{s:3:"url";s:83:"https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/team5.jpg";s:2:"id";i:11;}s:4:"link";s:0:"";}i:1;a:2:{s:7:"user_id";a:2:{s:3:"url";s:83:"https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/team3.jpg";s:2:"id";i:9;}s:4:"link";s:0:"";}i:2;a:2:{s:7:"user_id";a:2:{s:3:"url";s:83:"https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/team2.jpg";s:2:"id";i:8;}s:4:"link";s:0:"";}i:3;a:2:{s:7:"user_id";a:2:{s:3:"url";s:83:"https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/team6.jpg";s:2:"id";i:12;}s:4:"link";s:0:"";}}s:20:"onepress_hero_images";a:1:{i:0;a:1:{s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}}}s:27:"onepress_hero_overlay_color";s:19:"rgba(255,255,255,1)";s:24:"onepress_site_image_logo";s:67:"http://projetoreleituras.dev.br/wp-content/uploads/2020/03/logo.png";s:20:"onepress_about_boxes";a:2:{i:0;a:3:{s:12:"content_page";s:2:"17";s:10:"hide_title";s:0:"";s:11:"enable_link";s:0:"";}i:1;a:3:{s:12:"content_page";s:2:"22";s:10:"hide_title";s:0:"";s:11:"enable_link";s:0:"";}}s:17:"onepress_services";a:4:{i:0;a:5:{s:9:"icon_type";s:4:"icon";s:4:"icon";s:11:"wikipedia-w";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:12:"content_page";s:2:"23";s:11:"enable_link";s:0:"";}i:1;a:5:{s:9:"icon_type";s:4:"icon";s:4:"icon";s:2:"gg";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:12:"content_page";s:2:"24";s:11:"enable_link";s:0:"";}i:2;a:5:{s:9:"icon_type";s:4:"icon";s:4:"icon";s:13:"balance-scale";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:12:"content_page";s:2:"25";s:11:"enable_link";s:0:"";}i:3;a:5:{s:9:"icon_type";s:4:"icon";s:4:"icon";s:12:"object-group";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:12:"content_page";s:2:"26";s:11:"enable_link";s:0:"";}}s:18:"nav_menu_locations";a:2:{s:7:"primary";i:17;s:11:"menu-social";i:18;}s:23:"onepress_news_more_link";s:0:"";s:28:"onepress_videolightbox_title";s:44:"Parallax Effect - <strong>Perfected</strong>";s:26:"onepress_videolightbox_url";s:43:"https://www.youtube.com/watch?v=yUCFRL43Zm4";s:28:"onepress_videolightbox_image";i:36;s:22:"onepress_counter_title";s:0:"";s:25:"onepress_counter_subtitle";s:32:"Some Fun Facts about our agency?";s:22:"onepress_counter_boxes";a:4:{i:0;a:4:{s:5:"title";s:18:"Projects completed";s:6:"number";s:3:"368";s:11:"unit_before";s:0:"";s:10:"unit_after";s:0:"";}i:1;a:4:{s:5:"title";s:17:"Positive feedback";s:6:"number";s:2:"99";s:11:"unit_before";s:0:"";s:10:"unit_after";s:1:"%";}i:2;a:4:{s:5:"title";s:14:"Pizzas ordered";s:6:"number";s:3:"254";s:11:"unit_before";s:0:"";s:10:"unit_after";s:0:"";}i:3;a:4:{s:5:"title";s:21:"Average cost per hour";s:6:"number";s:2:"32";s:11:"unit_before";s:1:"$";s:10:"unit_after";s:0:"";}}s:24:"onepress_hero_fullscreen";i:0;s:29:"onepress_hero_overlay_opacity";s:3:"0.6";s:19:"onepress_about_desc";s:120:"We provide <i>creative solutions</i> to clients around the world,<br>\ncreating things that get attention and meaningful.";s:23:"onepress_features_boxes";a:4:{i:0;a:6:{s:5:"title";s:17:"Responsive Design";s:9:"icon_type";s:4:"icon";s:4:"icon";s:9:"fa-laptop";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:4:"desc";s:71:"The theme is responsive, your website will look great on touch devices.";s:4:"link";s:0:"";}i:1;a:6:{s:5:"title";s:15:"Parallax Effect";s:9:"icon_type";s:4:"icon";s:4:"icon";s:5:"photo";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:4:"desc";s:72:"Create memorable pages with smooth parallax effects that everyone loves.";s:4:"link";s:0:"";}i:2;a:6:{s:5:"title";s:11:"WooCommerce";s:9:"icon_type";s:4:"icon";s:4:"icon";s:18:"fa-cart-arrow-down";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:4:"desc";s:57:"Build a front page for your WooCommerce store in minutes.";s:4:"link";s:0:"";}i:3;a:6:{s:5:"title";s:14:"Content Blocks";s:9:"icon_type";s:4:"icon";s:4:"icon";s:7:"reorder";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:4:"desc";s:75:"Change the sections contents, display each block exactly where you need it.";s:4:"link";s:0:"";}}s:11:"custom_logo";i:1434;s:23:"onepress_hide_sitetitle";i:1;s:21:"onepress_hide_tagline";i:1;s:24:"onepress_gallery_disable";i:0;s:21:"onepress_gallery_desc";s:90:"NEW: Gallery section support advanced layouts: Grid, Slider, Carousel, Masonry, Justified.";s:28:"onepress_gallery_source_page";s:4:"1245";s:23:"onepress_gallery_layout";s:10:"full-width";s:24:"onepress_gallery_display";s:7:"masonry";s:18:"onepress_g_spacing";s:1:"2";s:14:"onepress_g_col";s:1:"5";s:22:"onepress_hero_parallax";i:0;s:27:"onepress_header_transparent";i:0;s:21:"onepress_header_width";s:9:"contained";s:30:"onepress_sections_nav___enable";s:1:"1";s:26:"onepress_sections_nav_hero";i:1;s:34:"onepress_sections_nav_hero_inverse";i:0;s:30:"onepress_sections_nav_features";i:1;s:27:"onepress_sections_nav_about";i:1;s:30:"onepress_sections_nav_services";i:1;s:35:"onepress_sections_nav_videolightbox";i:1;s:43:"onepress_sections_nav_videolightbox_inverse";i:1;s:29:"onepress_sections_nav_gallery";i:1;s:29:"onepress_sections_nav_counter";i:0;s:26:"onepress_sections_nav_team";i:1;s:26:"onepress_sections_nav_news";i:1;s:29:"onepress_sections_nav_contact";i:1;s:29:"onepress_sections_nav___color";s:0:"";s:24:"onepress_header_bg_color";s:6:"ededed";s:20:"onepress_hero_layout";s:1:"2";s:19:"onepress_hcl2_image";s:68:"http://projetoreleituras.dev.br/wp-content/uploads/2020/03/livro.png";s:21:"onepress_hcl2_content";s:1412:"<div class="row">\n<div class="col-2"><img class="alignnone size-full wp-image-1458" src="/wp-content/uploads/2020/03/microfone.png" alt="microfone" width="86" height="160" /></div>\n<div class="col-10 pl-0">\n<p class="pl-5 pr-5" style="color: #000;text-transform: uppercase;text-align: center;margin-top: 0px;font-weight: 500">trabalhando com os sentidos, proporciona uma experiência imersiva aos usuários, contribuindo para despertar emoções diversas, pensamento crítico, criatividade, memórias/nostalgia e sensação de satisfação, assim é o “aúdiolivro 3d” do <strong>projeto releituras</strong></p>\n</div>\n\n<ul class="lista-inline">\n 	<li class="item"><img class="alignnone size-full wp-image-1490" src="/wp-content/uploads/2020/03/logopratrocinio1-min.png" alt="logotipo patrocinador instituto guga kuerten" width="75" height="75" /></li>\n 	<li class="item"><img class="alignnone size-full wp-image-1491" src="/wp-content/uploads/2020/03/patrocinio2-min.png" alt="patrocínio cocreatction" width="67" height="75" /></li>\n 	<li class="item"><img class="alignnone size-full wp-image-1492" src="/wp-content/uploads/2020/03/patrocinio3-min.png" alt="logotipo instituto nexxera" width="148" height="75" /></li>\n 	<li class="item"><img class="alignnone size-full wp-image-1493" src="/wp-content/uploads/2020/03/patrocinio4-min.png" alt="logotipo the wall" width="75" height="75" /></li>\n</ul>\n\n</div>";s:20:"onepress_news_number";s:1:"4";s:19:"onepress_news_title";s:0:"";s:22:"onepress_news_subtitle";s:0:"";s:23:"onepress_news_hide_meta";s:1:"1";s:17:"onepress_news_cat";s:1:"0";s:23:"onepress_news_more_text";s:0:"";s:22:"onepress_contact_title";s:0:"";s:25:"onepress_contact_subtitle";s:0:"";s:15:"onepress_layout";s:13:"right-sidebar";s:38:"onepress_sections_nav___disable_mobile";s:0:"";s:30:"onepress_sections_nav___color2";s:0:"";s:32:"onepress_sections_nav___label_bg";s:0:"";s:35:"onepress_sections_nav___label_color";s:0:"";s:34:"onepress_sections_nav_news_inverse";i:0;s:37:"onepress_sections_nav_contact_inverse";i:0;s:26:"onepress_page_normal_align";s:4:"left";s:32:"onepress_sections_nav_hero_label";s:9:"O PROJETO";s:32:"onepress_sections_nav_news_label";s:4:"BLOG";s:35:"onepress_sections_nav_contact_label";s:16:"FALE COM A GENTE";s:36:"onepress_sections_nav___enable_label";s:1:"1";s:30:"onepress_sticky_header_disable";i:0;s:28:"onepress_vertical_align_menu";i:0;s:25:"onepress_transparent_logo";s:0:"";s:33:"onepress_transparent_site_title_c";s:0:"";s:32:"onepress_transparent_retina_logo";s:0:"";s:31:"onepress_page_title_bar_disable";i:0;s:26:"onepress_page_cover_pd_top";s:0:"";s:29:"onepress_page_cover_pd_bottom";s:0:"";s:25:"onepress_page_cover_color";s:0:"";s:27:"onepress_page_cover_overlay";s:0:"";s:23:"onepress_footer_info_bg";s:0:"";s:28:"onepress_footer_c_link_color";s:0:"";}', 'yes'),
+	(140, 'theme_mods_releituras', 'a:99:{s:18:"custom_css_post_id";i:-1;i:0;b:0;s:20:"onepress_contact_cf7";s:53:"[wpforms id="1431" title="false" description="false"]";s:21:"onepress_contact_text";s:305:"\n<p>Universidade Federal de Santa Catarina <br>Campo Universitário Reitor João David <br>Ferreira Lima, Acesso Trindade - Sn<br>Carvoeira, SC, CEP 88040-900<p>\n\n<p>___________________________________<p>\n\n<p>HORÁRIO DAS OFICINAS<p>\n\n<p>Seg - Sex 8:00 - 23:00<br>Sab 10:00 - 23:00<br>Dom 12:00 - 23:00<p>";s:30:"onepress_contact_address_title";s:0:"";s:24:"onepress_contact_address";s:0:"";s:22:"onepress_contact_phone";s:0:"";s:22:"onepress_contact_email";s:0:"";s:20:"onepress_contact_fax";s:0:"";s:23:"onepress_social_disable";i:1;s:23:"onepress_social_twitter";s:1:"#";s:24:"onepress_social_facebook";s:1:"#";s:22:"onepress_social_google";s:1:"#";s:25:"onepress_social_instagram";s:1:"#";s:27:"onepress_newsletter_disable";i:1;s:29:"onepress_newsletter_mailchimp";s:94:"//famethemes.us8.list-manage.com/subscribe/post?u=521c400d049a59a4b9c0550c2&#038;id=83187e0006";s:21:"onepress_team_members";a:4:{i:0;a:2:{s:7:"user_id";a:2:{s:3:"url";s:83:"https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/team5.jpg";s:2:"id";i:11;}s:4:"link";s:0:"";}i:1;a:2:{s:7:"user_id";a:2:{s:3:"url";s:83:"https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/team3.jpg";s:2:"id";i:9;}s:4:"link";s:0:"";}i:2;a:2:{s:7:"user_id";a:2:{s:3:"url";s:83:"https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/team2.jpg";s:2:"id";i:8;}s:4:"link";s:0:"";}i:3;a:2:{s:7:"user_id";a:2:{s:3:"url";s:83:"https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/team6.jpg";s:2:"id";i:12;}s:4:"link";s:0:"";}}s:20:"onepress_hero_images";a:1:{i:0;a:1:{s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}}}s:27:"onepress_hero_overlay_color";s:19:"rgba(255,255,255,1)";s:24:"onepress_site_image_logo";s:67:"http://projetoreleituras.dev.br/wp-content/uploads/2020/03/logo.png";s:20:"onepress_about_boxes";a:2:{i:0;a:3:{s:12:"content_page";s:2:"17";s:10:"hide_title";s:0:"";s:11:"enable_link";s:0:"";}i:1;a:3:{s:12:"content_page";s:2:"22";s:10:"hide_title";s:0:"";s:11:"enable_link";s:0:"";}}s:17:"onepress_services";a:4:{i:0;a:5:{s:9:"icon_type";s:4:"icon";s:4:"icon";s:11:"wikipedia-w";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:12:"content_page";s:2:"23";s:11:"enable_link";s:0:"";}i:1;a:5:{s:9:"icon_type";s:4:"icon";s:4:"icon";s:2:"gg";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:12:"content_page";s:2:"24";s:11:"enable_link";s:0:"";}i:2;a:5:{s:9:"icon_type";s:4:"icon";s:4:"icon";s:13:"balance-scale";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:12:"content_page";s:2:"25";s:11:"enable_link";s:0:"";}i:3;a:5:{s:9:"icon_type";s:4:"icon";s:4:"icon";s:12:"object-group";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:12:"content_page";s:2:"26";s:11:"enable_link";s:0:"";}}s:18:"nav_menu_locations";a:2:{s:7:"primary";i:17;s:11:"menu-social";i:18;}s:23:"onepress_news_more_link";s:0:"";s:28:"onepress_videolightbox_title";s:44:"Parallax Effect - <strong>Perfected</strong>";s:26:"onepress_videolightbox_url";s:43:"https://www.youtube.com/watch?v=yUCFRL43Zm4";s:28:"onepress_videolightbox_image";i:36;s:22:"onepress_counter_title";s:0:"";s:25:"onepress_counter_subtitle";s:32:"Some Fun Facts about our agency?";s:22:"onepress_counter_boxes";a:4:{i:0;a:4:{s:5:"title";s:18:"Projects completed";s:6:"number";s:3:"368";s:11:"unit_before";s:0:"";s:10:"unit_after";s:0:"";}i:1;a:4:{s:5:"title";s:17:"Positive feedback";s:6:"number";s:2:"99";s:11:"unit_before";s:0:"";s:10:"unit_after";s:1:"%";}i:2;a:4:{s:5:"title";s:14:"Pizzas ordered";s:6:"number";s:3:"254";s:11:"unit_before";s:0:"";s:10:"unit_after";s:0:"";}i:3;a:4:{s:5:"title";s:21:"Average cost per hour";s:6:"number";s:2:"32";s:11:"unit_before";s:1:"$";s:10:"unit_after";s:0:"";}}s:24:"onepress_hero_fullscreen";i:0;s:29:"onepress_hero_overlay_opacity";s:3:"0.6";s:19:"onepress_about_desc";s:120:"We provide <i>creative solutions</i> to clients around the world,<br>\ncreating things that get attention and meaningful.";s:23:"onepress_features_boxes";a:4:{i:0;a:6:{s:5:"title";s:17:"Responsive Design";s:9:"icon_type";s:4:"icon";s:4:"icon";s:9:"fa-laptop";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:4:"desc";s:71:"The theme is responsive, your website will look great on touch devices.";s:4:"link";s:0:"";}i:1;a:6:{s:5:"title";s:15:"Parallax Effect";s:9:"icon_type";s:4:"icon";s:4:"icon";s:5:"photo";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:4:"desc";s:72:"Create memorable pages with smooth parallax effects that everyone loves.";s:4:"link";s:0:"";}i:2;a:6:{s:5:"title";s:11:"WooCommerce";s:9:"icon_type";s:4:"icon";s:4:"icon";s:18:"fa-cart-arrow-down";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:4:"desc";s:57:"Build a front page for your WooCommerce store in minutes.";s:4:"link";s:0:"";}i:3;a:6:{s:5:"title";s:14:"Content Blocks";s:9:"icon_type";s:4:"icon";s:4:"icon";s:7:"reorder";s:5:"image";a:2:{s:3:"url";s:0:"";s:2:"id";s:0:"";}s:4:"desc";s:75:"Change the sections contents, display each block exactly where you need it.";s:4:"link";s:0:"";}}s:11:"custom_logo";i:1434;s:23:"onepress_hide_sitetitle";i:1;s:21:"onepress_hide_tagline";i:1;s:24:"onepress_gallery_disable";i:0;s:21:"onepress_gallery_desc";s:90:"NEW: Gallery section support advanced layouts: Grid, Slider, Carousel, Masonry, Justified.";s:28:"onepress_gallery_source_page";s:4:"1245";s:23:"onepress_gallery_layout";s:10:"full-width";s:24:"onepress_gallery_display";s:7:"masonry";s:18:"onepress_g_spacing";s:1:"2";s:14:"onepress_g_col";s:1:"5";s:22:"onepress_hero_parallax";i:0;s:27:"onepress_header_transparent";i:0;s:21:"onepress_header_width";s:9:"contained";s:30:"onepress_sections_nav___enable";s:0:"";s:26:"onepress_sections_nav_hero";i:1;s:34:"onepress_sections_nav_hero_inverse";i:0;s:30:"onepress_sections_nav_features";i:1;s:27:"onepress_sections_nav_about";i:1;s:30:"onepress_sections_nav_services";i:1;s:35:"onepress_sections_nav_videolightbox";i:1;s:43:"onepress_sections_nav_videolightbox_inverse";i:1;s:29:"onepress_sections_nav_gallery";i:1;s:29:"onepress_sections_nav_counter";i:0;s:26:"onepress_sections_nav_team";i:1;s:26:"onepress_sections_nav_news";i:1;s:29:"onepress_sections_nav_contact";i:1;s:29:"onepress_sections_nav___color";s:0:"";s:24:"onepress_header_bg_color";s:6:"ededed";s:20:"onepress_hero_layout";s:1:"2";s:19:"onepress_hcl2_image";s:68:"http://projetoreleituras.dev.br/wp-content/uploads/2020/03/livro.png";s:21:"onepress_hcl2_content";s:1412:"<div class="row">\n<div class="col-2"><img class="alignnone size-full wp-image-1458" src="/wp-content/uploads/2020/03/microfone.png" alt="microfone" width="86" height="160" /></div>\n<div class="col-10 pl-0">\n<p class="pl-5 pr-5" style="color: #000;text-transform: uppercase;text-align: center;margin-top: 0px;font-weight: 500">trabalhando com os sentidos, proporciona uma experiência imersiva aos usuários, contribuindo para despertar emoções diversas, pensamento crítico, criatividade, memórias/nostalgia e sensação de satisfação, assim é o “aúdiolivro 3d” do <strong>projeto releituras</strong></p>\n</div>\n\n<ul class="lista-inline">\n 	<li class="item"><img class="alignnone size-full wp-image-1490" src="/wp-content/uploads/2020/03/logopratrocinio1-min.png" alt="logotipo patrocinador instituto guga kuerten" width="75" height="75" /></li>\n 	<li class="item"><img class="alignnone size-full wp-image-1491" src="/wp-content/uploads/2020/03/patrocinio2-min.png" alt="patrocínio cocreatction" width="67" height="75" /></li>\n 	<li class="item"><img class="alignnone size-full wp-image-1492" src="/wp-content/uploads/2020/03/patrocinio3-min.png" alt="logotipo instituto nexxera" width="148" height="75" /></li>\n 	<li class="item"><img class="alignnone size-full wp-image-1493" src="/wp-content/uploads/2020/03/patrocinio4-min.png" alt="logotipo the wall" width="75" height="75" /></li>\n</ul>\n\n</div>";s:20:"onepress_news_number";s:1:"4";s:19:"onepress_news_title";s:0:"";s:22:"onepress_news_subtitle";s:0:"";s:23:"onepress_news_hide_meta";s:1:"1";s:17:"onepress_news_cat";s:1:"0";s:23:"onepress_news_more_text";s:0:"";s:22:"onepress_contact_title";s:0:"";s:25:"onepress_contact_subtitle";s:0:"";s:15:"onepress_layout";s:13:"right-sidebar";s:38:"onepress_sections_nav___disable_mobile";s:0:"";s:30:"onepress_sections_nav___color2";s:0:"";s:32:"onepress_sections_nav___label_bg";s:0:"";s:35:"onepress_sections_nav___label_color";s:0:"";s:34:"onepress_sections_nav_news_inverse";i:0;s:37:"onepress_sections_nav_contact_inverse";i:0;s:26:"onepress_page_normal_align";s:4:"left";s:32:"onepress_sections_nav_hero_label";s:9:"O PROJETO";s:32:"onepress_sections_nav_news_label";s:4:"BLOG";s:35:"onepress_sections_nav_contact_label";s:16:"FALE COM A GENTE";s:36:"onepress_sections_nav___enable_label";s:1:"1";s:30:"onepress_sticky_header_disable";i:0;s:28:"onepress_vertical_align_menu";i:0;s:25:"onepress_transparent_logo";s:0:"";s:33:"onepress_transparent_site_title_c";s:0:"";s:32:"onepress_transparent_retina_logo";s:0:"";s:31:"onepress_page_title_bar_disable";i:0;s:26:"onepress_page_cover_pd_top";s:0:"";s:29:"onepress_page_cover_pd_bottom";s:0:"";s:25:"onepress_page_cover_color";s:0:"";s:27:"onepress_page_cover_overlay";s:0:"";s:23:"onepress_footer_info_bg";s:0:"";s:28:"onepress_footer_c_link_color";s:0:"";s:16:"onepress_hero_id";s:9:"o-projeto";s:19:"onepress_contact_id";s:7:"contato";}', 'yes'),
 	(143, 'widget_media_gallery', 'a:1:{s:12:"_multiwidget";i:1;}', 'yes'),
 	(144, 'wp_page_for_privacy_policy', '0', 'yes'),
 	(145, 'show_comments_cookies_opt_in', '1', 'yes'),
@@ -1213,7 +1213,7 @@ INSERT INTO `wp_options` (`option_id`, `option_name`, `option_value`, `autoload`
 	(219, 'schema-ActionScheduler_LoggerSchema', '2.0.1584835287', 'yes'),
 	(220, 'wpforms_version', '1.5.9.5', 'yes'),
 	(221, 'wpforms_activated', 'a:1:{s:4:"lite";i:1584835287;}', 'yes'),
-	(224, 'action_scheduler_lock_async-request-runner', '1586468446', 'yes'),
+	(224, 'action_scheduler_lock_async-request-runner', '1586471929', 'yes'),
 	(225, 'wpforms_version_lite', '1.5.9.5', 'yes'),
 	(226, 'widget_wpforms-widget', 'a:1:{s:12:"_multiwidget";i:1;}', 'yes'),
 	(246, 'ewww_image_optimizer_backup_files', '', 'no'),
@@ -1247,8 +1247,6 @@ INSERT INTO `wp_options` (`option_id`, `option_name`, `option_value`, `autoload`
 	(1904, '_site_transient_timeout_theme_roots', '1586464776', 'no'),
 	(1905, '_site_transient_theme_roots', 'a:3:{s:8:"onepress";s:7:"/themes";s:10:"releituras";s:7:"/themes";s:12:"twentytwenty";s:7:"/themes";}', 'no'),
 	(1906, '_site_transient_update_themes', 'O:8:"stdClass":4:{s:12:"last_checked";i:1586462978;s:7:"checked";a:3:{s:8:"onepress";s:5:"2.2.4";s:10:"releituras";s:5:"0.1.0";s:12:"twentytwenty";s:3:"1.2";}s:8:"response";a:0:{}s:12:"translations";a:0:{}}', 'no'),
-	(1908, '_transient_timeout_ewww_image_optimizer_images_reoptimized', '1586467286', 'no'),
-	(1909, '_transient_ewww_image_optimizer_images_reoptimized', 'zero', 'no'),
 	(1910, '_transient_timeout_wpforms_dash_widget_lite_entries_by_form', '1586476801', 'no'),
 	(1911, '_transient_wpforms_dash_widget_lite_entries_by_form', 'a:1:{i:1431;a:3:{s:7:"form_id";i:1431;s:5:"count";i:0;s:5:"title";s:15:"Contato da Home";}}', 'no'),
 	(1914, '_site_transient_timeout_community-events-1aecf33ab8525ff212ebdffbb438372e', '1586506893', 'no'),
@@ -1266,8 +1264,10 @@ INSERT INTO `wp_options` (`option_id`, `option_name`, `option_value`, `autoload`
 	(1935, '_transient_timeout_as-post-store-dependencies-met', '1586550517', 'no'),
 	(1936, '_transient_as-post-store-dependencies-met', 'yes', 'no'),
 	(1938, 'action_scheduler_migration_status', 'complete', 'yes'),
-	(1966, '_transient_is_multi_author', '1', 'yes'),
-	(1967, '_transient_onepress_categories', '2', 'yes');
+	(2005, '_transient_timeout_ewww_image_optimizer_images_reoptimized', '1586473506', 'no'),
+	(2006, '_transient_ewww_image_optimizer_images_reoptimized', 'zero', 'no'),
+	(2027, '_transient_is_multi_author', '1', 'yes'),
+	(2028, '_transient_onepress_categories', '2', 'yes');
 /*!40000 ALTER TABLE `wp_options` ENABLE KEYS */;
 
 -- Copiando estrutura para tabela releituras.wp_postmeta
@@ -1279,9 +1279,9 @@ CREATE TABLE IF NOT EXISTS `wp_postmeta` (
   PRIMARY KEY (`meta_id`),
   KEY `post_id` (`post_id`),
   KEY `meta_key` (`meta_key`(191))
-) ENGINE=InnoDB AUTO_INCREMENT=878 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=913 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
--- Copiando dados para a tabela releituras.wp_postmeta: ~679 rows (aproximadamente)
+-- Copiando dados para a tabela releituras.wp_postmeta: ~681 rows (aproximadamente)
 /*!40000 ALTER TABLE `wp_postmeta` DISABLE KEYS */;
 INSERT INTO `wp_postmeta` (`meta_id`, `post_id`, `meta_key`, `meta_value`) VALUES
 	(1, 2, '_wp_page_template', 'default'),
@@ -1584,7 +1584,7 @@ INSERT INTO `wp_postmeta` (`meta_id`, `post_id`, `meta_key`, `meta_value`) VALUE
 	(351, 32, '_menu_item_target', ''),
 	(352, 32, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
 	(353, 32, '_menu_item_xfn', ''),
-	(354, 32, '_menu_item_url', 'https://demos.famethemes.com/onepress/#contact'),
+	(354, 32, '_menu_item_url', '#contato'),
 	(355, 1208, '_menu_item_type', 'custom'),
 	(356, 1208, '_menu_item_menu_item_parent', '0'),
 	(357, 1208, '_menu_item_object_id', '1208'),
@@ -1592,7 +1592,7 @@ INSERT INTO `wp_postmeta` (`meta_id`, `post_id`, `meta_key`, `meta_value`) VALUE
 	(359, 1208, '_menu_item_target', ''),
 	(360, 1208, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
 	(361, 1208, '_menu_item_xfn', ''),
-	(362, 1208, '_menu_item_url', 'http://projetoreleituras.dev.br/'),
+	(362, 1208, '_menu_item_url', '#o-projeto'),
 	(381, 33, '_edit_last', '1'),
 	(382, 33, '_thumbnail_id', '1503'),
 	(385, 37, '_thumbnail_id', '1508'),
@@ -1867,38 +1867,6 @@ INSERT INTO `wp_postmeta` (`meta_id`, `post_id`, `meta_key`, `meta_value`) VALUE
 	(677, 1430, '_wp_trash_meta_status', 'private'),
 	(678, 1430, '_wp_trash_meta_time', '1585519565'),
 	(679, 1430, '_wp_desired_post_slug', 'wpforms-preview'),
-	(680, 1554, '_menu_item_type', 'post_type'),
-	(681, 1554, '_menu_item_menu_item_parent', '0'),
-	(682, 1554, '_menu_item_object_id', '1444'),
-	(683, 1554, '_menu_item_object', 'page'),
-	(684, 1554, '_menu_item_target', ''),
-	(685, 1554, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
-	(686, 1554, '_menu_item_xfn', ''),
-	(687, 1554, '_menu_item_url', ''),
-	(689, 1555, '_menu_item_type', 'post_type'),
-	(690, 1555, '_menu_item_menu_item_parent', '0'),
-	(691, 1555, '_menu_item_object_id', '1442'),
-	(692, 1555, '_menu_item_object', 'page'),
-	(693, 1555, '_menu_item_target', ''),
-	(694, 1555, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
-	(695, 1555, '_menu_item_xfn', ''),
-	(696, 1555, '_menu_item_url', ''),
-	(698, 1556, '_menu_item_type', 'post_type'),
-	(699, 1556, '_menu_item_menu_item_parent', '0'),
-	(700, 1556, '_menu_item_object_id', '1437'),
-	(701, 1556, '_menu_item_object', 'page'),
-	(702, 1556, '_menu_item_target', ''),
-	(703, 1556, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
-	(704, 1556, '_menu_item_xfn', ''),
-	(705, 1556, '_menu_item_url', ''),
-	(707, 1557, '_menu_item_type', 'post_type'),
-	(708, 1557, '_menu_item_menu_item_parent', '0'),
-	(709, 1557, '_menu_item_object_id', '1182'),
-	(710, 1557, '_menu_item_object', 'page'),
-	(711, 1557, '_menu_item_target', ''),
-	(712, 1557, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
-	(713, 1557, '_menu_item_xfn', ''),
-	(714, 1557, '_menu_item_url', ''),
 	(716, 1558, '_edit_lock', '1585520833:1'),
 	(717, 1558, '_wp_trash_meta_status', 'publish'),
 	(718, 1558, '_wp_trash_meta_time', '1585520843'),
@@ -1964,7 +1932,39 @@ INSERT INTO `wp_postmeta` (`meta_id`, `post_id`, `meta_key`, `meta_value`) VALUE
 	(873, 1594, '_menu_item_target', ''),
 	(874, 1594, '_menu_item_classes', 'a:2:{i:0;s:2:"fa";i:1;s:7:"fa-yelp";}'),
 	(875, 1594, '_menu_item_xfn', ''),
-	(876, 1594, '_menu_item_url', 'http://www.yelp.com');
+	(876, 1594, '_menu_item_url', 'http://www.yelp.com'),
+	(878, 1595, '_wp_trash_meta_status', 'publish'),
+	(879, 1595, '_wp_trash_meta_time', '1586470001'),
+	(880, 1596, '_wp_trash_meta_status', 'publish'),
+	(881, 1596, '_wp_trash_meta_time', '1586470059'),
+	(882, 1597, '_menu_item_type', 'custom'),
+	(883, 1597, '_menu_item_menu_item_parent', '0'),
+	(884, 1597, '_menu_item_object_id', '1597'),
+	(885, 1597, '_menu_item_object', 'custom'),
+	(886, 1597, '_menu_item_target', ''),
+	(887, 1597, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
+	(888, 1597, '_menu_item_xfn', ''),
+	(889, 1597, '_menu_item_url', '#audio-livros'),
+	(891, 1598, '_menu_item_type', 'custom'),
+	(892, 1598, '_menu_item_menu_item_parent', '0'),
+	(893, 1598, '_menu_item_object_id', '1598'),
+	(894, 1598, '_menu_item_object', 'custom'),
+	(895, 1598, '_menu_item_target', ''),
+	(896, 1598, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
+	(897, 1598, '_menu_item_xfn', ''),
+	(898, 1598, '_menu_item_url', '#seja-voluntario'),
+	(900, 1599, '_menu_item_type', 'custom'),
+	(901, 1599, '_menu_item_menu_item_parent', '0'),
+	(902, 1599, '_menu_item_object_id', '1599'),
+	(903, 1599, '_menu_item_object', 'custom'),
+	(904, 1599, '_menu_item_target', ''),
+	(905, 1599, '_menu_item_classes', 'a:1:{i:0;s:0:"";}'),
+	(906, 1599, '_menu_item_xfn', ''),
+	(907, 1599, '_menu_item_url', '#doacoes'),
+	(909, 1600, '_wp_trash_meta_status', 'publish'),
+	(910, 1600, '_wp_trash_meta_time', '1586470628'),
+	(911, 1601, '_wp_trash_meta_status', 'publish'),
+	(912, 1601, '_wp_trash_meta_time', '1586470725');
 /*!40000 ALTER TABLE `wp_postmeta` ENABLE KEYS */;
 
 -- Copiando estrutura para tabela releituras.wp_posts
@@ -1997,9 +1997,9 @@ CREATE TABLE IF NOT EXISTS `wp_posts` (
   KEY `type_status_date` (`post_type`,`post_status`,`post_date`,`ID`),
   KEY `post_parent` (`post_parent`),
   KEY `post_author` (`post_author`)
-) ENGINE=InnoDB AUTO_INCREMENT=1595 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=1602 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
--- Copiando dados para a tabela releituras.wp_posts: ~264 rows (aproximadamente)
+-- Copiando dados para a tabela releituras.wp_posts: ~266 rows (aproximadamente)
 /*!40000 ALTER TABLE `wp_posts` DISABLE KEYS */;
 INSERT INTO `wp_posts` (`ID`, `post_author`, `post_date`, `post_date_gmt`, `post_content`, `post_title`, `post_excerpt`, `post_status`, `comment_status`, `ping_status`, `post_password`, `post_name`, `to_ping`, `pinged`, `post_modified`, `post_modified_gmt`, `post_content_filtered`, `post_parent`, `guid`, `menu_order`, `post_type`, `post_mime_type`, `comment_count`) VALUES
 	(1, 1, '2020-03-21 20:31:31', '2020-03-21 23:31:31', 'Bem-vindo ao WordPress. Esse é o seu primeiro post. Edite-o ou exclua-o, e então comece a escrever!', 'Oficina de Leitura', '', 'publish', 'open', 'open', '', 'ola-mundo', '', '', '2020-03-28 18:21:26', '2020-03-28 21:21:26', '', 0, 'http://projetoreleituras.dev.br/?p=1', 0, 'post', '', 1),
@@ -2024,7 +2024,7 @@ INSERT INTO `wp_posts` (`ID`, `post_author`, `post_date`, `post_date_gmt`, `post
 	(24, 2, '2016-02-12 08:13:06', '2016-02-12 08:13:06', 'Morbi in sem quis dui placerat ornare. Pellentesque odio nisi euismod in pharetra a ultricies.', 'Service Title #2', 'Morbi in sem quis dui placerat ornare. Pellentesque odio nisi euismod in pharetra a ultricies.', 'trash', 'closed', 'closed', '', 'service-title-2__trashed', '', '', '2020-03-29 19:04:42', '2020-03-29 22:04:42', '', 0, 'http://demos.famethemes.com/onepress/?page_id=24', 0, 'page', '', 0),
 	(25, 2, '2016-02-12 08:13:22', '2016-02-12 08:13:22', 'Morbi in sem quis dui placerat ornare. Pellentesque odio nisi euismod in pharetra a ultricies.', 'Service Title #3', 'Morbi in sem quis dui placerat ornare. Pellentesque odio nisi euismod in pharetra a ultricies.', 'trash', 'closed', 'closed', '', 'service-title-3__trashed', '', '', '2020-03-29 19:04:44', '2020-03-29 22:04:44', '', 0, 'http://demos.famethemes.com/onepress/?page_id=25', 0, 'page', '', 0),
 	(26, 2, '2016-02-12 08:13:33', '2016-02-12 08:13:33', 'Morbi in sem quis dui placerat ornare. Pellentesque odio nisi euismod in pharetra a ultricies.', 'Service Title #4', 'Morbi in sem quis dui placerat ornare. Pellentesque odio nisi euismod in pharetra a ultricies.', 'trash', 'closed', 'closed', '', 'service-title-4__trashed', '', '', '2020-03-29 19:04:46', '2020-03-29 22:04:46', '', 0, 'http://demos.famethemes.com/onepress/?page_id=26', 0, 'page', '', 0),
-	(32, 2, '2016-02-12 08:19:06', '2016-02-12 08:19:06', '', 'FALE COM A GENTE', '', 'publish', 'closed', 'closed', '', 'contact', '', '', '2020-03-29 19:16:05', '2020-03-29 22:16:05', '', 0, 'http://demos.famethemes.com/onepress/2016/02/12/contact/', 6, 'nav_menu_item', '', 0),
+	(32, 2, '2016-02-12 08:19:06', '2016-02-12 08:19:06', '', 'FALE COM A GENTE', '', 'publish', 'closed', 'closed', '', 'contact', '', '', '2020-04-09 19:17:26', '2020-04-09 22:17:26', '', 0, 'http://demos.famethemes.com/onepress/2016/02/12/contact/', 5, 'nav_menu_item', '', 0),
 	(33, 2, '2016-02-12 08:27:17', '2016-02-12 10:27:17', '<h3><img class="alignnone wp-image-35 size-full" src="https://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/blog4.jpg" alt="blog4" width="1280" height="853"></h3>\n<h3>Default</h3>\nThis is a paragraph. It should not have any alignment of any kind. It should just flow like you would normally expect. Nothing fancy. Just straight up text, free flowing, with love. Completely neutral and not picking a side or sitting on the fence. It just is. It just freaking is. It likes where it is. It does not feel compelled to pick a side. Leave him be. It will just be better that way. Trust me.\n<h3>Left Align</h3>\n<p style="text-align: left;">This is a paragraph. It is left aligned. Because of this, it is a bit more liberal in it\'s views. It\'s favorite color is green. Left align tends to be more eco-friendly, but it provides no concrete evidence that it really is. Even though it likes share the wealth evenly, it leaves the equal distribution up to justified alignment.</p>\n\n<h3>Center Align</h3>\n<p style="text-align: center;">This is a paragraph. It is center aligned. Center is, but nature, a fence sitter. A flip flopper. It has a difficult time making up its mind. It wants to pick a side. Really, it does. It has the best intentions, but it tends to complicate matters more than help. The best you can do is try to win it over and hope for the best. I hear center align does take bribes.</p>\n\n<h3>Right Align</h3>\n<p style="text-align: right;">This is a paragraph. It is right aligned. It is a bit more conservative in it\'s views. It\'s prefers to not be told what to do or how to do it. Right align totally owns a slew of guns and loves to head to the range for some practice. Which is cool and all. I mean, it\'s a pretty good shot from at least four or five football fields away. Dead on. So boss.</p>\n\n<h3>Justify Align</h3>\n<p style="text-align: justify;">This is a paragraph. It is justify aligned. It gets really mad when people associate it with Justin Timberlake. Typically, justified is pretty straight laced. It likes everything to be in it\'s place and not all cattywampus like the rest of the aligns. I am not saying that makes it better than the rest of the aligns, but it does tend to put off more of an elitist attitude.</p>', 'Releituras Selecionadas para o Cocreation Lab', '', 'publish', 'open', 'open', '', 'markup-text-alignment', '', '', '2020-03-28 18:22:36', '2020-03-28 21:22:36', '', 0, 'http://demos.famethemes.com/onepress/?p=33', 0, 'post', '', 0),
 	(34, 2, '2016-02-12 08:24:42', '2016-02-12 08:24:42', '', 'blog2', '', 'inherit', 'open', 'closed', '', 'blog2', '', '', '2020-03-21 21:04:29', '2020-03-22 00:04:29', '', 33, 'http://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/blog2.jpg', 0, 'attachment', 'image/jpeg', 0),
 	(35, 2, '2016-02-12 08:26:25', '2016-02-12 08:26:25', '', 'blog4', '', 'inherit', 'open', 'closed', '', 'blog4', '', '', '2020-03-21 21:04:29', '2020-03-22 00:04:29', '', 33, 'http://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/02/blog4.jpg', 0, 'attachment', 'image/jpeg', 0),
@@ -2087,7 +2087,7 @@ INSERT INTO `wp_posts` (`ID`, `post_author`, `post_date`, `post_date_gmt`, `post
 	(1197, 2, '2013-06-07 10:49:23', '2013-06-07 10:49:23', '', 'T_5_back', '', 'inherit', 'open', 'open', '', 't_5_back', '', '', '2013-06-07 10:49:23', '2013-06-07 10:49:23', '', 0, 'http://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2013/06/T_5_back.jpg', 0, 'attachment', 'image/jpeg', 0),
 	(1198, 2, '2013-06-07 10:51:51', '2013-06-07 10:51:51', '', 'T_6_front', '', 'inherit', 'open', 'open', '', 't_6_front', '', '', '2013-06-07 10:51:51', '2013-06-07 10:51:51', '', 0, 'http://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2013/06/T_6_front.jpg', 0, 'attachment', 'image/jpeg', 0),
 	(1199, 2, '2013-06-07 10:52:02', '2013-06-07 10:52:02', '', 'T_6_back', '', 'inherit', 'open', 'open', '', 't_6_back', '', '', '2013-06-07 10:52:02', '2013-06-07 10:52:02', '', 0, 'http://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2013/06/T_6_back.jpg', 0, 'attachment', 'image/jpeg', 0),
-	(1208, 2, '2016-03-18 06:17:41', '2016-03-18 06:17:41', '', 'O PROJETO', '', 'publish', 'closed', 'closed', '', 'features', '', '', '2020-03-29 19:16:05', '2020-03-29 22:16:05', '', 0, 'http://demos.famethemes.com/onepress/?p=1208', 1, 'nav_menu_item', '', 0),
+	(1208, 2, '2016-03-18 06:17:41', '2016-03-18 06:17:41', '', 'O PROJETO', '', 'publish', 'closed', 'closed', '', 'features', '', '', '2020-04-09 19:17:25', '2020-04-09 22:17:25', '', 0, 'http://demos.famethemes.com/onepress/?p=1208', 1, 'nav_menu_item', '', 0),
 	(1245, 2, '2016-10-05 09:12:09', '2016-10-05 09:12:09', '[gallery ids="1246,36,35,34,1179,1247,1248,1249,15,1250"]', 'Gallery', '', 'trash', 'closed', 'closed', '', 'gallery__trashed', '', '', '2020-03-29 19:02:13', '2020-03-29 22:02:13', '', 0, 'http://demos.famethemes.com/onepress/?page_id=1245', 0, 'page', '', 0),
 	(1246, 2, '2016-10-05 09:21:20', '2016-10-05 09:21:20', '', 'pexels-photo-171292', '', 'inherit', 'open', 'closed', '', 'pexels-photo-171292', '', '', '2020-03-21 21:04:29', '2020-03-22 00:04:29', '', 1245, 'http://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/10/pexels-photo-171292.jpeg', 0, 'attachment', 'image/jpeg', 0),
 	(1247, 2, '2016-10-05 09:21:24', '2016-10-05 09:21:24', '', 'pexels-photo-186077', '', 'inherit', 'open', 'closed', '', 'pexels-photo-186077', '', '', '2020-03-21 21:04:29', '2020-03-22 00:04:29', '', 1245, 'http://demos.famethemes.com/onepress/wp-content/uploads/sites/17/2016/10/pexels-photo-186077.jpeg', 0, 'attachment', 'image/jpeg', 0),
@@ -2240,10 +2240,6 @@ INSERT INTO `wp_posts` (`ID`, `post_author`, `post_date`, `post_date_gmt`, `post
 	(1551, 1, '2020-03-29 19:05:37', '2020-03-29 22:05:37', '', 'LOJA', '', 'inherit', 'closed', 'closed', '', '1182-revision-v1', '', '', '2020-03-29 19:05:37', '2020-03-29 22:05:37', '', 1182, 'http://projetoreleituras.dev.br/2020/03/29/1182-revision-v1/', 0, 'revision', '', 0),
 	(1552, 1, '2020-03-29 19:06:05', '2020-03-29 22:06:05', '<p>This is the WPForms preview page. All your form previews will be handled on this page.</p><p>The page is set to private, so it is not publicly accessible. Please do not delete this page :) .</p>', 'WPForms Preview', '', 'inherit', 'closed', 'closed', '', '1430-revision-v1', '', '', '2020-03-29 19:06:05', '2020-03-29 22:06:05', '', 1430, 'http://projetoreleituras.dev.br/2020/03/29/1430-revision-v1/', 0, 'revision', '', 0),
 	(1553, 1, '2020-03-29 19:07:18', '2020-03-29 22:07:18', '<!-- wp:group {"align":"full"} -->\n<div class="wp-block-group alignfull"><div class="wp-block-group__inner-container"><!-- wp:group {"customBackgroundColor":"#ececea","align":"full"} -->\n<div class="wp-block-group alignfull has-background" style="background-color:#ececea"><div class="wp-block-group__inner-container"><!-- wp:heading {"align":"center"} -->\n<h2 class="has-text-align-center">SEJA UM DOADOR, ABRACE ESSA CAUSA!</h2>\n<!-- /wp:heading -->\n\n<!-- wp:image {"align":"full","id":1508,"sizeSlug":"full","className":"pb-0"} -->\n<figure class="wp-block-image alignfull size-full pb-0"><img src="http://projetoreleituras.dev.br/wp-content/uploads/2020/03/doador-min-1.png" alt="menina com fone de ouvido" class="wp-image-1508"/></figure>\n<!-- /wp:image --></div></div>\n<!-- /wp:group --></div></div>\n<!-- /wp:group -->\n\n<!-- wp:paragraph -->\n<p></p>\n<!-- /wp:paragraph -->', 'DOAÇÕES', '', 'inherit', 'closed', 'closed', '', '1444-revision-v1', '', '', '2020-03-29 19:07:18', '2020-03-29 22:07:18', '', 1444, 'http://projetoreleituras.dev.br/2020/03/29/1444-revision-v1/', 0, 'revision', '', 0),
-	(1554, 1, '2020-03-29 19:14:27', '2020-03-29 22:14:27', ' ', '', '', 'publish', 'closed', 'closed', '', '1554', '', '', '2020-03-29 19:16:05', '2020-03-29 22:16:05', '', 0, 'http://projetoreleituras.dev.br/?p=1554', 4, 'nav_menu_item', '', 0),
-	(1555, 1, '2020-03-29 19:14:27', '2020-03-29 22:14:27', ' ', '', '', 'publish', 'closed', 'closed', '', '1555', '', '', '2020-03-29 19:16:05', '2020-03-29 22:16:05', '', 0, 'http://projetoreleituras.dev.br/?p=1555', 2, 'nav_menu_item', '', 0),
-	(1556, 1, '2020-03-29 19:14:27', '2020-03-29 22:14:27', ' ', '', '', 'publish', 'closed', 'closed', '', '1556', '', '', '2020-03-29 19:16:05', '2020-03-29 22:16:05', '', 0, 'http://projetoreleituras.dev.br/?p=1556', 3, 'nav_menu_item', '', 0),
-	(1557, 1, '2020-03-29 19:14:28', '2020-03-29 22:14:28', ' ', '', '', 'publish', 'closed', 'closed', '', '1557', '', '', '2020-03-29 19:16:05', '2020-03-29 22:16:05', '', 0, 'http://projetoreleituras.dev.br/?p=1557', 5, 'nav_menu_item', '', 0),
 	(1558, 1, '2020-03-29 19:27:22', '2020-03-29 22:27:22', '{\n    "releituras::onepress_layout": {\n        "value": "right-sidebar",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:20:58"\n    },\n    "releituras::onepress_sections_nav_hero": {\n        "value": true,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:19:58"\n    },\n    "releituras::onepress_sections_nav___disable_mobile": {\n        "value": false,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:20:58"\n    },\n    "releituras::onepress_sections_nav___color": {\n        "value": "",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:22:39"\n    },\n    "releituras::onepress_sections_nav___color2": {\n        "value": "",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:22:39"\n    },\n    "releituras::onepress_sections_nav___label_bg": {\n        "value": "",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:23:15"\n    },\n    "releituras::onepress_sections_nav___label_color": {\n        "value": "",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:23:15"\n    },\n    "releituras::onepress_sections_nav_hero_inverse": {\n        "value": false,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:24:15"\n    },\n    "releituras::onepress_sections_nav_news_inverse": {\n        "value": true,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:25:15"\n    },\n    "releituras::onepress_sections_nav_contact": {\n        "value": true,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:25:15"\n    },\n    "releituras::onepress_sections_nav_contact_inverse": {\n        "value": false,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:25:15"\n    },\n    "releituras::onepress_page_normal_align": {\n        "value": "left",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:26:13"\n    },\n    "releituras::onepress_social_disable": {\n        "value": true,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:27:12"\n    },\n    "releituras::onepress_newsletter_disable": {\n        "value": true,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:27:12"\n    }\n}', '', '', 'trash', 'closed', 'closed', '', 'ba7b708d-0cd8-45af-8303-e5c99af780bc', '', '', '2020-03-29 19:27:22', '2020-03-29 22:27:22', '', 0, 'http://projetoreleituras.dev.br/?p=1558', 0, 'customize_changeset', '', 0),
 	(1559, 1, '2020-03-29 19:37:31', '2020-03-29 22:37:31', '{\n    "releituras::onepress_contact_text": {\n        "value": "\\n<p>Universidade Federal de Santa Catarina <br>Campo Universit\\u00e1rio Reitor Jo\\u00e3o David <br>Ferreira Lima, Acesso Trindade - Sn<br>Carvoeira, SC, CEP 88040-900<p>\\n\\n<p>___________________________________<p>\\n\\n<p>HOR\\u00c1RIO DAS OFICINAS<p>\\n\\n<p>Seg - Sex 8:00 - 23:00<br>Sab 10:00 - 23:00<br>Dom 12:00 - 23:00<p>",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-03-29 22:37:31"\n    }\n}', '', '', 'trash', 'closed', 'closed', '', '025daa4e-17de-4158-9224-f4e4b9e05bb7', '', '', '2020-03-29 19:37:31', '2020-03-29 22:37:31', '', 0, 'http://projetoreleituras.dev.br/?p=1559', 0, 'customize_changeset', '', 0),
 	(1560, 1, '2020-04-01 14:03:26', '2020-04-01 17:03:26', '{\n    "releituras::onepress_sections_nav_hero_label": {\n        "value": "O PROJETO",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-01 17:00:51"\n    },\n    "releituras::onepress_sections_nav_news_inverse": {\n        "value": false,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-01 17:00:51"\n    },\n    "releituras::onepress_sections_nav_news_label": {\n        "value": "BLOG",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-01 17:02:42"\n    },\n    "releituras::onepress_sections_nav_contact_label": {\n        "value": "FALE COM A GENTE",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-01 17:01:43"\n    },\n    "releituras::onepress_sections_nav_news": {\n        "value": true,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-01 17:02:42"\n    },\n    "releituras::onepress_sections_nav___disable_mobile": {\n        "value": false,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-01 17:03:26"\n    },\n    "releituras::onepress_sections_nav___enable_label": {\n        "value": true,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-01 17:03:26"\n    }\n}', '', '', 'trash', 'closed', 'closed', '', 'ddc75275-b2bb-48bb-96b4-9cdc2e7d9d1d', '', '', '2020-04-01 14:03:26', '2020-04-01 17:03:26', '', 0, 'http://projetoreleituras.dev.br/?p=1560', 0, 'customize_changeset', '', 0),
@@ -2264,7 +2260,14 @@ INSERT INTO `wp_posts` (`ID`, `post_author`, `post_date`, `post_date_gmt`, `post
 	(1591, 1, '2020-04-09 18:01:25', '2020-04-09 21:01:25', '', 'Instagram', '', 'publish', 'closed', 'closed', '', 'instagram', '', '', '2020-04-09 18:01:25', '2020-04-09 21:01:25', '', 0, 'http://projetoreleituras.dev.br/?p=1591', 5, 'nav_menu_item', '', 0),
 	(1592, 1, '2020-04-09 18:01:25', '2020-04-09 21:01:25', '', 'Spotfy', '', 'publish', 'closed', 'closed', '', 'spotfy', '', '', '2020-04-09 18:01:25', '2020-04-09 21:01:25', '', 0, 'http://projetoreleituras.dev.br/?p=1592', 2, 'nav_menu_item', '', 0),
 	(1593, 1, '2020-04-09 18:01:25', '2020-04-09 21:01:25', '', 'Youtube', '', 'publish', 'closed', 'closed', '', 'youtube', '', '', '2020-04-09 18:01:25', '2020-04-09 21:01:25', '', 0, 'http://projetoreleituras.dev.br/?p=1593', 3, 'nav_menu_item', '', 0),
-	(1594, 1, '2020-04-09 18:01:24', '2020-04-09 21:01:24', '', 'Yelp', '', 'publish', 'closed', 'closed', '', 'yelp', '', '', '2020-04-09 18:01:24', '2020-04-09 21:01:24', '', 0, 'http://projetoreleituras.dev.br/?p=1594', 1, 'nav_menu_item', '', 0);
+	(1594, 1, '2020-04-09 18:01:24', '2020-04-09 21:01:24', '', 'Yelp', '', 'publish', 'closed', 'closed', '', 'yelp', '', '', '2020-04-09 18:01:24', '2020-04-09 21:01:24', '', 0, 'http://projetoreleituras.dev.br/?p=1594', 1, 'nav_menu_item', '', 0),
+	(1595, 1, '2020-04-09 19:06:41', '2020-04-09 22:06:41', '{\n    "releituras::onepress_hero_id": {\n        "value": "O-Projeto",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-09 22:06:41"\n    }\n}', '', '', 'trash', 'closed', 'closed', '', 'd4e5f394-f326-4a99-867c-0a43fe4efd12', '', '', '2020-04-09 19:06:41', '2020-04-09 22:06:41', '', 0, 'http://projetoreleituras.dev.br/2020/04/09/d4e5f394-f326-4a99-867c-0a43fe4efd12/', 0, 'customize_changeset', '', 0),
+	(1596, 1, '2020-04-09 19:07:38', '2020-04-09 22:07:38', '{\n    "releituras::onepress_hero_id": {\n        "value": "o-projeto",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-09 22:07:38"\n    }\n}', '', '', 'trash', 'closed', 'closed', '', '25f8c85c-28f5-4548-9fd1-9b8a1a31c050', '', '', '2020-04-09 19:07:38', '2020-04-09 22:07:38', '', 0, 'http://projetoreleituras.dev.br/2020/04/09/25f8c85c-28f5-4548-9fd1-9b8a1a31c050/', 0, 'customize_changeset', '', 0),
+	(1597, 1, '2020-04-09 19:16:34', '2020-04-09 22:16:34', '', 'ÁUDIOLIVROS', '', 'publish', 'closed', 'closed', '', 'audiolivros', '', '', '2020-04-09 19:17:25', '2020-04-09 22:17:25', '', 0, 'http://projetoreleituras.dev.br/?p=1597', 2, 'nav_menu_item', '', 0),
+	(1598, 1, '2020-04-09 19:16:35', '2020-04-09 22:16:35', '', 'SEJA VOLUNTÁRIO', '', 'publish', 'closed', 'closed', '', 'seja-voluntario', '', '', '2020-04-09 19:17:25', '2020-04-09 22:17:25', '', 0, 'http://projetoreleituras.dev.br/?p=1598', 3, 'nav_menu_item', '', 0),
+	(1599, 1, '2020-04-09 19:16:35', '2020-04-09 22:16:35', '', 'DOAÇÕES', '', 'publish', 'closed', 'closed', '', 'doacoes', '', '', '2020-04-09 19:17:26', '2020-04-09 22:17:26', '', 0, 'http://projetoreleituras.dev.br/?p=1599', 4, 'nav_menu_item', '', 0),
+	(1600, 1, '2020-04-09 19:17:08', '2020-04-09 22:17:08', '{\n    "releituras::onepress_contact_id": {\n        "value": "contato",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-09 22:17:08"\n    },\n    "releituras::onepress_contact_title": {\n        "value": "",\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-09 22:17:08"\n    }\n}', '', '', 'trash', 'closed', 'closed', '', 'acf15dc6-a831-40fc-919b-83c8218bcf61', '', '', '2020-04-09 19:17:08', '2020-04-09 22:17:08', '', 0, 'http://projetoreleituras.dev.br/2020/04/09/acf15dc6-a831-40fc-919b-83c8218bcf61/', 0, 'customize_changeset', '', 0),
+	(1601, 1, '2020-04-09 19:18:44', '2020-04-09 22:18:44', '{\n    "releituras::onepress_sections_nav___enable": {\n        "value": false,\n        "type": "theme_mod",\n        "user_id": 1,\n        "date_modified_gmt": "2020-04-09 22:18:44"\n    }\n}', '', '', 'trash', 'closed', 'closed', '', 'de812a46-b9ba-4d72-b16d-cf9e0fc20baf', '', '', '2020-04-09 19:18:44', '2020-04-09 22:18:44', '', 0, 'http://projetoreleituras.dev.br/2020/04/09/de812a46-b9ba-4d72-b16d-cf9e0fc20baf/', 0, 'customize_changeset', '', 0);
 /*!40000 ALTER TABLE `wp_posts` ENABLE KEYS */;
 
 -- Copiando estrutura para tabela releituras.wp_termmeta
@@ -2325,7 +2328,7 @@ CREATE TABLE IF NOT EXISTS `wp_term_relationships` (
   KEY `term_taxonomy_id` (`term_taxonomy_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
--- Copiando dados para a tabela releituras.wp_term_relationships: ~31 rows (aproximadamente)
+-- Copiando dados para a tabela releituras.wp_term_relationships: ~30 rows (aproximadamente)
 /*!40000 ALTER TABLE `wp_term_relationships` DISABLE KEYS */;
 INSERT INTO `wp_term_relationships` (`object_id`, `term_taxonomy_id`, `term_order`) VALUES
 	(1, 1, 0),
@@ -2350,15 +2353,14 @@ INSERT INTO `wp_term_relationships` (`object_id`, `term_taxonomy_id`, `term_orde
 	(1177, 14, 0),
 	(1177, 15, 0),
 	(1208, 17, 0),
-	(1554, 17, 0),
-	(1555, 17, 0),
-	(1556, 17, 0),
-	(1557, 17, 0),
 	(1590, 18, 0),
 	(1591, 18, 0),
 	(1592, 18, 0),
 	(1593, 18, 0),
-	(1594, 18, 0);
+	(1594, 18, 0),
+	(1597, 17, 0),
+	(1598, 17, 0),
+	(1599, 17, 0);
 /*!40000 ALTER TABLE `wp_term_relationships` ENABLE KEYS */;
 
 -- Copiando estrutura para tabela releituras.wp_term_taxonomy
@@ -2393,7 +2395,7 @@ INSERT INTO `wp_term_taxonomy` (`term_taxonomy_id`, `term_id`, `taxonomy`, `desc
 	(14, 14, 'post_tag', '', 0, 1),
 	(15, 15, 'post_tag', '', 0, 2),
 	(16, 16, 'post_tag', '', 0, 0),
-	(17, 17, 'nav_menu', '', 0, 6),
+	(17, 17, 'nav_menu', '', 0, 5),
 	(18, 18, 'nav_menu', '', 0, 5);
 /*!40000 ALTER TABLE `wp_term_taxonomy` ENABLE KEYS */;
 
@@ -2445,7 +2447,7 @@ INSERT INTO `wp_usermeta` (`umeta_id`, `user_id`, `meta_key`, `meta_value`) VALU
 	(32, 2, 'dismissed_wp_pointers', ''),
 	(33, 1, 'wp_user-settings', 'libraryContent=browse&editor=html'),
 	(34, 1, 'wp_user-settings-time', '1585333906'),
-	(47, 1, 'nav_menu_recently_edited', '18'),
+	(47, 1, 'nav_menu_recently_edited', '17'),
 	(48, 1, 'managenav-menuscolumnshidden', 'a:4:{i:0;s:11:"link-target";i:1;s:15:"title-attribute";i:2;s:3:"xfn";i:3;s:11:"description";}'),
 	(49, 1, 'metaboxhidden_nav-menus', 'a:1:{i:0;s:12:"add-post_tag";}');
 /*!40000 ALTER TABLE `wp_usermeta` ENABLE KEYS */;
@@ -2538,7 +2540,7 @@ CREATE TABLE IF NOT EXISTS `wp_yoast_seo_meta` (
   UNIQUE KEY `object_id` (`object_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_520_ci;
 
--- Copiando dados para a tabela releituras.wp_yoast_seo_meta: ~66 rows (aproximadamente)
+-- Copiando dados para a tabela releituras.wp_yoast_seo_meta: ~70 rows (aproximadamente)
 /*!40000 ALTER TABLE `wp_yoast_seo_meta` DISABLE KEYS */;
 INSERT INTO `wp_yoast_seo_meta` (`object_id`, `internal_link_count`, `incoming_link_count`) VALUES
 	(1, 0, 0),
@@ -2591,6 +2593,10 @@ INSERT INTO `wp_yoast_seo_meta` (`object_id`, `internal_link_count`, `incoming_l
 	(1502, 0, 0),
 	(1506, 0, 0),
 	(1531, 0, 0),
+	(1554, 0, 0),
+	(1555, 0, 0),
+	(1556, 0, 0),
+	(1557, 0, 0),
 	(1561, 0, 0),
 	(1563, 0, 0),
 	(1565, 0, 0),
