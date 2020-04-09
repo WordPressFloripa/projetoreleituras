@@ -10,11 +10,26 @@ Version:        0.1.0
 
 /* header */
 .site-header {
-    line-height: 85px;
+    line-height: 35px;
 }
 
 .site-branding {
     max-width: 170px;
+}
+
+.onepress-menu {
+    display: flex;
+    align-items: center;
+}
+
+.onepress-menu > li {
+    line-height: 85px;
+}
+
+.onepress-menu li.onepress-current-item > a {
+    color: #fff;
+    line-height: 30px;
+    background: #663366;
 }
 
 /*menu social*/
