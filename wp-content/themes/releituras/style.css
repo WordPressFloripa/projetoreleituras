@@ -7,9 +7,29 @@ Author URI:
 Template:       onepress
 Version:        0.1.0
 */
+
+/* header */
+.site-header {
+    line-height: 85px;
+}
+
+.site-branding {
+    max-width: 170px;
+}
+
 /*menu social*/
+#menu-social {
+    background: #000;
+    text-align: right;
+    padding: 0 7em;
+}
+
 ul#menu-redes-sociais {
     list-style-type: none;
+}
+
+ul#menu-redes-sociais li {
+    margin: 0;
 }
 
 i.fa {
@@ -18,7 +38,7 @@ i.fa {
 }
 
 a.nav-link {
-    width: 45px;
+    width: 50px;
     height: 45px;
     overflow: hidden;
 }

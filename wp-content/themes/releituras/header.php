@@ -22,20 +22,18 @@
 <?php do_action( 'onepress_before_site_start' ); ?>
 <div id="page" class="hfeed site">   
 	<a class="skip-link screen-reader-text" href="#content"><?php esc_html_e( 'Skip to content', 'onepress' ); ?></a>
-    <menu id="menu-social"  role="contentinfo" style="background: black; height: 50px; margin: 0; color: #fff" class="pt-5 pb-2 d-flex align-items-center">
-        <div>
-            <?php
-                wp_nav_menu(
-                    array(
-                        'theme_location' => 'menu-social',
-                        'menu_class' => 'item-menu',
-                        'fallback_cb' => 'WP_Bootstrap_Navwalker::fallback',
-                        'walker' => new WP_Bootstrap_Navwalker()
-                    )
-                );
-            ?>
-        </div>
-    </menu>
+    <div id="menu-social" role="contentinfo">
+        <?php
+            wp_nav_menu(
+                array(
+                    'theme_location' => 'menu-social',
+                    'menu_class' => 'lista-inline',
+                    'fallback_cb' => 'WP_Bootstrap_Navwalker::fallback',
+                    'walker' => new WP_Bootstrap_Navwalker()
+                )
+            );
+        ?>
+    </div>
     <?php
     /**
      * @since 2.0.0
