@@ -21,7 +21,6 @@ Version:        0.1.0
 #menu-social {
     background: #000;
     text-align: right;
-    padding: 0 7em;
 }
 
 ul#menu-redes-sociais {
@@ -61,6 +60,10 @@ ul.lista-inline li:last-child {
 /*cores de fundo*/
 .bg-cinza {
     background-color: #ececea;
+}
+
+.bg-preto {
+    background-color: #000;
 }
 
 /*hero*/
