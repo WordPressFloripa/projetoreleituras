@@ -18,5 +18,14 @@ function onepress_parent_theme_enqueue_styles() {
 		get_stylesheet_directory_uri() . '/style.css',
 		array( 'onepress-style' )
 	);
-
+	require_once get_template_directory() . '/class-wp-bootstrap-navwalker.php';
 }
+
+/*criando novo menu*/
+
+
+register_nav_menus(
+	array(
+		'menu-social'  => esc_html__( 'Menu Social', 'releituras' ),
+	)
+);

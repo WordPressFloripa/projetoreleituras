@@ -7,22 +7,21 @@ Author URI:
 Template:       onepress
 Version:        0.1.0
 */
-
-/*listas*/
-ul.lista-inline {
-    display: inline-flex;
-    margin: 0 auto;
+/*menu social*/
+ul#menu-redes-sociais {
+    list-style-type: none;
 }
 
-ul.lista-inline li {
-    margin-right: 30px;
+i.fa {
+    font-size: 30px;
+    color: #fff;
 }
 
-ul.lista-inline li:last-child {
-    margin-right: 0px;
+a.nav-link {
+    width: 45px;
+    height: 45px;
+    overflow: hidden;
 }
-
-
 /*cores de fundo*/
 .bg-cinza {
     background-color: #ececea;
@@ -34,6 +33,20 @@ ul.lista-inline li:last-child {
     padding-top: 5% !important;
     position: relative;
     z-index: 80;
+}
+
+.list-group-horizontal {
+    -ms-flex-direction: row;
+    flex-direction: row;
+}
+
+.list-group {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;s
+    padding-left: 0;
+    margin-bottom: 0;
 }
 
 /*depoimentos*/
@@ -72,3 +85,8 @@ ul.lista-inline li:last-child {
 .blog-entry article .list-article-thumb {
     float: none;
 }
+ /*menu social superior*/
+
+ /* .nav-link {
+    display: inline;
+} */
