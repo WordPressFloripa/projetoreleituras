@@ -1,20 +1,59 @@
 /*
 Theme Name:     Releituras
-Theme URI:      
 Description:    Onepress child theme.
-Author:         Me
-Author URI:     
+Author:         Comunidade Wordpress Florianópolis
+Author URI:     https://wpfloripa.com.br/
 Template:       onepress
-Version:        0.1.0
+Version:        0.1.2
 */
 
 
-.site-content {
-    border-top: 0;
-    margin-top: 0;
+/* 
+SUMÁRIO
+ 
+01 - Acessibilidade
+02 - header
+03 - menu social
+04 - listas
+05 - cores de fundo
+06 - hero
+07 - seja voluntario 
+08 - depoimentos 
+09 - audilivros 
+10 - seja um doador 
+11 - blog 
+12 - contato
+13 - Postagem de Audiolivro
+
+*/
+
+
+/* 01 - Acessibilidade */
+
+.site-branding a:focus {
+    outline-width: 1px;
+    outline-style: solid;
+    outline-color: #000;
 }
 
-/* header */
+a.wp-block-button__link:focus {
+    outline-width: 2px;
+    outline-style: solid;
+    outline-color: #000;
+}
+
+a.nav-link:focus {
+    outline-width: 1px;
+    outline-style: solid;
+    outline-color: #fff;
+}
+
+input[type=text], input[type=password], input[type=search],input[type=email], textarea {
+    border: 1px solid grey !important;
+}
+
+
+/* 02 - header */
 
 .header-section {
     margin-bottom: 30px;
@@ -47,7 +86,8 @@ Version:        0.1.0
     padding-right: 16px;
 }
 
-/*menu social*/
+/* 03 - menu social */
+
 #menu-social {
     background: #000;
     text-align: right;
@@ -61,18 +101,23 @@ ul#menu-redes-sociais li {
     margin: 0;
 }
 
-i.fa {
+ul#menu-redes-sociais a.nav-link {
+    width: 42px;
+    height: 40px;
+    overflow: hidden;
+    text-align: center;
+    padding: 5px 0;
+    margin: 3px 0;
+}
+
+ul#menu-redes-sociais i.fa {
     font-size: 30px;
     color: #fff;
 }
 
-a.nav-link {
-    width: 50px;
-    height: 45px;
-    overflow: hidden;
-}
 
-/*listas*/
+/* 04 - listas */
+
 ul.lista-inline {
     display: inline-flex;
     margin: 0 auto;
@@ -84,27 +129,6 @@ ul.lista-inline li {
 
 ul.lista-inline li:last-child {
     margin-right: 0px;
-}
-
-
-/*cores de fundo*/
-.bg-cinza {
-    background-color: #ececea;
-}
-
-.bg-preto {
-    background-color: #000;
-}
-
-/*hero*/
-
-#o-projeto {
-    margin-bottom: 20px;
-}
-
-.hero-slideshow-normal > .container {
-    padding-top: 5% !important;
-    padding-bottom: 0 !important;
 }
 
 .list-group-horizontal {
@@ -121,19 +145,50 @@ ul.lista-inline li:last-child {
     margin-bottom: 0;
 }
 
-/* seja voluntario */
+/* 05 - cores de fundo */
 
-#seja-voluntario {
-    margin-top: 80px;
+.bg-cinza {
+    background-color: #ececea;
 }
 
-/*depoimentos*/
+.bg-preto {
+    background-color: #000;
+}
+
+/* 06 - hero */
+
+#o-projeto {
+    margin-bottom: 20px;
+}
+
+.hero-slideshow-normal > .container {
+    padding-top: 5% !important;
+    padding-bottom: 0 !important;
+}
+
+.imagem-hero img {
+    max-width: 350px;
+}
+
+/* 07 - seja voluntario */
+
+#seja-voluntario {
+    margin-top: 100px;
+}
+
+/* 08 - depoimentos */
 
 .slick-slide img {
     width: 100%;
 }
 
-/*seja um doador*/
+/* 09 - audilivros */
+
+#audio-livros img {
+    max-width: 370px;
+}
+
+/* 10 - seja um doador */
 
 #doacoes {
     margin-top: 100px;
@@ -142,13 +197,14 @@ ul.lista-inline li:last-child {
 #seja-um-doador h2 {
     padding: 2em 0;
     font-size: 30px;
+    margin-bottom: -10px;
 }
 
 #seja-um-doador figure {
     padding-bottom: 0;
 }
 
-/*blog*/
+/* 11 - blog */
 
 .blog-entry article {
     display: inline-block;
@@ -168,8 +224,23 @@ ul.lista-inline li:last-child {
     float: none;
 }
 
-/* Contato */
+/* 12 - contato */
 
 #contato {
     margin-top: 80px;
+}
+
+/* 13 - Postagem de Audiolivro */
+
+.audiolivroFrame iframe {
+    min-width: 100%;
+    min-height: 170px;
+}
+
+@media  screen and (max-width: 600px) {
+    .audiolivroFrame iframe {
+        max-width: 300px;
+        min-height: 120px;
+        max-height: 120px;
+    }
 }

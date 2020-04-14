@@ -78,7 +78,7 @@ do_action( 'onepress_before_section_part', 'hero', $hook_args );
 								echo '<div class="hcl2-content">' . apply_filters( 'the_content', do_shortcode( wp_kses_post( $hcl2_content ) ) ) . '</div>';
 }; ?>
 						</div>
-						<div class="col-md-12 col-lg-6">
+						<div class="col-md-12 col-lg-6 text-center wow slideInRight imagem-hero">
 							<?php if ( $hcl2_image ) {
 								echo '<img class="hcl2-image" src="' . esc_url( $hcl2_image ) . '" alt="">';
 }; ?>

@@ -21,11 +21,14 @@ function onepress_parent_theme_enqueue_styles() {
 	require_once get_template_directory() . '/class-wp-bootstrap-navwalker.php';
 }
 
-/*criando novo menu*/
-
+/*criando menu social*/
 
 register_nav_menus(
 	array(
 		'menu-social'  => esc_html__( 'Menu Social', 'releituras' ),
 	)
 );
+
+/*Add imagem para lista de audiolivros*/
+add_image_size( 'img-lista-audiolivros', 200, 200, true );
+
