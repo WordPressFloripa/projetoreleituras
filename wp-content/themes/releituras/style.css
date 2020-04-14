@@ -172,6 +172,10 @@ ul.lista-inline li:last-child {
 
 /* 07 - seja voluntario */
 
+.site-content {
+    border-top: none !important;
+}
+
 #seja-voluntario {
     margin-top: 100px;
 }
