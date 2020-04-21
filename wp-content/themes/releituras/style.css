@@ -24,6 +24,7 @@ SUMÁRIO
 11 - blog 
 12 - contato
 13 - Postagem de Audiolivro
+13 - menu social rodapé
 
 */
 
@@ -140,7 +141,7 @@ ul.lista-inline li:last-child {
     display: -ms-flexbox;
     display: flex;
     -ms-flex-direction: column;
-    flex-direction: column;s
+    flex-direction: column;
     padding-left: 0;
     margin-bottom: 0;
 }
@@ -211,7 +212,6 @@ ul.lista-inline li:last-child {
 /* 11 - blog */
 
 .blog-entry article {
-    display: inline-block;
     max-width: 250px;
     border-top: none !important;
     padding: 0 !important;
@@ -234,6 +234,13 @@ ul.lista-inline li:last-child {
     margin-top: 80px;
 }
 
+.contact-form div.wpforms-container-full .wpforms-form .wpforms-submit {
+    background: #ffcc00;
+    color: #000;
+    width: 100px;
+    margin-left: 230px;
+}
+
 /* 13 - Postagem de Audiolivro */
 
 .audiolivroFrame iframe {
@@ -247,4 +254,45 @@ ul.lista-inline li:last-child {
         min-height: 120px;
         max-height: 120px;
     }
+}
+
+/* 14 - menu social rodapé */
+
+#menu-social-footer {
+    text-align: right;
+}
+
+ul.lista-inline {
+    list-style-type: none;
+}
+
+ul.lista-inline li {
+    margin: 0;
+}
+
+ul.lista-inline a.nav-link {
+    width: 42px;
+    height: 40px;
+    overflow: hidden;
+    text-align: center;
+    padding: 5px 0;
+    margin: 3px 0;
+}
+
+ul.lista-inline i.fa {
+    font-size: 30px;
+    color: #fff;
+}
+
+.site-footer .site-info {
+    text-align: left;
+    height: 70px;
+    padding-top: 12px;
+    font-size: 16px;
+}
+
+.info {
+    display: inline;
+    position: absolute;
+    padding: 12px;
 }

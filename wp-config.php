@@ -2,8 +2,6 @@
 
 // BEGIN iThemes Security - Do not modify or remove this line
 // iThemes Security Config Details: 2
-define('WP_CACHE', true);
-define( 'WPCACHEHOME', 'D:\laragon\www\releituras\wp-content\plugins\wp-super-cache/' );
 define( 'DISALLOW_FILE_EDIT', true ); // Disable File Editor - Security > Settings > WordPress Tweaks > File Editor
 // END iThemes Security - Do not modify or remove this line
 
