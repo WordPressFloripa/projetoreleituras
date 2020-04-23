@@ -294,5 +294,5 @@ ul.lista-inline i.fa {
 .info {
     display: inline;
     position: absolute;
-    padding: 12px;
+    text-align-last: justify;
 }
