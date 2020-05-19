@@ -1,0 +1,77 @@
+<?php
+/* * * * * * * * * * * * * * * * * * * *
+ *  ██████╗ █████╗  ██████╗ ███████╗
+ * ██╔════╝██╔══██╗██╔═══██╗██╔════╝
+ * ██║     ███████║██║   ██║███████╗
+ * ██║     ██╔══██║██║   ██║╚════██║
+ * ╚██████╗██║  ██║╚██████╔╝███████║
+ *  ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+ *
+ * @author   : Daan van den Bergh
+ * @url      : https://daan.dev/wordpress-plugins/caos/
+ * @copyright: (c) 2020 Daan van den Bergh
+ * @license  : GPL2v2 or later
+ * * * * * * * * * * * * * * * * * * * */
+
+defined('ABSPATH') || exit;
+
+class CAOS_Frontend_Functions
+{
+    /**
+     * CAOS_Frontend_Functions constructor.
+     */
+    public function __construct()
+    {
+        // @formatter:off
+        add_action('wp_enqueue_scripts', array($this, 'enqueue_js_scripts'));
+        add_action('wp_enqueue_scripts', array($this, 'add_dns_prefetch'), 1);
+        add_action('rest_api_init', array($this, 'register_routes'));
+        // @formatter:on
+    }
+
+    /**
+     * Enqueue JS scripts for frontend.
+     */
+    function enqueue_js_scripts()
+    {
+        if (current_user_can('manage_options') && !CAOS_OPT_TRACK_ADMIN) {
+            return;
+        }
+
+        if (CAOS_OPT_CAPTURE_OUTBOUND_LINKS === 'on') {
+            wp_enqueue_script('caos_frontend_script', plugins_url('assets/js/caos-frontend.js', CAOS_PLUGIN_FILE), ['jquery'], CAOS_STATIC_VERSION, true);
+        }
+    }
+
+    /**
+     * Register CAOS Proxy so endpoint can be used.
+     * For using Stealth mode, SSL is required.
+     */
+    public function register_routes()
+    {
+        if (!CAOS_OPT_EXT_STEALTH_MODE) {
+            return;
+        }
+
+        $proxy = new CAOS_API_Proxy();
+        $proxy->register_routes();
+    }
+
+    /**
+     * Add Preconnect to google-analytics.com and CDN URL (if set) in wp_head().
+     */
+    public function add_dns_prefetch()
+    {
+        if (!CAOS_OPT_PRECONNECT) {
+            return;
+        }
+
+        echo "<link rel='preconnect' href='//www.google-analytics.com' crossorigin>\n";
+
+        if (!$cdn = CAOS_OPT_CDN_URL) {
+            return;
+        }
+
+        echo "<link rel='preconnect' href='//$cdn' crossorigin>\n";
+    }
+}

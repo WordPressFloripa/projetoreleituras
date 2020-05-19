@@ -1,0 +1,36 @@
+<?php
+/* * * * * * * * * * * * * * * * * * * *
+ *  ██████╗ █████╗  ██████╗ ███████╗
+ * ██╔════╝██╔══██╗██╔═══██╗██╔════╝
+ * ██║     ███████║██║   ██║███████╗
+ * ██║     ██╔══██║██║   ██║╚════██║
+ * ╚██████╗██║  ██║╚██████╔╝███████║
+ *  ╚═════╝╚═╝  ╚═╝ ╚═════╝ ╚══════╝
+ *
+ * @author   : Daan van den Bergh
+ * @url      : https://daan.dev/wordpress-plugins/caos/
+ * @copyright: (c) 2020 Daan van den Bergh
+ * @license  : GPL2v2 or later
+ * * * * * * * * * * * * * * * * * * * */
+
+$customAttributes = CAOS_OPT_REMOTE_JS_FILE == 'gtag.js'
+    ? apply_filters('caos_gtag_script_element_attributes', '')
+    : apply_filters('caos_analytics_script_element_attributes', '');
+?>
+<script <?= $customAttributes; ?>>
+    <?php if (CAOS_OPT_ALLOW_TRACKING == 'cookie_is_set' && CAOS_OPT_COOKIE_NAME): ?>
+    if (document.cookie.indexOf('<?= CAOS_OPT_COOKIE_NAME; ?>=') === -1) {
+        window['ga-disable-<?= CAOS_OPT_TRACKING_ID; ?>'] = true;
+    }
+    <?php elseif (CAOS_OPT_ALLOW_TRACKING == 'cookie_is_not_set' && CAOS_OPT_COOKIE_NAME): ?>
+    if (document.cookie.indexOf('<?= CAOS_OPT_COOKIE_NAME; ?>=') !== -1) {
+        window['ga-disable-<?= CAOS_OPT_TRACKING_ID; ?>'] = true;
+    }
+    <?php elseif (CAOS_OPT_ALLOW_TRACKING == 'cookie_has_value' && CAOS_OPT_COOKIE_NAME && CAOS_OPT_COOKIE_VALUE): ?>
+    if (cookieValue !== '<?= CAOS_OPT_COOKIE_VALUE; ?>') {
+        window['ga-disable-<?= CAOS_OPT_TRACKING_ID; ?>'] = true;
+    }
+    <?php else: ?>
+    // You're always allowing cookies. No additional script is needed.
+    <?php endif; ?>
+</script>
