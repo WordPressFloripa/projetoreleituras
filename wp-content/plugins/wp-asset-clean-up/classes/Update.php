@@ -66,6 +66,9 @@ HTML;
 
         // Clear cache (via AJAX) only if the user is logged-in (with the right privileges)
 	    add_action('wp_ajax_' . WPACU_PLUGIN_ID . '_clear_cache', array($this, 'ajaxClearCache'), PHP_INT_MAX);
+
+	    // After an update, preload the page for the guest view (the preload for the admin is done within script.min.js own plugin file)
+	    add_action('wp_ajax_' . WPACU_PLUGIN_ID . '_preload', array($this, 'ajaxPreloadGuest'), PHP_INT_MAX);
     }
 
 	/**
@@ -75,10 +78,16 @@ HTML;
     {
 	    if (! is_admin() && Main::instance()->frontendShow()) {
 		    if (! empty($_POST)) {
-			    add_action('wp', array($this, 'frontendUpdate'), 9);
+			    $wpacuAction = Misc::isElementorMaintenanceModeOn() ? 'template_redirect' : 'wp';
+
+			    if ($wpacuAction === 'wp') {
+				    add_action( 'wp', array( $this, 'frontendUpdate' ), 9 );
+			    } else {
+				    add_action( 'template_redirect', array( $this, 'frontendUpdate' ), 15 );
+                }
 		    }
 
-		    add_action('template_redirect', array($this, 'redirectAfterFrontEndUpdate'));
+		    add_action('template_redirect', array($this, 'redirectAfterFrontEndUpdate'), 16);
 	    }
     }
 
@@ -136,11 +145,20 @@ HTML;
 
 	    // Form submitted from a Singular Page
 	    // e.g. post, page, custom post type such as 'product' page from WooCommerce, home page (static page selected as front page)
+
+        // Sometimes, there's a singular page set as 404 page (e.g. via "404page – your smart custom 404 error page" plugin)
+        if (is_404() && Misc::getVar('post', 'wpacu_is_singular_page')) {
+            $postId = (int)$_POST['wpacu_is_singular_page'];
+        }
+
         if ($postId > 0) {
             $post = get_post($postId);
             $this->savePost($post->ID, $post);
             return;
         }
+
+	    // "Contracted" or "Expanded" when managing the assets (for admin use only)
+	    self::updateHandleRowStatus();
 
 	    // Any preloads
 	    Preloads::updatePreloads();
@@ -286,6 +304,7 @@ HTML;
 
         // If globally disabled, make an exception to load for submitted assets
         $this->saveLoadExceptions('post', $postId);
+        $this->saveLoadExceptionsPostType();
 
 	    // Add / Remove Site-wide Unloads
 	    $this->updateEverywhereUnloads();
@@ -293,6 +312,9 @@ HTML;
         // Any bulk unloads or removed? (e.g. all pages of a certain post type)
         $this->saveToBulkUnloads();
         $this->removeBulkUnloads($post->post_type);
+
+	    // "Contracted" or "Expanded" when managing the assets (for admin use only)
+	    self::updateHandleRowStatus();
 
 	    // Any preloads
 	    Preloads::updatePreloads();
@@ -334,9 +356,8 @@ HTML;
 	    // Was the Assets List Layout changed?
 	    self::updateAssetListLayoutSettings();
 
-        $jsonNoAssetsLoadList = json_encode($wpacuNoLoadAssets);
-
-	    Misc::addUpdateOption(WPACU_PLUGIN_ID . '_front_page_no_load', $jsonNoAssetsLoadList);
+        $jsonNoAssetsLoadList = json_encode( $wpacuNoLoadAssets );
+        Misc::addUpdateOption( WPACU_PLUGIN_ID . '_front_page_no_load', $jsonNoAssetsLoadList );
 
         // If globally disabled, make an exception to load for submitted assets
         $this->saveLoadExceptions('front_page');
@@ -357,6 +378,9 @@ HTML;
         self::updateIgnoreChild();
 
 	    add_action('wpacu_admin_notices', array($this, 'homePageUpdated'));
+
+	    // "Contracted" or "Expanded" when managing the assets (for admin use only)
+	    self::updateHandleRowStatus();
 
 	    $this->frontEndUpdateFor['homepage'] = true;
 
@@ -379,7 +403,7 @@ HTML;
     }
 
 	/**
-	 * Lite: For Singular Page (Post, Page, Custom Post Type) and Front Page (Home Page)
+	 * Lite: For Singular Page (Post, Page, Custom Post Type), Front Page (Home Page), On All Pages of a specific post type (post, page or custom)
 	 * Pro: 'for_pro' would trigger the actions from the premium extension (if available)
      * UPDATE: Since v1.2.9.5, no fallback for both the lite and pro version activated at the same time would work anymore
      * Users need to only keep the PRO version since it's standalone since v1.0.3
@@ -393,32 +417,23 @@ HTML;
 	 */
 	public function saveLoadExceptions($type = 'post', $postId = '')
     {
-        if ($type === 'post' && !$postId) {
+        if ( $type === 'post' && ! $postId ) {
             // $postId needs to have a value if $type is a 'post' type
             return;
         }
 
-        // Any load exceptions?
-        $isPostOptionStyles = (isset($_POST['wpacu_styles_load_it']) && ! empty($_POST['wpacu_styles_load_it']));
-        $isPostOptionScripts = (isset($_POST['wpacu_scripts_load_it']) && ! empty($_POST['wpacu_scripts_load_it']));
-
         $loadExceptionsStyles = $loadExceptionsScripts = array();
 
-        // Clear existing list first
+        // [Start] Clear existing list first
         if ($type === 'post') {
             delete_post_meta($postId, '_' . WPACU_PLUGIN_ID . '_load_exceptions');
-        }
-
-        if ($type === 'front_page') {
+        } elseif ($type === 'front_page') {
             delete_option( WPACU_PLUGIN_ID . '_front_page_load_exceptions');
         }
-
-        if (! $isPostOptionStyles && ! $isPostOptionScripts) {
-            return;
-        }
+	    // [End] Clear existing list first
 
         // Load Exception
-        // Case: On this page
+        // On this page or page type such as 404, search, etc.
         if (isset($_POST['wpacu_styles_load_it']) && ! empty($_POST['wpacu_styles_load_it'])) {
             foreach ($_POST['wpacu_styles_load_it'] as $wpacuHandle) {
                 // Do not append it if the global unload is removed
@@ -468,16 +483,92 @@ HTML;
 
             $jsonLoadExceptions = json_encode(Misc::filterList($list));
 
-            if ($type === 'post') {
-                if (! add_post_meta($postId, '_' . WPACU_PLUGIN_ID . '_load_exceptions', $jsonLoadExceptions, true)) {
-                    update_post_meta($postId, '_' . WPACU_PLUGIN_ID . '_load_exceptions', $jsonLoadExceptions);
-                }
-            }
-
-            if ($type === 'front_page') {
-	            Misc::addUpdateOption( WPACU_PLUGIN_ID . '_front_page_load_exceptions', $jsonLoadExceptions);
+            if ( $type === 'post' && (! add_post_meta($postId, '_' . WPACU_PLUGIN_ID . '_load_exceptions', $jsonLoadExceptions, true)) ) {
+                update_post_meta( $postId, '_' . WPACU_PLUGIN_ID . '_load_exceptions', $jsonLoadExceptions );
+            } elseif ($type === 'front_page') {
+	            Misc::addUpdateOption( WPACU_PLUGIN_ID . '_front_page_load_exceptions', $jsonLoadExceptions );
             }
         }
+    }
+
+	/**
+	 *
+	 */
+	public function saveLoadExceptionsPostType()
+    {
+	    // On all pages belonging to a (custom) post type (e.g. WooCommerce product page)
+	    if (isset($_POST['wpacu_styles_load_it_post_type']) && ! empty($_POST['wpacu_styles_load_it_post_type'])) {
+		    $wpacuPostType = key($_POST['wpacu_styles_load_it_post_type']);
+		    $loadExceptionsStyles = $_POST['wpacu_styles_load_it_post_type'][$wpacuPostType];
+		    }
+
+	    if (isset($_POST['wpacu_scripts_load_it_post_type']) && ! empty($_POST['wpacu_scripts_load_it_post_type'])) {
+		    $wpacuPostType = key($_POST['wpacu_scripts_load_it_post_type']);
+		    $loadExceptionsScripts = $_POST['wpacu_scripts_load_it_post_type'][$wpacuPostType];
+	    }
+
+	    if ((! empty($loadExceptionsStyles) || ! empty($loadExceptionsScripts)) && (isset($wpacuPostType) && $wpacuPostType)) {
+		    // Default
+		    $listToSave = array( 'styles' => array(), 'scripts' => array() );
+
+		    // Build list
+		    if (! empty($loadExceptionsStyles)) {
+		        $listToSave['styles'] = $loadExceptionsStyles;
+		    }
+
+		    if (! empty($loadExceptionsScripts)) {
+		        $listToSave['scripts'] = $loadExceptionsScripts;
+		    }
+
+		    $jsonLoadExceptionsToAdd = json_encode(array($wpacuPostType => $listToSave));
+
+		    $optionToUpdate = WPACU_PLUGIN_ID . '_post_type_load_exceptions';
+
+		    $existingListEmpty = array( $wpacuPostType => array( 'styles' => array(), 'scripts' => array() ) );
+		    $existingListJson = get_option($optionToUpdate);
+
+		    $existingListData = Main::instance()->existingList($existingListJson, $existingListEmpty);
+		    $existingList = $existingListData['list'];
+
+		    if ( $existingListJson && is_array($existingList) && ! empty($existingList) ) {
+                if (isset($existingList[$wpacuPostType])) {
+                    foreach ($listToSave as $assetType => $assetValues) {
+                        foreach ($assetValues as $assetHandle => $assetValue) {
+                            $existingList[ $wpacuPostType ][ $assetType ][ $assetHandle ] = $assetValue;
+                        }
+                    }
+                } else {
+                    $existingList[$wpacuPostType] = $listToSave;
+                }
+
+                // Clear empty (redundant) values
+			    foreach ($existingList as $wpacuPostType => $assetTypes) {
+				    foreach ($assetTypes as $assetType => $assetValues) {
+				        if (empty($assetValues)) {
+				            unset($existingList[$wpacuPostType][$assetType]);
+				        }
+
+				        foreach ($assetValues as $assetHandle => $assetValue) {
+					        if ( $assetValue === '' ) {
+						        unset( $existingList[ $wpacuPostType ][ $assetType ][ $assetHandle ] );
+					        }
+
+					        if (empty($existingList[ $wpacuPostType ][ $assetType ])) {
+						        unset( $existingList[$wpacuPostType][$assetType] );
+					        }
+
+					        if (empty($existingList[$wpacuPostType])) {
+						        unset($existingList[$wpacuPostType]);
+					        }
+				        }
+				    }
+			    }
+
+			    Misc::addUpdateOption( $optionToUpdate, json_encode($existingList) );
+		    } else {
+			    Misc::addUpdateOption( $optionToUpdate, $jsonLoadExceptionsToAdd );
+		    }
+	    }
     }
 
 	/**
@@ -951,6 +1042,55 @@ HTML;
 	}
 
 	/**
+	 *
+	 */
+	public static function updateHandleRowStatus()
+	{
+		$formKey = 'wpacu_handle_row_contracted_area';
+
+		if (! Misc::isValidRequest('post', $formKey)) {
+			return;
+		}
+
+		if (! isset($_POST[$formKey]['styles']) && ! isset($_POST[$formKey]['scripts'])) {
+			return;
+		}
+
+		$optionToUpdate = WPACU_PLUGIN_ID . '_global_data';
+		$globalKey = 'handle_row_contracted'; // Contracted or Expanded (default)
+
+		$existingListEmpty = array('styles' => array($globalKey => array()), 'scripts' => array($globalKey => array()));
+		$existingListJson = get_option($optionToUpdate);
+
+		$existingListData = Main::instance()->existingList($existingListJson, $existingListEmpty);
+		$existingList = $existingListData['list'];
+
+		if (isset($_POST[$formKey]['styles']) && ! empty($_POST[$formKey]['styles'])) {
+			foreach ($_POST[$formKey]['styles'] as $styleHandle => $styleContractedValue) {
+				// $styleContractedValue should be equal with '1' suggesting it's ON (no value means it's expanded by default)
+				if ($styleContractedValue === '' && isset($existingList['styles'][$globalKey][$styleHandle])) {
+					unset($existingList['styles'][$globalKey][$styleHandle]);
+				} elseif ($styleContractedValue !== '') {
+					$existingList['styles'][$globalKey][$styleHandle] = $styleContractedValue;
+				}
+			}
+		}
+
+		if (isset($_POST[$formKey]['scripts']) && ! empty($_POST[$formKey]['scripts'])) {
+			foreach ($_POST[$formKey]['scripts'] as $scriptHandle => $scriptContractedValue) {
+				// $scriptContractedValue should be equal with '1' suggesting it's ON (no value means it's expanded by default)
+				if ($scriptContractedValue === '' && isset($existingList['scripts'][$globalKey][$scriptHandle])) {
+					unset($existingList['scripts'][$globalKey][$scriptHandle]);
+				} elseif ($scriptContractedValue !== '') {
+					$existingList['scripts'][$globalKey][$scriptHandle] = $scriptContractedValue;
+				}
+			}
+		}
+
+		Misc::addUpdateOption($optionToUpdate, json_encode(Misc::filterList($existingList)));
+	}
+
+	/**
      * This is triggered automatically and sets a transient with the handles info
      * It doesn't require any manual action from the user
      *
@@ -976,7 +1116,43 @@ HTML;
 			foreach ($assetDataHandleList as $assetObj) {
 				$assetArray = (array)$assetObj;
 				$assetHandle = $assetArray['handle'];
-				unset($assetArray['handle']); // no need to have it twice
+
+				// Strip other unused information including the 'handle' (no need to have it twice as it's already in one of the array's keys)
+				unset( $assetArray['handle'], $assetArray['textdomain'], $assetArray['translations_path'] );
+
+				// Some handles don't have an "src" value such as "woocommerce-inline"
+				if (isset($assetArray['src']) && $assetArray['src']) {
+					$assetArray['src'] = Misc::assetFromHrefToRelativeUri( $assetArray['src'], $assetKey );
+				}
+
+				// [wpacu_pro]
+				if (isset($assetArray['output'])) { // hardcoded assets have an 'output' value
+					// Is there already an entry for the same handle with a value set for 'output' and 'output_min'
+					if (isset($existingList[$assetKey][$globalKey][$assetHandle]['output'], $existingList[$assetKey][$globalKey][$assetHandle]['output_min'])) {
+						// Save resources: do not update the same values and skip the minification (good to avoid large inline content)
+						continue;
+					}
+
+					if ( ! isset( $assetArray['output_min'] ) ) {
+						$assetArray['output_min'] = '';
+
+						// Reference: $wpacuHardcodedInfoToStoreAfterSubmit from _assets-hardcoded-list.php
+						if ( strpos( $assetHandle, 'wpacu_hardcoded_script_' ) === 0 ) {
+							$outputMin = \WpAssetCleanUp\OptimiseAssets\MinifyJs::applyMinification( $assetArray['output'] );
+							if ( $assetArray['output'] !== $outputMin ) {
+								$assetArray['output_min'] = $outputMin;
+							}
+						} elseif ( ( strpos( $assetHandle, 'wpacu_hardcoded_link_' ) === 0 ) || ( strpos( $assetHandle,
+									'wpacu_hardcoded_style_' ) === 0 ) ) {
+							$outputMin = \WpAssetCleanUp\OptimiseAssets\MinifyCss::applyMinification( $assetArray['output'] );
+							if ( $assetArray['output'] !== $outputMin ) {
+								$assetArray['output_min'] = $outputMin;
+							}
+						}
+					}
+				}
+				// [/wpacu_pro]
+
 				$existingList[$assetKey][$globalKey][$assetHandle] = $assetArray;
 			}
 		}
@@ -1003,8 +1179,43 @@ HTML;
 	        exit();
         }
 
-		OptimizeCommon::clearAllCache();
+		OptimizeCommon::clearCache();
+
+		exit();
+	}
+
+	/**
+	 * This is triggered when /admin/admin-ajax.php is called (default WordPress AJAX handler)
+	 */
+	public function ajaxPreloadGuest()
+    {
+	    if (! Menu::userCanManageAssets()) {
+		    echo 'Error: Not enough privileges to perform this action.';
+		    exit();
+	    }
+
+        $pageUrl = isset($_POST['page_url']) ? $_POST['page_url'] : false;
+
+	    $pageUrlPreload = add_query_arg( array(
+		    'wpacu_preload' => 1
+	    ), $pageUrl );
+
+	    if (! filter_var($pageUrlPreload, FILTER_VALIDATE_URL)) {
+	        echo 'The URL `'.$pageUrlPreload.'` is not valid.';
+	        exit();
+	    }
+
+	    $response = wp_remote_get($pageUrlPreload);
+
+	    if (is_wp_error($response)) {
+	        // Any error generated during the fetch? Print it
+	        echo 'Error: '.$response->get_error_code();
+	    } else {
+	        // No errors
+		    echo 'Status Code: '.wp_remote_retrieve_response_code($response).' /  Page URL (preload): ' . $pageUrlPreload . "\n\n";
+		    echo (isset($response['body']) ? $response['body'] : 'No "body" key found from wp_remote_get(), the preload might not have triggered');
+	    }
 
 	    exit();
-	}
+    }
 }

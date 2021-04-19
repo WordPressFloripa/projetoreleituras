@@ -1,7 +1,8 @@
 <?php
 namespace WpAssetCleanUp;
 
-use WpAssetCleanUp\OptimiseAssets\CombineCssImports;
+use WpAssetCleanUp\OptimiseAssets\OptimizeCss;
+use WpAssetCleanUp\OptimiseAssets\OptimizeJs;
 
 /**
  * Class FileSystem
@@ -56,7 +57,7 @@ class FileSystem
 		// ONLY relevant for CSS files
 		if ($alter === 'combine_css_imports') {
 			// This custom class does not minify as it's custom made for combining @import
-			$optimizer = new CombineCssImports($localPathToFile);
+			$optimizer = new \WpAssetCleanUp\OptimiseAssets\CombineCssImports($localPathToFile);
 			return $optimizer->minify();
 		}
 
@@ -76,11 +77,24 @@ class FileSystem
 	 */
 	public static function file_put_contents($localPathToFile, $contents)
 	{
-		// Fallback
-		if (! self::init()) {
-			return @file_put_contents($localPathToFile, $contents);
+		if ( (strpos($localPathToFile, WP_CONTENT_DIR . OptimizeCss::getRelPathCssCacheDir()) !== false && ! is_dir(dirname($localPathToFile)))
+			|| (strpos($localPathToFile, WP_CONTENT_DIR . OptimizeJs::getRelPathJsCacheDir()) !== false && ! is_dir(dirname($localPathToFile)))
+			|| (strpos($localPathToFile, '/_storage/_recent_items/') !== false && ! is_dir(dirname($localPathToFile)))
+		) {
+			@mkdir(dirname($localPathToFile), 0755, true );
 		}
 
-		return self::init()->put_contents($localPathToFile, $contents, FS_CHMOD_FILE);
+		// Fallback
+		if (! self::init()) {
+			$return = @file_put_contents($localPathToFile, $contents);
+		} else {
+			$return = self::init()->put_contents( $localPathToFile, $contents, FS_CHMOD_FILE );
+		}
+
+		if (! $return) {
+			error_log('Asset CleanUp: Could not write to '.$localPathToFile);
+		}
+
+		return $return;
 	}
 }

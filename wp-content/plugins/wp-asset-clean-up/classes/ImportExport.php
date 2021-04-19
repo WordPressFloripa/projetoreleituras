@@ -265,7 +265,7 @@ SQL;
 
 		if (! empty($importedList)) {
 			// After import was completed, clear all CSS/JS cache
-			OptimizeCommon::clearAllCache();
+			OptimizeCommon::clearCache();
 
 			set_transient('wpacu_import_done', json_encode($importedList), 30);
 

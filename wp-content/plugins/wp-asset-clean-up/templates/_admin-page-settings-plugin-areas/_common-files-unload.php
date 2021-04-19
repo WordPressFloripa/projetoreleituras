@@ -67,17 +67,17 @@ $styleTabContent = ($selectedTabArea === $tabIdArea) ? 'style="display: table-ce
 
         <tr valign="top">
             <th scope="row">
-                <label for="wpacu_disable_dashicons_for_guests"><?php echo sprintf(__('Disable %s Site-Wide For Guests', 'wp-asset-clean-up'), 'Dashicons'); ?></label>
-                <p style="margin-top: 2px;" class="wpacu_subtitle"><small><a target="_blank" href="https://developer.wordpress.org/resource/dashicons/">Read more about Dashicons</a></small></p>
+                <label for="wpacu_disable_dashicons_for_guests"><?php echo sprintf(__('Disable %s if Toolbar is hidden (Site-Wide)', 'wp-asset-clean-up'), 'Dashicons'); ?></label>
+                <p style="margin-top: 2px;" class="wpacu_subtitle"><small>The top admin bar (toolbar) requires Dashicons to function properly.<br /><a target="_blank" href="https://developer.wordpress.org/resource/dashicons/">Read about Dashicons</a> | <a target="_blank" href="https://wordpress.org/support/article/toolbar/">Read about Toolbar</a></small></p>
             </th>
             <td>
                 <label class="wpacu_switch">
                     <input id="wpacu_disable_dashicons_for_guests" type="checkbox"
 					    <?php echo (($data['disable_dashicons_for_guests'] == 1) ? 'checked="checked"' : ''); ?>
-                           name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[disable_dashicons_for_guests]"
+                           name="<?php echo WPACU_PLUGIN_ID . '_global_unloads'; ?>[disable_dashicons_for_guests]"
                            value="1" /> <span class="wpacu_slider wpacu_round"></span> </label>
                 &nbsp;
-			    <?php echo sprintf(__('This will unload %s for guests (non logged-in users)', 'wp-asset-clean-up'), 'Dashicons'); ?> -&gt; <em>/wp-includes/css/dashicons.min.css</em> (46 KB + the size of the actual font file loaded based on the browser)
+			    <?php echo sprintf(__('This will unload %s if the toolbar (top admin bar) is not showing up. This is be because the toolbar requires Dashicons to load properly, otherwise its layout will be broken.', 'wp-asset-clean-up'), 'Dashicons'); ?> -&gt; <em>/wp-includes/css/dashicons.min.css</em> (46 KB + the size of the actual font file loaded based on the browser)
                 <p style="margin-top: 10px;"><?php _e('This is a CSS file that loads the official icon font of the WordPress admin as of 3.8. While needed for showing up the icons loaded within the top admin bar and in the styling of other plugins such as Query Monitor, it is sometimes loaded site-wide for guests (non logged-in users) when it is not needed.', 'wp-asset-clean-up'); ?></p>
             </td>
         </tr>
@@ -93,7 +93,7 @@ $styleTabContent = ($selectedTabArea === $tabIdArea) ? 'style="display: table-ce
                            name="<?php echo WPACU_PLUGIN_ID . '_global_unloads'; ?>[disable_wp_block_library]"
                            value="1" /> <span class="wpacu_slider wpacu_round"></span> </label>
                 &nbsp;
-			    <?php echo sprintf(__('This will unload %s', 'wp-asset-clean-up'), 'Gutenberg Blocks CSS file'); ?> -&gt; (<em>/wp-includes/css/dist/block-library/style.min.css</em>) (25 KB)
+			    <?php echo sprintf(__('This will unload %s', 'wp-asset-clean-up'), 'Gutenberg Blocks CSS file'); ?> -&gt; (<em>/wp-includes/css/dist/block-library/style.min.css</em>) (52 KB) - <span style="color: #0073aa; vertical-align: middle;" class="dashicons dashicons-info"></span> <a href="https://assetcleanup.com/docs/?p=713" target="_blank">Not sure if you need it or not? Use Coverage from Chrome DevTools!</a>
                 <p style="margin-top: 10px;"><?php _e('If you\'re not using Gutenberg blocks in your posts/page (e.g. you prefer the Classic Editor), then you can unload this file site-wide to avoid an extra render-blocking external CSS file load.', 'wp-asset-clean-up'); ?></p>
                 <?php
                 if ($extraTip = \WpAssetCleanUp\Tips::ceGutenbergCssLibraryBlockTip()) {
@@ -103,19 +103,29 @@ $styleTabContent = ($selectedTabArea === $tabIdArea) ? 'style="display: table-ce
             </td>
         </tr>
 
+	    <?php
+	    global $wp_version;
+	    $isjQueryMigrateUnloaded    = $wp_version >= 5.5;
+	    $jqueryMigrateUnloadOpacity = $isjQueryMigrateUnloaded ? 0.65 : 1;
+	    ?>
         <tr valign="top">
-            <th scope="row">
+            <th scope="row" style="opacity: <?php echo $jqueryMigrateUnloadOpacity; ?>;">
                 <label for="wpacu_disable_jquery_migrate"><?php echo sprintf(__('Disable %s Site-Wide', 'wp-asset-clean-up'), 'jQuery Migrate'); ?> <span style="color: #cc0000;" class="dashicons dashicons-wordpress-alt wordpress-core-file"><span class="wpacu-tooltip">WordPress Core File<br />Not sure if needed or not? In this case, it's better to leave it loaded to avoid breaking the website.</span></span></label>
             </th>
             <td>
-                <label class="wpacu_switch">
+                <?php if ($isjQueryMigrateUnloaded) { ?>
+                    <div style="margin-bottom: 10px;" class="wpacu-warning">
+                        <p style="margin-top: 0;"><span style="color: darkorange;" class="dashicons dashicons-warning"></span> Starting from WordPress 5.5, jQuery Migrate is no longer loaded, thus this option is no longer relevant for your website (which uses WordPress <?php echo $wp_version; ?>) as it acts as being always enabled. If you need to have jQuery Migrate loaded as it was before, please check the <strong><a rel="noopener noreferrer" target="_blank" href="https://wordpress.org/plugins/enable-jquery-migrate-helper/">Enable jQuery Migrate Helper</a></strong> plugin</p>
+                    </div>
+                <?php } ?>
+                <label class="wpacu_switch" style="opacity: <?php echo $jqueryMigrateUnloadOpacity; ?>;">
                     <input id="wpacu_disable_jquery_migrate" type="checkbox"
 						<?php echo (($data['disable_jquery_migrate'] == 1) ? 'checked="checked"' : ''); ?>
                            name="<?php echo WPACU_PLUGIN_ID . '_global_unloads'; ?>[disable_jquery_migrate]"
                            value="1" /> <span class="wpacu_slider wpacu_round"></span> </label>
                 &nbsp;
-                <?php echo sprintf(__('This will unload %s', 'wp-asset-clean-up'), 'jQuery Migrate'); ?> (<em>jquery-migrate(.min).js</em>)
-                <p style="margin-top: 10px;"><?php _e('This is a JavaScript library that allows older jQuery code (up to version jQuery 1.9) to run on the latest version of jQuery avoiding incompatibility problems. Unless your website is using an old theme or has a jQuery plugin that was written a long time ago, this file is likely not needed to load. Consider disabling it to improve page loading time. Make sure to properly test the website.', 'wp-asset-clean-up'); ?></p>
+                <span style="opacity: <?php echo $jqueryMigrateUnloadOpacity; ?>;"><?php echo sprintf(__('This will unload %s', 'wp-asset-clean-up'), 'jQuery Migrate'); ?> (<em>jquery-migrate(.min).js</em>)</span>
+                <p style="margin-top: 10px; opacity: <?php echo $jqueryMigrateUnloadOpacity; ?>;"><?php _e('This is a JavaScript library that allows older jQuery code (up to version jQuery 1.9) to run on the latest version of jQuery avoiding incompatibility problems. Unless your website is using an old theme or has a jQuery plugin that was written a long time ago, this file is likely not needed to load. Consider disabling it to improve page loading time. Make sure to properly test the website.', 'wp-asset-clean-up'); ?></p>
             </td>
         </tr>
 

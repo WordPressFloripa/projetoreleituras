@@ -5,7 +5,7 @@
 use WpAssetCleanUp\Misc;
 use WpAssetCleanUp\OptimiseAssets\OptimizeCommon;
 
-if (! isset($data)) {
+if (! isset($data, $selectedTabArea)) {
 	exit;
 }
 
@@ -29,8 +29,8 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
 	<?php
 	if (Misc::isWpRocketMinifyHtmlEnabled()) {
 		?>
-        <div class="wpacu-warning" style="font-size: 13px; margin-bottom: 18px;">
-            <span class="dashicons dashicons-warning"></span> <strong>Incompatibility Notice:</strong> At this time, "<strong>Combine loaded JS (JavaScript) into fewer files</strong>" option is not taking any effect as "<em>Minify HTML</em>" is active in "WP Rocket" -&gt; "File Optimization" Settings. If you wish to keep WP Rocket's Minify HTML on, consider optimizing JavaScript files with WP Rocket while cleaning the useless JavaScript with <?php echo WPACU_PLUGIN_TITLE; ?>.
+        <div class="wpacu-warning" style="font-size: 13px; margin-bottom: 18px; border: 1px solid #cc000059;">
+            <span class="dashicons dashicons-warning" style="color: #cc0000;"></span> <strong>Incompatibility Notice:</strong> At this time, "<strong>Combine loaded JS (JavaScript) into fewer files</strong>" option is not taking any effect as "<em>Minify HTML</em>" is active in "WP Rocket" -&gt; "File Optimization" Settings. If you wish to keep WP Rocket's Minify HTML on, consider optimizing JavaScript files with WP Rocket while cleaning the useless JavaScript with <?php echo WPACU_PLUGIN_TITLE; ?>.
         </div>
 		<?php
 	}
@@ -102,8 +102,11 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
 
         <tr>
             <td colspan="2" style="padding: 0;">
-                <div style="line-height: 22px; background: #f8f8f8; border-left: 4px solid #008f9c; padding: 10px; margin: 0 0 15px;">
-                    <strong><?php _e('NOTE', 'wp-asset-clean-up'); ?>:</strong> <?php echo __('Concatenating assets is no longer a recommended practice in HTTP/2', 'wp-asset-clean-up'); ?>. &nbsp; <a id="wpacu-http2-info-js-target" href="#wpacu-http2-info-js"><?php _e('Read more', 'wp-asset-clean-up'); ?></a> &nbsp;/&nbsp; <a class="wpacu_hide wpacu_verify_http2_protocol" target="_blank" href="https://tools.keycdn.com/http2-test"><strong><?php _e('Verify if the website is delivered through the HTTP/2 network protocol', 'wp-asset-clean-up'); ?></strong></a> <span class="wpacu_hide wpacu_http2_protocol_is_supported" style="color: green; font-weight: 400;"><span class="dashicons dashicons-yes-alt"></span> Your website `<span style="font-weight: 500;"><?php echo get_site_url(); ?></span>` is delivered through the HTTP/2 network protocol.</span>
+                <div class="wpacu-combine-notice-default wpacu_hide" style="line-height: 22px; background: #f8f8f8; border-left: 4px solid #008f9c; padding: 10px; margin: 0 0 15px;">
+                    <strong><?php _e('NOTE', 'wp-asset-clean-up'); ?>:</strong> <?php echo __('Concatenating assets is no longer a recommended practice in HTTP/2', 'wp-asset-clean-up'); ?>. &nbsp; <a data-id="wpacu-http2-info-js" class="wpacu-http2-info-js-target" href="#wpacu-http2-info-js"><?php _e('Read more', 'wp-asset-clean-up'); ?></a> &nbsp;/&nbsp; <a class="wpacu_verify_http2_protocol" target="_blank" href="https://tools.keycdn.com/http2-test"><strong><?php _e('Verify if the website is delivered through the HTTP/2 network protocol', 'wp-asset-clean-up'); ?></strong></a>
+                </div>
+                <div class="wpacu-combine-notice-http-2-detected wpacu_hide" style="line-height: 22px; background: #f8f8f8; border-left: 4px solid #008f9c; padding: 10px; margin: 0 0 15px;">
+                    <span class="wpacu_http2_protocol_is_supported" style="color: green; font-weight: 400;"><span class="dashicons dashicons-yes-alt"></span> Your website `<span style="font-weight: 500;"><?php echo get_site_url(); ?></span>` is delivered through the HTTP/2 network protocol, thus the website will be as fast without using this feature which might require maintenance once in a while.</span> <a class="wpacu-http2-info-js-target" href="#wpacu-http2-info-js"><?php _e('Read more', 'wp-asset-clean-up'); ?></a>
                 </div>
             </td>
         </tr>
@@ -140,40 +143,58 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
 				?>
 
 				<div id="wpacu_combine_loaded_js_info_area" <?php if (empty($data['is_optimize_js_enabled_by_other_party']) && in_array($data['combine_loaded_js'], array('for_admin', 'for_all', 1))) { ?> style="opacity: 1;" <?php } else { ?>style="opacity: 0.4;"<?php } ?>>
-                    <p style="margin-top: 8px; padding: 10px; background: #f2faf2;">
-                        <label for="combine_loaded_js_for_admin_only_checkbox">
-                            <input id="combine_loaded_js_for_admin_only_checkbox"
-								<?php echo ((in_array($data['combine_loaded_js_for_admin_only'], array('for_admin', 1))
-								             || $data['combine_loaded_js'] === 'for_admin')
-									? 'checked="checked"' : ''); ?>
-                                   type="checkbox"
-                                   name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[combine_loaded_js_for_admin_only]"
-                                   value="1" />
-							<?php _e('Apply combination only for logged-in administrator', 'wp-asset-clean-up'); ?> (<?php _e('for debugging purposes', 'wp-asset-clean-up'); ?>)
-                        </label>
-                    </p>
-
-                    <div style="padding: 10px; background: #f2faf2;" class="wpacu-fancy-checkbox">
-						<?php echo $availableForProAppendInlineJs; ?>&nbsp;
-                        <input style="opacity: 0.4;" id="combine_loaded_js_append_handle_extra_checkbox"
-                            <?php echo (($data['combine_loaded_js_append_handle_extra'] == 1) ? 'checked="checked"' : ''); ?>
-                               type="checkbox"
-                               name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[combine_loaded_js_append_handle_extra]"
-                               value="1" />
-                        <label for="combine_loaded_js_append_handle_extra_checkbox">Add inline tag contents associated with a script (handle) to the combined group of files before/after the main script's contents</label>
-                        <p style="margin-top: 10px;"><small>When a file is added to a combined group of files, the CDATA as well as any other inline content (e.g. added via <code style="font-size: inherit;">wp_add_inline_script()</code>) associated with it will also be added to the combined files. This reduces the number of DOM elements as well makes sure that, in case, the combined file is deferred, the code from the inline tags is triggered at the same time as the one from the file</small></p>
+                    <div style="margin-top: 8px; padding: 12px; background: #f2faf2; border-radius: 10px;">
+                        <ul style="margin: 0;">
+                            <li style="float: left; margin-right: 30px; margin-bottom: 0; line-height: 32px;" class="wpacu-fancy-radio">
+                                <label for="combine_loaded_js_for_guests_radio">
+                                    <input id="combine_loaded_js_for_guests_radio"
+                                           style="margin: -1px 0 0;"
+										<?php echo (in_array($data['combine_loaded_js_for'], array('guests', '')) ? 'checked="checked"' : ''); ?>
+                                           type="radio"
+                                           name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[combine_loaded_js_for]"
+                                           value="guests" />
+                                    &nbsp;<?php _e('Apply it only for guest visitors', 'wp-asset-clean-up'); ?> (<?php echo __('default', 'wp-asset-clean-up'); ?>)
+                                </label>
+                            </li>
+                            <li style="float: left; margin-bottom: 0; line-height: 32px;" class="wpacu-fancy-radio">
+                                <label for="combine_loaded_js_for_all_radio">
+                                    <input id="combine_loaded_js_for_all_radio"
+                                           style="margin: -1px 0 0;"
+										<?php echo (($data['combine_loaded_js_for'] === 'all') ? 'checked="checked"' : ''); ?>
+                                           type="radio"
+                                           name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[combine_loaded_js_for]"
+                                           value="all" />
+                                    &nbsp;<?php _e('Apply it for all visitors (not recommended)', 'wp-asset-clean-up'); ?> * <small>to avoid using extra disk space</small>
+                                </label>
+                            </li>
+                        </ul>
+                        <div style="clear: both;"></div>
                     </div>
 
-                    <p style="padding: 10px; background: #f2faf2;">
-                        <label for="wpacu_combine_loaded_js_defer_body_checkbox">
-                            <input id="wpacu_combine_loaded_js_defer_body_checkbox"
-								<?php echo (($data['combine_loaded_js_defer_body'] == 1) ? 'checked="checked"' : ''); ?>
-                                   type="checkbox"
-                                   name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[combine_loaded_js_defer_body]"
-                                   value="1" />
-                            Defer loading JavaScript combined files from <code>&lt;body&gt;</code> (applies <code>defer="defer"</code> attribute to the combined script tags)
-                        </label>
-                    </p>
+					<p style="margin-top: 10px;"><strong>Note:</strong> When a file is added to a combined group of files, the CDATA as well as any other inline content (e.g. added via <code style="font-size: inherit;">wp_add_inline_script()</code>) associated with it will also be added to the combined files. This reduces the number of DOM elements as well makes sure that, in case, the combined file is deferred, the code from the inline tags is triggered at the same time as the one from the file</p>
+
+                    <div style="padding: 10px; background: #f2faf2;">
+                        <p>
+                            <label for="wpacu_combine_loaded_js_defer_body_checkbox">
+                                <input id="wpacu_combine_loaded_js_defer_body_checkbox"
+                                    <?php echo (($data['combine_loaded_js_defer_body'] == 1) ? 'checked="checked"' : ''); ?>
+                                       type="checkbox"
+                                       name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[combine_loaded_js_defer_body]"
+                                       value="1" />
+                                Defer loading JavaScript combined files from <code>&lt;body&gt;</code> (applies <code>defer="defer"</code> attribute to the combined script tags)
+                            </label>
+                        </p>
+                        <p>
+                            <label for="combine_loaded_js_try_catch_checkbox">
+                                <input id="combine_loaded_js_try_catch_checkbox"
+			                        <?php echo (($data['combine_loaded_js_try_catch'] == 1) ? 'checked="checked"' : ''); ?>
+                                       type="checkbox"
+                                       name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[combine_loaded_js_try_catch]"
+                                       value="1" />
+                                Wrap each JavaScript file included in the combined group in its own <em>try {} catch(e) {}</em> statement in case it has an error and it would affect the execution of the other included files * <small>use it if you have JS errors in the console inside the combined file</small>
+                            </label>
+                        </p>
+                    </div>
 
                     <hr />
 
@@ -237,7 +258,7 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
                 <p class="wpacu_subtitle"><small><em><?php _e('This will work for local (same domain) files. External requests tags will not be altered (e.g. cdnjs.cloudflare.com, ajax.googleapis.com etc.).', 'wp-asset-clean-up'); ?></em></small></p>
             </th>
             <td>
-                <label class="wpacu_switch wpacu_disabled">
+                <label class="wpacu_switch wpacu_disabled"><!-- Disabled: Available only in the Pro version -->
                     <input id="wpacu_inline_js_files_enable"
                            data-target-opacity="wpacu_inline_js_files_info_area"
                            type="checkbox"
@@ -261,9 +282,9 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
 			    }
 			    ?>
 
-                <div id="wpacu_inline_js_files_info_area" style="opacity: 0.4;">
+                <div id="wpacu_inline_js_files_info_area" <?php if (empty($data['is_optimize_css_enabled_by_other_party']) && $data['inline_js_files'] == 1) { ?> style="opacity: 1;" <?php } else { ?>style="opacity: 0.4;"<?php } ?>>
                     <p class="wpacu-warning" style="margin: 10px 0; font-size: 13px; padding: 4px 9px;">
-                        <small><strong style="color: orange;"><span class="dashicons dashicons-warning"></span></strong> Please be extra careful if you decide to use this feature as inlining JavaScript files can be trickier than inlining CSS ones due to the more complex syntax and various attributes that might set to the external JS file such as "async" and "defer" (files having this attribute will be called via <em>DOMContentLoaded</em> event).</small>
+                        <small><strong style="color: orange;"><span class="dashicons dashicons-warning"></span></strong> Please be extra careful if you decide to use this feature as inlining JavaScript files can be trickier than inlining CSS ones due to the more complex syntax and various attributes that might set to the external JS file such as "async" &amp; "defer" (the content of any JS having this attribute will be wrapped between <code>document.addEventListener('DOMContentLoaded', function() {</code> and <code>});</code>.</small>
                     </p>
 
                     <p style="margin-top: 8px; padding: 10px; background: #f2faf2;">
@@ -279,7 +300,7 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
 
                     <div id="wpacu_inline_js_files_list_area">
                         <div style="margin: 12px 0 6px;"><?php _e('Alternatively or in addition to automatic inlining, you can place the relative path(s) or part of them to the files you wish to inline below:', 'wp-asset-clean-up'); ?> (<strong><?php _e('one per line', 'wp-asset-clean-up'); ?></strong>):</div>
-                        <p style="margin-top: 8px;"><span class="dashicons dashicons-warning" style="color: #ffc107;"></span> <strong>Note:</strong> Please input the sources to the original JavaScript files (one per line) like in the examples below, not to the cached/optimized ones (which are usually located in <em><?php echo str_replace(site_url(), '', WP_CONTENT_URL) . OptimizeCommon::getRelPathPluginCacheDir(); ?></em>)</p>
+                        <p style="margin-top: 8px;"><span class="dashicons dashicons-warning" style="color: #ffc107;"></span> <strong>Note:</strong> Please input the sources to the original JavaScript files (one per line) like in the examples below, not to the cached/optimized ones (which are usually located in <em><?php echo str_replace(site_url(), '', WP_CONTENT_URL) . OptimizeCommon::getRelPathPluginCacheDir(); ?></em>). RegExes are accepted. Note that the hash (#) is automatically used as delimiter so you don't need to add it below.</p>
                         <label for="wpacu_inline_js_files_list">
                                     <textarea style="width: 100%;"
                                               rows="4"
@@ -324,13 +345,14 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
             </td>
         </tr>
 
+        <!-- [wpacu_pro] -->
         <tr valign="top">
             <th scope="row" class="setting_title">
                 <label for="wpacu_move_scripts_to_body_enable"><?php _e('Move All <code>&lt;SCRIPT&gt;</code> tags From HEAD to BODY', 'wp-asset-clean-up'); ?> <?php echo $availableForProMoveScriptsToBody; ?></label>
                 <p class="wpacu_subtitle"><small><em><?php _e('This triggers late after all other optimizations are applied for maximum compatibility', 'wp-asset-clean-up'); ?>.</em></small></p>
             </th>
             <td>
-                <label class="wpacu_switch wpacu_disabled">
+                <label class="wpacu_switch wpacu_disabled"><!-- Disabled: Available only in the Pro version -->
                     <input id="wpacu_move_scripts_to_body_enable"
                            data-target-opacity="wpacu_move_scripts_to_body_info_area"
                            type="checkbox"
@@ -361,11 +383,12 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
                 </div>
             </td>
         </tr>
+        <!-- [/wpacu_pro] -->
 
         <tr valign="top">
             <th scope="row" class="setting_title">
                 <label for="wpacu_cache_dynamic_loaded_js_enable"><?php _e('Cache Dynamic Loaded JavaScript', 'wp-asset-clean-up'); ?></label>
-                <p class="wpacu_subtitle"><small><em><?php _e('This option is enabled by default on new installs or after a settings reset', 'wp-asset-clean-up'); ?>.</em></small></p>
+                <p class="wpacu_subtitle"><small><span class="dashicons dashicons-warning"></span> <em><?php _e('Please do not enable this option unless you have non-static (dynamic) loaded JavaScript', 'wp-asset-clean-up'); ?>.</em></small></p>
             </th>
             <td>
                 <label class="wpacu_switch">
@@ -450,8 +473,8 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
             <code>&lt;script type="text/javascript" src="/wp-includes/js/jquery.js"&gt;&lt;/script&gt;</code><br />
             <code>&lt;script type="text/javascript" src="/wp-includes/js/jquery-migrate.min.js"&gt;&lt;/script&gt;</code><br />
             <code>&lt;script type="text/javascript"&gt;jQuery(document).ready(function($) { /* code here */ });&lt;/script&gt;</code><br />
-            <code>&lt;script type="text/javascript"&gt;$(document).ready(function() { /* another code here */ });&lt;/script&gt;</code>                    </p>
-
+            <code>&lt;script type="text/javascript"&gt;$(document).ready(function() { /* another code here */ });&lt;/script&gt;</code>
+        </p>
     </div>
 </div>
 
@@ -461,7 +484,7 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
         <h2 style="margin-top: 5px;"><?php _e('Examples of SCRIPTS moved from HEAD to BODY', 'wp-asset-clean-up'); ?></h2>
 
         <span><strong>FROM</strong></span>
-        <pre style="margin-top: 4px; margin-bottom: 8px;">
+        <pre style="margin-top: 4px; margin-bottom: 8px; white-space: pre;">
 <code>&lt;head&gt;</code>
     <code>&lt;title&gt;Your page title here&lt;/title&gt;</code>
     <code>...</code>
@@ -477,7 +500,7 @@ $availableForProMoveScriptsToBody = '<a class="go-pro-link-no-style" target="_bl
         <div style="margin-top: -6px; margin-bottom: 14px;"><hr /></div>
 
         <span><strong>TO</strong></span>
-        <pre style="margin-top: 4px; margin-bottom: 0;">
+        <pre style="margin-top: 4px; margin-bottom: 0; white-space: pre;">
 <code>&lt;head&gt;</code>
     <code>&lt;title>Your page title here&lt;/title&gt;</code>
     <code>...</code>

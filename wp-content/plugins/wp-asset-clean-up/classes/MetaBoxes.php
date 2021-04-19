@@ -35,8 +35,21 @@ class MetaBoxes
 	 */
 	public function initMetaBox($type)
 	{
+		if ( ! Menu::userCanManageAssets() ) {
+			return;
+		}
+
+		if ( Main::instance()->settings['allow_manage_assets_to'] === 'chosen' && ! empty(Main::instance()->settings['allow_manage_assets_to_list']) ) {
+			$wpacuCurrentUserId = get_current_user_id();
+
+			if ( ! in_array( $wpacuCurrentUserId, Main::instance()->settings['allow_manage_assets_to_list'] ) ) {
+				return; // the current logged-in admin is not in the list of "Allow managing assets to:"
+			}
+		}
+
 		if ($type === 'manage_page_assets') {
 			add_action( 'add_meta_boxes', array( $this, 'addAssetManagerMetaBox' ), 11 );
+			add_action( 'add_meta_boxes', array( $this, 'keepAssetManagerMetaBoxOnTheLeftSide' ), 1 );
 		}
 
 		if ($type === 'manage_page_options') {
@@ -60,6 +73,51 @@ class MetaBoxes
 				apply_filters('wpacu_asset_list_meta_box_context',  'normal'),
 				apply_filters('wpacu_asset_list_meta_box_priority', 'high')
 			);
+		}
+	}
+
+	/**
+	 * Sometimes, users are moving by mistake the meta box to the right side which is not desirable
+	 * and have difficulties moving it back, thus, this method moves it back to the left (normal) side
+	 *
+	 * @param $postType
+	 */
+	public function keepAssetManagerMetaBoxOnTheLeftSide($postType)
+	{
+		$user = wp_get_current_user();
+
+		if (isset($user->ID) && $user->ID) {
+			$userMetaBoxOption = get_user_option('meta-box-order_'.$postType,  $user->ID );
+
+			if (isset($userMetaBoxOption['side'], $userMetaBoxOption['normal']) && strpos($userMetaBoxOption['side'], WPACU_PLUGIN_ID . '_asset_list') !== false) {
+				// Remove it from the side list
+				if (strpos($userMetaBoxOption['side'], ',') !== false) {
+					$allSideMetaBoxes = explode(',', $userMetaBoxOption['side']);
+
+					foreach ($allSideMetaBoxes as $sideMetaBoxIndex => $sideMetaBoxName) {
+						if ($sideMetaBoxName === WPACU_PLUGIN_ID . '_asset_list') {
+							unset($allSideMetaBoxes[$sideMetaBoxIndex]);
+						}
+					}
+
+					$userMetaBoxOption['side'] = implode(',', array_unique($allSideMetaBoxes));
+				} else {
+					$userMetaBoxOption['side'] = str_replace(WPACU_PLUGIN_ID . '_asset_list', '', $userMetaBoxOption['side']);
+				}
+
+				// Move it back to the normal one
+				if (strpos($userMetaBoxOption['normal'], ',') !== false) {
+					$allNormalMetaBoxes = explode( ',', $userMetaBoxOption['normal'] );
+					$allNormalMetaBoxes[] = WPACU_PLUGIN_ID . '_asset_list';
+					$userMetaBoxOption['normal'] = implode(',', array_unique($allNormalMetaBoxes));
+				} elseif ($userMetaBoxOption['normal'] !== '') {
+					$userMetaBoxOption['normal'] .= ','.WPACU_PLUGIN_ID . '_asset_list';
+				} elseif ($userMetaBoxOption['normal'] === '') {
+					$userMetaBoxOption['normal'] .= WPACU_PLUGIN_ID . '_asset_list';
+				}
+
+				update_user_option($user->ID, 'meta-box-order_'.$postType, $userMetaBoxOption, true);
+			}
 		}
 	}
 
@@ -134,6 +192,8 @@ class MetaBoxes
 			if (Main::instance()->settings['assets_list_show_status'] === 'fetch_on_click') {
 				$data['fetch_assets_on_click'] = true;
 			}
+
+			$data['dom_get_type'] = Main::instance()->settings['dom_get_type'];
 		}
 
 		Main::instance()->parseTemplate('meta-box', $data, true);
@@ -200,11 +260,11 @@ class MetaBoxes
 
 		// These are not public pages that are loading CSS/JS
 		// e.g. URI request ending in '/ct_template/inner-content/'
-		if (isset($obj->name) && in_array($obj->name, self::hideMetaBoxesForPostTypes())) {
+		if (isset($obj->name) && $obj->name && in_array($obj->name, self::hideMetaBoxesForPostTypes())) {
 			return false;
 		}
 
-		if (isset($_GET['post']) && $_GET['post'] && isset($obj->name)) {
+		if (isset($_GET['post'], $obj->name) && $_GET['post'] && $obj->name) {
 			$permalinkStructure = get_option( 'permalink_structure' );
 			$postPermalink      = get_permalink( $_GET['post'] );
 

@@ -1,13 +1,15 @@
 <?php
 /**
- * Plugin Name: WPForms Lite
- * Plugin URI:  https://wpforms.com
- * Description: Beginner friendly WordPress contact form plugin. Use our Drag & Drop form builder to create your WordPress forms.
- * Author:      WPForms
- * Author URI:  https://wpforms.com
- * Version:     1.6.0.1
- * Text Domain: wpforms-lite
- * Domain Path: languages
+ * Plugin Name:       WPForms Lite
+ * Plugin URI:        https://wpforms.com
+ * Description:       Beginner friendly WordPress contact form plugin. Use our Drag & Drop form builder to create your WordPress forms.
+ * Requires at least: 4.9
+ * Requires PHP:      5.5
+ * Author:            WPForms
+ * Author URI:        https://wpforms.com
+ * Version:           1.6.6
+ * Text Domain:       wpforms-lite
+ * Domain Path:       assets/languages
  *
  * WPForms is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,7 +22,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with WPForms. If not, see <http://www.gnu.org/licenses/>.
+ * along with WPForms. If not, see <https://www.gnu.org/licenses/>.
  */
 
 // Exit if accessed directly.
@@ -30,7 +32,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 // Plugin version.
 if ( ! defined( 'WPFORMS_VERSION' ) ) {
-	define( 'WPFORMS_VERSION', '1.6.0.1' );
+	define( 'WPFORMS_VERSION', '1.6.6' );
 }
 
 // Plugin Folder Path.
@@ -50,6 +52,22 @@ if ( ! defined( 'WPFORMS_PLUGIN_FILE' ) ) {
 
 // Don't allow multiple versions to be active.
 if ( function_exists( 'wpforms' ) ) {
+
+	if ( ! function_exists( 'wpforms_pro_just_activated' ) ) {
+		/**
+		 * When we are activate a Pro version, we need to do additional operations:
+		 * 1) deactivate a Lite version
+		 * 2) register option which help to run all activation process for Pro version (custom tables creation, etc.)
+		 *
+		 * @since 1.6.2
+		 */
+		function wpforms_pro_just_activated() {
+
+			wpforms_deactivate();
+			add_option( 'wpforms_install', 1 );
+		}
+	}
+	add_action( 'activate_wpforms/wpforms.php', 'wpforms_pro_just_activated' );
 
 	if ( ! function_exists( 'wpforms_lite_just_activated' ) ) {
 		/**
@@ -93,7 +111,12 @@ if ( function_exists( 'wpforms' ) ) {
 		 * @since 1.0.0
 		 */
 		function wpforms_deactivate() {
-			deactivate_plugins( 'wpforms-lite/wpforms.php' );
+
+			$plugin = 'wpforms-lite/wpforms.php';
+
+			deactivate_plugins( $plugin );
+
+			do_action( 'wpforms_plugin_deactivated', $plugin );
 		}
 	}
 	add_action( 'admin_init', 'wpforms_deactivate' );
@@ -123,7 +146,7 @@ if ( function_exists( 'wpforms' ) ) {
 					<p>%2$s</p>
 				</div>',
 				esc_html__( 'Heads up!', 'wpforms-lite' ),
-				esc_html__( 'Your site already has WPForms Pro activated. If you want to switch to WPForms Lite, please first go to Plugins > Installed Plugins and deactivate WPForms. Then, you can activate WPForms Lite.', 'wpforms-lite' )
+				esc_html__( 'Your site already has WPForms Pro activated. If you want to switch to WPForms Lite, please first go to Plugins → Installed Plugins and deactivate WPForms. Then, you can activate WPForms Lite.', 'wpforms-lite' )
 			);
 
 			if ( isset( $_GET['activate'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification.Recommended
@@ -155,8 +178,8 @@ if ( version_compare( phpversion(), '5.5', '<' ) ) {
 					<?php
 					printf(
 						wp_kses(
-							/* translators: %1$s - WPBeginner URL for recommended WordPress hosting. */
-							__( 'Your site is running an <strong>insecure version</strong> of PHP that is no longer supported. Please contact your web hosting provider to update your PHP version or switch to a <a href="%1$s" target="_blank" rel="noopener noreferrer">recommended WordPress hosting company</a>.', 'wpforms-lite' ),
+							/* translators: %s - WPBeginner URL for recommended WordPress hosting. */
+							__( 'Your site is running an <strong>insecure version</strong> of PHP that is no longer supported. Please contact your web hosting provider to update your PHP version or switch to a <a href="%s" target="_blank" rel="noopener noreferrer">recommended WordPress hosting company</a>.', 'wpforms-lite' ),
 							array(
 								'a'      => array(
 									'href'   => array(),
@@ -173,8 +196,8 @@ if ( version_compare( phpversion(), '5.5', '<' ) ) {
 					<?php
 					printf(
 						wp_kses(
-							/* translators: %1$s - WPForms.com URL for documentation with more details. */
-							__( '<strong>Note:</strong> WPForms plugin is disabled on your site until you fix the issue. <a href="%1$s" target="_blank" rel="noopener noreferrer">Read more for additional information.</a>', 'wpforms-lite' ),
+							/* translators: %s - WPForms.com URL for documentation with more details. */
+							__( '<strong>Note:</strong> WPForms plugin is disabled on your site until you fix the issue. <a href="%s" target="_blank" rel="noopener noreferrer">Read more for additional information.</a>', 'wpforms-lite' ),
 							array(
 								'a'      => array(
 									'href'   => array(),

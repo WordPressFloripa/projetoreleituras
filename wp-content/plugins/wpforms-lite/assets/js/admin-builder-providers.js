@@ -20,7 +20,7 @@
 			s = this.settings;
 
 			// Document ready.
-			$( document ).ready( WPFormsProviders.ready );
+			$( WPFormsProviders.ready );
 
 			WPFormsProviders.bindUIActions();
 		},
@@ -359,6 +359,9 @@
 			WPFormsProviders.fireAJAX( $this, data, function( res ) {
 				if ( res.success ) {
 					$container.after( res.data.html );
+
+					// Re-init tooltips for new fields.
+					wpf.initTooltips();
 				} else {
 					WPFormsProviders.errorDisplay( res.data.error, $container );
 				}

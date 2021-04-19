@@ -1,7 +1,6 @@
 <?php
 namespace WpAssetCleanUp;
 
-use WpAssetCleanUp\OptimiseAssets\MinifyJs;
 use WpAssetCleanUp\OptimiseAssets\OptimizeCommon;
 use WpAssetCleanUp\OptimiseAssets\OptimizeJs;
 
@@ -62,6 +61,10 @@ class HardcodedAssets
 		ob_start();
 
 		add_action('shutdown', static function() {
+			if (! defined('NEXTEND_SMARTSLIDER_3_URL_PATH')) {
+				ob_flush();
+			}
+
 			$htmlSource = '';
 
 			// We'll need to get the number of ob levels we're in, so that we can iterate over each, collecting
@@ -72,40 +75,9 @@ class HardcodedAssets
 				$htmlSource .= ob_get_clean();
 			}
 
-			echo self::addHardcodedAssetsForEditFrontEndView(OptimizeCommon::alterHtmlSource($htmlSource));
-		}, 0);
-	}
+			echo OptimizeCommon::alterHtmlSource($htmlSource);
 
-	/**
-	 * @param $htmlSource
-	 *
-	 * @return string|string[]
-	 */
-	public static function addHardcodedAssetsForEditFrontEndView($htmlSource)
-	{
-		if ( ! ($anyHardCodedAssets = wp_cache_get('wpacu_hardcoded_assets_encoded')) ) {
-			$htmlSource = str_replace( '{wpacu_assets_collapsible_wrap_hardcoded_list}', '', $htmlSource);
-			return $htmlSource;
-		}
-
-		$jsonH = base64_decode($anyHardCodedAssets);
-
-		$wpacuPrintHardcodedManagementList = static function($jsonH) {
-			$data = wp_cache_get('wpacu_settings_frontend_data') ?: array();
-			$data['do_not_print_list'] = true;
-			$data['all']['hardcoded'] = (array)json_decode($jsonH, ARRAY_A);
-			ob_start();
-			include_once WPACU_PLUGIN_DIR.'/templates/meta-box-loaded-assets/_assets-hardcoded-list.php'; // generate $hardcodedTagsOutput
-			return ob_get_clean();
-		};
-
-		$htmlSource = str_replace(
-			'{wpacu_assets_collapsible_wrap_hardcoded_list}',
-			$wpacuPrintHardcodedManagementList($jsonH), // call the function to return the HTML output
-			$htmlSource
-		);
-
-		return $htmlSource;
+			}, 0);
 	}
 
 	/**
@@ -126,7 +98,7 @@ class HardcodedAssets
 	 */
 	public static function getAll($htmlSource, $encodeIt = true)
 	{
-		$htmlSourceAlt = self::removeHtmlCommentsExceptMSIE($htmlSource);
+		$htmlSourceAlt = CleanUp::removeHtmlComments($htmlSource, true);
 
 		$collectLinkStyles = true; // default
 		$collectScripts    = true; // default
@@ -140,7 +112,6 @@ class HardcodedAssets
 			/*
 			* [START] Collect Hardcoded LINK (stylesheet) & STYLE tags
 			*/
-			// Extract all the LINK tag that do not have "data-wpacu-debug-style-handle="
 			preg_match_all( '#(?=(?P<link_tag><link[^>]*stylesheet[^>]*(>)))|(?=(?P<style_tag><style[^>]*?>.*</style>))#Umsi',
 				$htmlSourceAlt, $matchesSourcesFromTags, PREG_SET_ORDER );
 
@@ -246,7 +217,6 @@ class HardcodedAssets
 				}
 
 				$allInlineAssocWithJsHandle = array_unique($allInlineAssocWithJsHandle);
-
 				}
 
 			// Go through the hardcoded SCRIPT tags
@@ -368,10 +338,7 @@ class HardcodedAssets
 
 		$tagsWithinConditionalComments = self::extractHtmlFromConditionalComments( $htmlSourceAlt );
 
-		if (self::useBufferingForEditFrontEndView()) {
-			// Triggered within the front-end view (when admin is logged-in and manages the assets)
-			wp_cache_set( 'wpacu_hardcoded_content_within_conditional_comments', $tagsWithinConditionalComments );
-		} elseif (Main::instance()->isGetAssetsCall) {
+		if (Main::instance()->isGetAssetsCall) {
 			// AJAX call within the Dashboard
 			$hardCodedAssets['within_conditional_comments'] = $tagsWithinConditionalComments;
 		}
@@ -388,6 +355,7 @@ class HardcodedAssets
 	 *
 	 * @return mixed
 	 */
+	/*
 	public static function removeHtmlCommentsExceptMSIE($htmlSource)
 	{
 		// No comments? Do not continue
@@ -395,29 +363,28 @@ class HardcodedAssets
 			return $htmlSource;
 		}
 
-		if (! (function_exists('libxml_use_internal_errors')
-		       && function_exists('libxml_clear_errors')
-		       && class_exists('DOMDocument')))
-		{
+		if (! (function_exists('libxml_use_internal_errors') && function_exists('libxml_clear_errors') && class_exists('\DOMDocument'))) {
 			return $htmlSource;
 		}
 
-		$domComments = new \DOMDocument();
-		libxml_use_internal_errors(true);
-
+		// First, collect all MSIE comments
 		preg_match_all('#<!--\[if(.*?)]>(<!-->|-->|\s|)(.*?)(<!--<!|<!)\[endif]-->#si', $htmlSource, $matchedMSIEComments);
 
-		$htmlSourceAlt = $htmlSource;
+		$allMSIEComments = array();
 
 		if (isset($matchedMSIEComments[0]) && ! empty($matchedMSIEComments[0])) {
 			foreach ($matchedMSIEComments[0] as $matchedMSIEComment) {
-				$htmlSourceAlt = str_replace($matchedMSIEComment, '', $htmlSourceAlt);
+				$allMSIEComments[] = $matchedMSIEComment;
 			}
 		}
 
-		$domComments->loadHTML($htmlSourceAlt); // fetch from the altered HTML (without the MSIE comments)
+		if (! ($domTag = ObjectCache::wpacu_cache_get('wpacu_html_dom_tag'))) {
+			$domTag = new \DOMDocument();
+			libxml_use_internal_errors( true );
+			$domTag->loadHTML( $htmlSource );
+		}
 
-		$xpathComments = new \DOMXPath($domComments);
+		$xpathComments = new \DOMXPath($domTag);
 		$comments = $xpathComments->query('//comment()');
 
 		libxml_clear_errors();
@@ -475,6 +442,8 @@ class HardcodedAssets
 
 		return $htmlSource;
 	}
+	*/
+	//endRemoveIf(development)
 
 	/**
 	 * @param $htmlSource
@@ -549,5 +518,76 @@ class HardcodedAssets
 		}
 
 		return false;
+	}
+
+	/**
+	 * @param $data
+	 *
+	 * @return string
+	 */
+	public static function getHardCodedManageAreaForFrontEndView($data)
+	{
+		$dataSettingsFrontEnd = ObjectCache::wpacu_cache_get('wpacu_settings_frontend_data') ?: array();
+		$dataSettingsFrontEnd['page_unload_text'] = $data['page_unload_text'];
+		// The following string will be replaced by the values got the from the AJAX call to /?wpassetcleanup_load=1&wpacu_just_hardcoded
+		$dataWpacuSettingsFrontend = base64_encode(json_encode($dataSettingsFrontEnd));
+		$imgLoadingSpinnerUrl = admin_url('images/spinner.gif');
+
+		$currentHardcodedAssetRules = '';
+
+		// When the form is submitted it will clear some values if they are not sent anymore which can happen with a failed AJAX call to retrieve the list of hardcoded assets
+		// Place the current values to the area in case the AJAX call fails and it won't print the list
+		// If the user presses "Update", it won't clear any existing rules
+		// If the list is printed, obviously it will be with all the fields in place as they should be
+		foreach (array('current', 'load_exceptions', 'handle_unload_regex', 'handle_load_regex', 'handle_load_logged_in') as $ruleKey) {
+			foreach ( array( 'styles', 'scripts' ) as $assetType ) {
+				if ( isset( $dataSettingsFrontEnd[$ruleKey][ $assetType ] ) && ! empty( $dataSettingsFrontEnd[$ruleKey][$assetType] ) ) {
+					// Go through the values, depending on how the array is structured
+					// handle_unload_regex, handle_load_regex
+					if (in_array($ruleKey, array('handle_unload_regex', 'handle_load_regex'))) {
+						foreach ( $dataSettingsFrontEnd[ $ruleKey ][ $assetType ] as $assetHandle => $assetValues ) {
+							if ( strpos( $assetHandle, 'wpacu_hardcoded_' ) !== false ) {
+								if ($ruleKey === 'handle_unload_regex') {
+									$enableValue                = isset( $assetValues['enable'] ) ? $assetValues['enable'] : '';
+									$regExValue                 = isset( $assetValues['value'] ) ? $assetValues['value']   : '';
+									$currentHardcodedAssetRules .= '<input type="hidden" name="wpacu_handle_unload_regex[' . $assetType . '][' . $assetHandle . '][enable]" value="' . $enableValue . '" />';
+									$currentHardcodedAssetRules .= '<input type="hidden" name="wpacu_handle_unload_regex[' . $assetType . '][' . $assetHandle . '][value]"  value="' . esc_attr( $regExValue ) . '" />';
+								} elseif ($ruleKey === 'handle_load_regex') {
+									$enableValue                = isset( $assetValues['enable'] ) ? $assetValues['enable'] : '';
+									$regExValue                 = isset( $assetValues['value'] ) ? $assetValues['value']   : '';
+									$currentHardcodedAssetRules .= '<input type="hidden" name="wpacu_handle_load_regex[' . $assetType . '][' . $assetHandle . '][enable]" value="' . $enableValue . '" />';
+									$currentHardcodedAssetRules .= '<input type="hidden" name="wpacu_handle_load_regex[' . $assetType . '][' . $assetHandle . '][value]"  value="' . esc_attr( $regExValue ) . '" />';
+								}
+							}
+						}
+					} else {
+						// current, load_exceptions, handle_load_logged_in
+						foreach ( $dataSettingsFrontEnd[ $ruleKey ][ $assetType ] as $assetHandle ) {
+							if ( strpos( $assetHandle, 'wpacu_hardcoded_' ) !== false ) {
+								if ( $ruleKey === 'current' ) {
+									$currentHardcodedAssetRules .= '<input type="hidden" name="wpassetcleanup[' . $assetType . '][]" value="' . $assetHandle . '" />';
+								} elseif ( $ruleKey === 'load_exceptions' ) {
+									$currentHardcodedAssetRules .= '<input type="hidden" name="wpacu_styles_load_it[]" value="' . $assetHandle . '" />';
+								} elseif ($ruleKey === 'handle_load_logged_in') {
+									$currentHardcodedAssetRules .= '<input type="hidden" name="wpacu_load_it_logged_in['.$assetType.']['.$assetHandle.']" value="1" />';
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		$hardcodedManageAreaHtml = <<<HTML
+<div class="wpacu-assets-collapsible-wrap wpacu-wrap-area wpacu-hardcoded" id="wpacu-assets-collapsible-wrap-hardcoded-list" data-wpacu-settings-frontend="{$dataWpacuSettingsFrontend}">
+    <a class="wpacu-assets-collapsible wpacu-assets-collapsible-active" href="#" style="padding: 15px 15px 15px 44px;"><span class="dashicons dashicons-code-standards"></span> Hardcoded (non-enqueued) Styles &amp; Scripts</a>
+    <div class="wpacu-assets-collapsible-content" style="max-height: inherit;">
+        <div style="padding: 20px 0; margin: 0;"><img src="{$imgLoadingSpinnerUrl}" align="top" width="20" height="20" alt="" /> The list of hardcoded assets is fetched... Please wait...</div>
+        {$currentHardcodedAssetRules}
+    </div>
+</div>
+HTML;
+
+		return $hardcodedManageAreaHtml;
 	}
 }

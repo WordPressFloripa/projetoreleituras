@@ -52,7 +52,7 @@ if ($showSettingsType === 'tabs') {
 
 	$selectedTabArea = isset($_REQUEST['wpacu_selected_tab_area']) && array_key_exists($_REQUEST['wpacu_selected_tab_area'],
 		$settingsTabs) // the tab id area has to be one within the list above
-		? $_REQUEST['wpacu_selected_tab_area'] // after update
+		? sanitize_text_field($_REQUEST['wpacu_selected_tab_area']) // after update
 		: $defaultTabArea; // default
 
 	if ($selectedTabArea && array_key_exists($selectedTabArea, $settingsTabs)) {
@@ -60,7 +60,7 @@ if ($showSettingsType === 'tabs') {
 	}
 
 	$selectedSubTabArea = isset($_REQUEST['wpacu_selected_sub_tab_area']) // after update
-        ? $_REQUEST['wpacu_selected_sub_tab_area']
+        ? sanitize_text_field($_REQUEST['wpacu_selected_sub_tab_area'])
         : ''; // default
 }
 ?>

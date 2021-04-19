@@ -2,7 +2,7 @@
 /*
  * No direct access to this file
  */
-if (! isset($data)) {
+if (! isset($data, $selectedTabArea)) {
 	exit;
 }
 
@@ -108,19 +108,22 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
                 </div>
 
                 <div id="wpacu-settings-hide-meta-boxes">
-                    <p><?php _e('If you wish to hide the meta boxes completely for any reason (e.g. you rarely manage the assets and you want to reduce cluttering in the edit post/page area, especially if you do lots of edits), you can do so using the options below (<em>don\'t forget to uncheck them whenever you wish to manage the CSS/JS assets again</em>)', 'wp-asset-clean-up'); ?>:</p>
+                    <p><?php _e('If you wish to hide the meta boxes completely for any reason (e.g. you rarely manage the assets and you want to reduce cluttering in the edit post/page/taxonomy area, especially if you do lots of edits), you can do so using the options below (<em>don\'t forget to uncheck them whenever you wish to manage the CSS/JS assets again</em>)', 'wp-asset-clean-up'); ?>:</p>
                     <ul>
-                        <li><label for="wpacu-hide-assets-meta-box-checkbox"><input <?php echo (($data['hide_assets_meta_box'] == 1) ? 'checked="checked"' : ''); ?> id="wpacu-hide-assets-meta-box-checkbox" type="checkbox" name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[hide_assets_meta_box]" value="1" /> Hide "Asset CleanUp Pro: CSS &amp; JavaScript Manager" meta box</label></li>
-                        <li><label for="wpacu-hide-options-meta-box-checkbox"><input <?php echo (($data['hide_options_meta_box'] == 1) ? 'checked="checked"' : ''); ?> id="wpacu-hide-options-meta-box-checkbox" type="checkbox" name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[hide_options_meta_box]" value="1" /> Hide "Asset CleanUp Pro: Options" meta box</label></li>
+                        <li><label for="wpacu-hide-assets-meta-box-checkbox"><input <?php echo (($data['hide_assets_meta_box'] == 1) ? 'checked="checked"' : ''); ?> id="wpacu-hide-assets-meta-box-checkbox" type="checkbox" name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[hide_assets_meta_box]" value="1" /> Hide "<?php echo WPACU_PLUGIN_TITLE; ?>: CSS &amp; JavaScript Manager" meta box</label></li>
+                        <li><label for="wpacu-hide-options-meta-box-checkbox"><input <?php echo (($data['hide_options_meta_box'] == 1) ? 'checked="checked"' : ''); ?> id="wpacu-hide-options-meta-box-checkbox" type="checkbox" name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[hide_options_meta_box]" value="1" /> Hide "<?php echo WPACU_PLUGIN_TITLE; ?>: Options" meta box</label></li>
                     </ul>
                     <hr />
 
                     <label for="wpacu-hide-meta-boxes-for-post-types">Hide all meta boxes for the following public post types (multiple selection drop-down):</label><br />
                 </div>
 
-                <select style="margin-top: 4px; min-width: 340px;" id="wpacu-hide-meta-boxes-for-post-types"
-                        data-placeholder="Choose Post Type(s)..."
-                        class="wpacu-chosen-select"
+                <select style="margin-top: 4px; min-width: 340px;"
+                        id="wpacu-hide-meta-boxes-for-post-types"
+	                    <?php if ($data['input_style'] !== 'standard') { ?>
+                            data-placeholder="Choose Post Type(s)..."
+                            class="wpacu-chosen-select"
+                        <?php } ?>
                         multiple="multiple"
                         name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[hide_meta_boxes_for_post_types][]">
                     <?php foreach ($postTypesList as $postTypeKey => $postTypeValue) { ?>
@@ -129,7 +132,6 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
                     <?php } ?>
                 </select>
                 <p id="wpacu-hide-meta-boxes-for-post-types-info" style="margin-top: 4px;"><small>Sometimes, you might have a post type marked as 'public', but it's not queryable or doesn't have a public URL of its own, making the assets list irrelevant. Or, you have finished optimising pages for a particular post type and you wish to have the assets list hidden. You can choose to hide the meta boxes for these particular post types.</small></p>
-                <hr />
             </td>
         </tr>
         <tr valign="top">
@@ -162,23 +164,67 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
             </td>
         </tr>
         <tr valign="top">
-            <th scope="row">
+            <th scope="row" class="setting_title">
+                <label for="wpacu_frontend"><?php _e('Allow managing assets to:', 'wp-asset-clean-up'); ?></label>
+                <p class="wpacu_subtitle"><small><em><?php _e('Only the chosen administrators will have access to the plugin\'s CSS &amp; JS Manager.', 'wp-asset-clean-up'); ?></em></small></p>
+            </th>
+            <td>
+                <?php
+                $currentUserId = get_current_user_id();
+
+                $args = array(
+	                'role'    => 'administrator',
+	                'orderby' => 'user_nicename',
+	                'order'   => 'ASC'
+                );
+
+                $users = get_users( $args );
+
+                ?>
+                <select style="vertical-align: top;" id="wpacu-allow-manage-assets-to-select" name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[allow_manage_assets_to]">
+                    <option <?php if (in_array($data['allow_manage_assets_to'], array('', 'any_admin'))) { ?>selected="selected"<?php } ?> value="any_admin">any administrator</option>
+                    <option <?php if ($data['allow_manage_assets_to'] === 'chosen') { ?>selected="selected"<?php } ?> value="chosen">only to the following administrator(s):</option>
+                </select>
+                &nbsp;
+                <div <?php if (in_array($data['allow_manage_assets_to'], array('', 'any_admin'))) { ?>class="wpacu_hide"<?php } ?>
+                    id="wpacu-allow-manage-assets-to-select-list-area">
+                <select id="wpacu-allow-manage-assets-to-select-list"
+                        name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[allow_manage_assets_to_list][]"
+                        <?php if ($data['input_style'] !== 'standard') { ?>
+                            data-placeholder="Choose the admin(s) who will access the list..."
+                        <?php } ?>
+                        multiple="multiple">
+                    <?php
+                    foreach ( $users as $user ) {
+                        $appendText = $selected = '';
+
+                        if ($currentUserId === $user->ID) {
+                            $appendText = ' &#10141; yourself';
+                        }
+
+                        if (isset($data['allow_manage_assets_to_list']) && is_array($data['allow_manage_assets_to_list']) && in_array($user->ID, $data['allow_manage_assets_to_list'])) {
+                            $selected = 'selected="selected"';
+                        }
+
+                        echo '<option '.$selected.' value="'.$user->ID.'">' . esc_html( $user->display_name ) . ' (' . esc_html( $user->user_email ) . ')'.$appendText.'</option>';
+                    }
+                    ?>
+                </select>
+                    <div style="margin: 2px 0 0;"><small>This is a multiple selection drop-down. If nothing is chosen from the list, it will default to "any administrator".</small></div>
+                </div>
+
+                <div style="margin: 10px 0 0;"><p>Some people that have admin access might be confused by the CSS/JS manager (which could be for the developer of the website). If they are mostly editing articles, updating WooCommerce products and so on, there's no point for them to keep seeing a cluttered edit post/page with CSS/JS assets that can even be changed by mistake. You can leave this only to the developers with "administrator" roles.</p></div>
+            </td>
+        </tr>
+        <tr valign="top">
+            <th scope="row" class="setting_title">
                 <label for="wpacu_assets_list_layout"><?php _e('Assets List Layout', 'wp-asset-clean-up'); ?></label>
+                <p class="wpacu_subtitle"><small><em><?php _e('You can decide how would you like to view the list of the enqueued CSS &amp; JavaScript', 'wp-asset-clean-up'); ?></em></small></p>
             </th>
             <td>
                 <label>
-                    <select id="wpacu_assets_list_layout"
-                            style="max-width: inherit;"
-                            name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[assets_list_layout]">
-                        <option <?php if ($data['assets_list_layout'] === 'by-location') { echo 'selected="selected"'; } ?> value="by-location"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by location (themes, plugins, core &amp; external)', 'wp-asset-clean-up'); ?></option>
-                        <option <?php if ($data['assets_list_layout'] === 'by-position') { echo 'selected="selected"'; } ?> value="by-position"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by tag position: &lt;head&gt; &amp; &lt;body&gt;', 'wp-asset-clean-up'); ?></option>
-                        <option <?php if ($data['assets_list_layout'] === 'by-preload') { echo 'selected="selected"'; } ?> value="by-preload"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by preloaded or not-preloaded status', 'wp-asset-clean-up'); ?></option>
-                        <option <?php if ($data['assets_list_layout'] === 'by-parents') { echo 'selected="selected"'; } ?> value="by-parents"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by dependencies: Parents, Children, Independent', 'wp-asset-clean-up'); ?></option>
-                        <option <?php if ($data['assets_list_layout'] === 'by-loaded-unloaded') { echo 'selected="selected"'; } ?> value="by-loaded-unloaded"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by loaded or unloaded status', 'wp-asset-clean-up'); ?></option>
-                        <option <?php if (in_array($data['assets_list_layout'], array('two-lists', 'default'))) { echo 'selected="selected"'; } ?> value="two-lists"><?php _e('All Styles', 'wp-asset-clean-up'); ?> + <?php _e('All Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Two lists', 'wp-asset-clean-up'); ?></option>
-                        <option disabled="disabled" value="all"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('One list', 'wp-asset-clean-up'); ?> (<?php _e('Pro Version', 'wp-asset-clean-up'); ?>)</option>
-                    </select>
-                </label>
+                    <?php echo \WpAssetCleanUp\Settings::generateAssetsListLayoutDropDown($data['assets_list_layout'], WPACU_PLUGIN_ID . '_settings[assets_list_layout]' ); ?>
+				</label>
 
                 <div id="wpacu-assets-list-by-location-selected" style="margin: 10px 0; <?php if ($data['assets_list_layout'] !== 'by-location') { ?> display: none; <?php } ?>">
                     <div style="margin-bottom: 6px;"><?php _e('When list is grouped by location, keep the assets from each of the plugins in the following state', 'wp-asset-clean-up'); ?>:</div>
@@ -195,10 +241,10 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
                         <li>
                             <label for="assets_list_layout_plugin_area_status_contracted">
                                 <input id="assets_list_layout_plugin_area_status_contracted"
+				                       <?php if ($data['assets_list_layout_plugin_area_status'] === 'contracted') { ?>checked="checked"<?php } ?>
                                        type="radio"
-                                       disabled="disabled"
                                        name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[assets_list_layout_plugin_area_status]"
-                                       value="contracted"> <?php _e('Contracted', 'wp-asset-clean-up'); ?> (<?php _e('Pro Version', 'wp-asset-clean-up'); ?>) <?php echo $availableForPro; ?>
+                                       value="contracted"> <?php _e('Contracted', 'wp-asset-clean-up'); ?>
                             </label>
                         </li>
                     </ul>
@@ -207,29 +253,13 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
 
                 <div class="wpacu-clearfix"></div>
 
-                <p><?php _e('These are various ways in which the list of assets that you will manage will show up. Depending on your preference, you might want to see the list of styles &amp; scripts first, or all together sorted in alphabetical order etc.', 'wp-asset-clean-up'); ?> <?php _e('Options that are disabled are available in the Pro version.', 'wp-asset-clean-up'); ?></p>
+                <p style="margin-top: 8px;"><?php _e('These are various ways in which the list of assets that you will manage will show up. Depending on your preference, you might want to see the list of styles &amp; scripts first, or all together sorted in alphabetical order etc.', 'wp-asset-clean-up'); ?> <?php _e('Options that are disabled are available in the Pro version.', 'wp-asset-clean-up'); ?></p>
             </td>
         </tr>
 
         <tr valign="top">
             <th scope="row">
-                <label for="wpacu_hide_from_admin_bar"><?php echo sprintf(__('Hide %s from the top Admin Bar', 'wp-asset-clean-up'), '"'.WPACU_PLUGIN_TITLE.'"'); ?></label>
-            </th>
-            <td>
-                <label class="wpacu_switch">
-                    <input id="wpacu_hide_from_admin_bar"
-                           type="checkbox"
-						<?php echo (($data['hide_from_admin_bar'] == 1) ? 'checked="checked"' : ''); ?>
-                           name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[hide_from_admin_bar]"
-                           value="1" /> <span class="wpacu_slider wpacu_round"></span> </label>
-
-                This is useful if you're not using too often the plugin's options from the top Admin Bar and wish to make up some space there. <span style="color: #004567;" class="dashicons dashicons-info"></span> <a href="https://assetcleanup.com/docs/?p=187" target="_blank">Read more</a>
-            </td>
-        </tr>
-
-        <tr valign="top">
-            <th scope="row">
-                <label><?php _e('On Assets List Layout Load, keep the expandable areas:', 'wp-asset-clean-up'); ?></label>
+                <label><?php _e('On Assets List Layout Load, keep the groups:', 'wp-asset-clean-up'); ?></label>
             </th>
             <td>
                 <ul class="assets_list_layout_areas_status_choices">
@@ -255,6 +285,7 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
                 <div class="wpacu-clearfix"></div>
 
                 <p><?php _e('Sometimes, when you have plenty of elements in the edit page, you might want to contract the list of assets when you\'re viewing the page as it will save space. This can be a good practice, especially when you finished optimising the pages and you don\'t want to keep seeing the long list of files every time you edit a page.', 'wp-asset-clean-up'); ?></p>
+                <p><strong><?php _e('Note', 'wp-asset-clean-up'); ?>:</strong> <?php _e('This does not include the assets rows within the groups which are expanded &amp; contracted individually, depending on your preference.', 'wp-asset-clean-up'); ?></p>
             </td>
         </tr>
 
@@ -323,6 +354,36 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
                 <p><?php _e('In case you prefer standard HTML checkboxes instead of the enhanced CSS3 iPhone style ones (on &amp; off) or you need a simple HTML layout in case you\'re using a screen reader software (e.g. for people with disabilities) which requires standard/clean HTML code, then you can choose "Standard" as an option.', 'wp-asset-clean-up'); ?> <span style="color: #004567;" class="dashicons dashicons-info"></span> <a href="https://assetcleanup.com/docs/?p=95" target="_blank">Read more</a></p>
             </td>
         </tr>
+
+        <tr valign="top">
+            <th scope="row" class="setting_title">
+                <label><?php echo sprintf(__('Hide %s menus', 'wp-asset-clean-up'), '"'.WPACU_PLUGIN_TITLE.'"'); ?></label>
+                <p class="wpacu_subtitle"><small><em><?php _e('Are you rarely using the plugin and want to make some space in the admin menus?', 'wp-asset-clean-up'); ?></em></small></p>
+            </th>
+            <td>
+                <ul style="padding: 0;">
+                    <li style="margin-bottom: 14px;">
+                        <label for="wpacu_hide_from_admin_bar">
+                            <input id="wpacu_hide_from_admin_bar"
+                                   type="checkbox"
+							    <?php echo (($data['hide_from_admin_bar'] == 1) ? 'checked="checked"' : ''); ?>
+                                   name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[hide_from_admin_bar]"
+                                   value="1" /> <span class="wpacu_slider wpacu_round"></span>
+                            <span>Hide it from the top admin bar</span> / This could be useful if your top admin bar is filled with too many items and you rarely use the plugin.</label> <span style="color: #004567;" class="dashicons dashicons-info"></span> <a href="https://assetcleanup.com/docs/?p=187" target="_blank">Read more</a>
+                    </li>
+                    <li>
+                        <label for="wpacu_hide_from_side_bar">
+                            <input id="wpacu_hide_from_side_bar"
+                                   type="checkbox"
+							    <?php echo (($data['hide_from_side_bar'] == 1) ? 'checked="checked"' : ''); ?>
+                                   name="<?php echo WPACU_PLUGIN_ID . '_settings'; ?>[hide_from_side_bar]"
+                                   value="1" /> <span class="wpacu_slider wpacu_round"></span>
+                            <span>Hide it from the left sidebar within the Dashboard</span> / The only access will be from <em>"Settings" -&gt; "<?php echo WPACU_PLUGIN_TITLE; ?>"</em>.</label> <span style="color: #004567;" class="dashicons dashicons-info"></span> <a href="https://assetcleanup.com/docs/?p=584" target="_blank">Read more</a>
+                    </li>
+                </ul>
+            </td>
+        </tr>
+
         <tr valign="top">
             <th scope="row">
                 <label for="wpacu_hide_core_files"><?php _e('Hide WordPress Core Files From The Assets List?', 'wp-asset-clean-up'); ?></label>
@@ -354,6 +415,7 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
                 Allow <?php echo WPACU_PLUGIN_TITLE; ?> to anonymously track plugin usage in order to help us make the plugin better? No sensitive or personal data is collected. <span style="color: #004567;" class="dashicons dashicons-info"></span> <a id="wpacu-show-tracked-data-list-modal-target" href="#wpacu-show-tracked-data-list-modal">What kind of data will be sent for the tracking?</a>
             </td>
         </tr>
+
         <tr valign="top">
             <th scope="row">
                 <label for="wpacu_fetch_cached_files_details_from"><?php _e('Fetch assets\' caching information from:', 'wp-asset-clean-up'); ?></label>
@@ -367,6 +429,7 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
                 </select> &nbsp; <span style="color: #004567; vertical-align: middle;" class="dashicons dashicons-info"></span> <a style="vertical-align: middle;" id="wpacu-fetch-assets-details-location-modal-target" href="#wpacu-fetch-assets-details-location-modal">Read more</a>
             </td>
         </tr>
+
         <tr valign="top">
             <th scope="row">
                 <label for="wpacu_clear_cached_files_after"><?php _e('Clear previously cached CSS/JS files older than (x) days', 'wp-asset-clean-up'); ?></label>
@@ -455,19 +518,4 @@ foreach (\WpAssetCleanUp\MetaBoxes::$noMetaBoxesForPostTypes as $noMetaBoxesForP
     </div>
 </div>
 
-<!-- removeIf(development) -->
-<!-- [wpacu_lite] -->
-<!--
-<div id="wpacu-deactivate-modal-info" class="wpacu-modal" style="padding-top: 60px;">
-    <div class="wpacu-modal-content" style="max-width: 650px;">
-        <span class="wpacu-close">&times;</span>
-        <h2 style="margin-top: 5px;"><?php _e('Asset CleanUp: Deactivation Modal', 'wp-asset-clean-up'); ?></h2>
-        <p>When you use the "Deactivate" link for "Asset CleanUp: Page Speed Booster" plugin from "Plugins" -&gt; "Installed Plugins", a popup like the one in the below example shows up allowing you the option to <em>Skip &amp; Deactivate</em> or select an uninstall reason, sending your feedback and deactivate it. Collecting feedback is very useful to understand why you decided to deactivate the plugin so we can further improve it based on the overall feedback.</p>
-        <p>However, there are times when you might do debugging on your website and you have to often deactivate the plugin. You can disable the feedback modal and you will not be asked for any uninstall reason anytime you use the "Deactivate" link.</p>
-        <hr />
-        <img style="margin: 0 auto; width: 100%; max-width: 500px; display: table;" src="<?php echo WPACU_PLUGIN_URL. '/assets/images/wpacu-deactivate-modal.jpg'; ?>" alt="" />
-    </div>
-</div>
--->
-<!-- [/wpacu_lite] -->
-<!-- endRemoveIf(development) -->
+<!-- -->

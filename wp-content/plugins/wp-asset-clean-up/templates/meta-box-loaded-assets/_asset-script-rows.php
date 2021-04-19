@@ -3,56 +3,76 @@ if (! isset($data)) {
 	exit; // no direct access
 }
 
-foreach ($data['all']['scripts'] as $obj) {
-	$data['row'] = array();
-    $data['row']['obj'] = $obj;
+$allAssets = $data['all']['scripts'];
+$allAssetsFinal = $data['unloaded_js_handles'] = array();
 
-	$active = (isset($data['current']['scripts']) && in_array($data['row']['obj']->handle, $data['current']['scripts']));
+foreach ($allAssets as $obj) {
+	$row        = array();
+	$row['obj'] = $obj;
 
-    $data['row']['class']   = $active ? 'wpacu_not_load' : '';
-	$data['row']['checked'] = $active ? 'checked="checked"' : '';
+	$active = ( isset( $data['current']['scripts'] ) && in_array( $row['obj']->handle, $data['current']['scripts'] ) );
+
+	$row['class']   = $active ? 'wpacu_not_load' : '';
+	$row['checked'] = $active ? 'checked="checked"' : '';
 
 	/*
-	 * $data['row']['is_group_unloaded'] is only used to apply a red background in the script's area to point out that the script is unloaded
+	 * $row['is_group_unloaded'] is only used to apply a red background in the script's area to point out that the script is unloaded
 	*/
-	$data['row']['global_unloaded'] = $data['row']['is_post_type_unloaded'] = $data['row']['is_load_exception_per_page'] = $data['row']['is_group_unloaded'] = false;
+	$row['global_unloaded'] = $row['is_post_type_unloaded'] = $row['is_load_exception_per_page'] = $row['is_group_unloaded'] = false;
 
 	// Mark it as unloaded - Everywhere
-	if (in_array($data['row']['obj']->handle, $data['global_unload']['scripts']) && !$data['row']['class']) {
-		$data['row']['global_unloaded'] = $data['row']['is_group_unloaded'] = true;
+	if ( in_array( $row['obj']->handle, $data['global_unload']['scripts'] ) && ! $row['class'] ) {
+		$row['global_unloaded'] = $row['is_group_unloaded'] = true;
 	}
 
 	// Mark it as unloaded - for the Current Post Type
-	if ($data['bulk_unloaded_type'] && in_array($data['row']['obj']->handle, $data['bulk_unloaded'][$data['bulk_unloaded_type']]['scripts'])) {
-		$data['row']['is_group_unloaded'] = true;
+	if ( isset($data['bulk_unloaded_type']) &&
+	     $data['bulk_unloaded_type'] &&
+	     is_array($data['bulk_unloaded'][$data['bulk_unloaded_type']]['scripts']) &&
+	     in_array($row['obj']->handle, $data['bulk_unloaded'][$data['bulk_unloaded_type']]['scripts']) ) {
+		$row['is_group_unloaded'] = true;
 
-		if ($data['bulk_unloaded_type'] === 'post_type') {
-			$data['row']['is_post_type_unloaded'] = true;
+		if ( $data['bulk_unloaded_type'] === 'post_type' ) {
+			$row['is_post_type_unloaded'] = true;
 		}
 	}
 
-	$isLoadExceptionPerPage = isset($data['load_exceptions']['scripts']) && in_array($data['row']['obj']->handle, $data['load_exceptions']['scripts']);
+	$isLoadExceptionPerPage = isset( $data['load_exceptions']['scripts'] ) && in_array( $row['obj']->handle, $data['load_exceptions']['scripts'] );
+	$isLoadExceptionForCurrentPostType = ( isset( $data['load_exceptions_post_type'] ['scripts'] [$row['obj']->handle] )
+	                                       && $data['load_exceptions_post_type'] ['scripts'] [$row['obj']->handle] );
 
-	$data['row']['is_load_exception_per_page']    = $isLoadExceptionPerPage;
+	$row['is_load_exception_per_page']  = $isLoadExceptionPerPage;
+	$row['is_load_exception_post_type'] = $isLoadExceptionForCurrentPostType;
 
-	$isLoadException = $isLoadExceptionPerPage;
+	$isLoadException = $isLoadExceptionPerPage || $isLoadExceptionForCurrentPostType;
 
 	// No load exception of any kind and a bulk unload rule is applied? Append the CSS class for unloading
-	if (! $isLoadException && $data['row']['is_group_unloaded']) {
-		$data['row']['class'] .= ' wpacu_not_load';
+	if ( ! $isLoadException && $row['is_group_unloaded']) {
+		$row['class'] .= ' wpacu_not_load';
 	}
 
-	foreach (array('data', 'before', 'after') as $extraKey) {
+	if (strpos($row['class'], 'wpacu_not_load') !== false) {
+		// Actually unloaded JS, not just marked for unload
+		$data['unloaded_js_handles'][] = $row['obj']->handle;
+		}
+
+	foreach ( array( 'data', 'before', 'after' ) as $extraKey ) {
 		// "data": CDATA added via wp_localize_script()
 		// "before" / "after" the tag inline content added via wp_add_inline_script()
-		$data['row']['extra_'.$extraKey.'_js'] = ( is_object( $data['row']['obj']->extra ) && isset( $data['row']['obj']->extra->{$extraKey} ) ) ? $data['row']['obj']->extra->{$extraKey} : false;
+		$row[ 'extra_' . $extraKey . '_js' ] = ( is_object( $row['obj']->extra ) && isset( $row['obj']->extra->{$extraKey} ) ) ? $row['obj']->extra->{$extraKey} : false;
 
-		if ( ! $data['row']['extra_'.$extraKey.'_js'] ) {
-			$data['row']['extra_'.$extraKey.'_js'] = ( is_array( $data['row']['obj']->extra ) && isset( $data['row']['obj']->extra[$extraKey] ) ) ? $data['row']['obj']->extra[$extraKey] : false;
+		if ( ! $row[ 'extra_' . $extraKey . '_js' ] ) {
+			$row[ 'extra_' . $extraKey . '_js' ] = ( is_array( $row['obj']->extra ) && isset( $row['obj']->extra[ $extraKey ] ) ) ? $row['obj']->extra[ $extraKey ] : false;
 		}
 	}
 
-	$data['row']['class'] .= ' script_'.$data['row']['obj']->handle;
+	$row['class'] .= ' script_' . $row['obj']->handle;
+
+	$allAssetsFinal[$obj->handle] = $row;
+}
+
+foreach ($allAssetsFinal as $assetHandle => $row) {
+	$data['row'] = $row;
 
 	// Load Template
 	$templateRowOutput = \WpAssetCleanUp\Main::instance()->parseTemplate(
@@ -61,7 +81,7 @@ foreach ($data['all']['scripts'] as $obj) {
 	);
 
 	if (isset($data['rows_build_array']) && $data['rows_build_array']) {
-		$uniqueHandle = $data['row']['obj']->handle;
+		$uniqueHandle = $row['obj']->handle;
 
 		if (array_key_exists($uniqueHandle, $data['rows_assets'])) {
 			$uniqueHandle .= 1; // make sure each key is unique
@@ -69,30 +89,30 @@ foreach ($data['all']['scripts'] as $obj) {
 
 		if (isset($data['rows_by_location']) && $data['rows_by_location']) {
 			$data['rows_assets']
-			  [$data['row']['obj']->locationMain]
-				[$data['row']['obj']->locationChild]
+			  [$row['obj']->locationMain]
+				[$row['obj']->locationChild]
 				  [$uniqueHandle]
 					['script'] = $templateRowOutput;
 		} elseif (isset($data['rows_by_position']) && $data['rows_by_position']) {
-			$handlePosition = $data['row']['obj']->position;
+			$handlePosition = $row['obj']->position;
 
 			$data['rows_assets']
 				[$handlePosition] // 'head', 'body'
 					[$uniqueHandle]
 						['script'] = $templateRowOutput;
 		} elseif (isset($data['rows_by_preload']) && $data['rows_by_preload']) {
-			$preloadStatus = $data['row']['obj']->preload_status;
+			$preloadStatus = $row['obj']->preload_status;
 
 			$data['rows_assets']
 				[$preloadStatus] // 'preloaded', 'not_preloaded'
 					[$uniqueHandle]
 						['script'] = $templateRowOutput;
 		} elseif (isset($data['rows_by_parents']) && $data['rows_by_parents'])  {
-			$childHandles = isset($data['all_deps']['scripts'][$data['row']['obj']->handle]) ? $data['all_deps']['scripts'][$data['row']['obj']->handle] : array();
+			$childHandles = isset($data['all_deps']['parent_to_child']['scripts'][$row['obj']->handle]) ? $data['all_deps']['parent_to_child']['scripts'][$row['obj']->handle] : array();
 
 			if (! empty($childHandles)) {
 				$handleStatus = 'parent';
-			} elseif (isset($data['row']['obj']->deps) && ! empty($data['row']['obj']->deps)) {
+			} elseif (isset($row['obj']->deps) && ! empty($row['obj']->deps)) {
 				$handleStatus = 'child';
 			} else {
 				$handleStatus = 'independent';
@@ -103,10 +123,28 @@ foreach ($data['all']['scripts'] as $obj) {
 					[$uniqueHandle]
 						['scripts'] = $templateRowOutput;
 		} elseif (isset($data['rows_by_loaded_unloaded']) && $data['rows_by_loaded_unloaded']) {
-			$handleStatus = (strpos($data['row']['class'], 'wpacu_not_load') !== false) ? 'unloaded' : 'loaded';
+			$handleStatus = (strpos($row['class'], 'wpacu_not_load') !== false) ? 'unloaded' : 'loaded';
 
 			$data['rows_assets']
 				[$handleStatus] // 'loaded', 'unloaded'
+					[$uniqueHandle]
+						['script'] = $templateRowOutput;
+		} elseif(isset($data['rows_by_size']) && $data['rows_by_size']) {
+			$sizeStatus = (isset($row['obj']->sizeRaw) && is_int($row['obj']->sizeRaw)) ? 'with_size' : 'external_na';
+
+			$data['rows_assets']
+				[$sizeStatus] // 'with_size', 'external_na'
+					[$uniqueHandle]
+						['script'] = $templateRowOutput;
+
+			if ($sizeStatus === 'with_size') {
+				// Associated the handle with the raw size of the file
+				$data['handles_sizes'][$uniqueHandle] = $row['obj']->sizeRaw;
+			}
+		} elseif (isset($data['rows_by_rules']) && $data['rows_by_rules']) {
+			$ruleStatus = \WpAssetCleanUp\Misc::handleHasAtLeastOneRule($data, 'scripts') ? 'with_rules' : 'with_no_rules';
+			$data['rows_assets']
+				[$ruleStatus] // 'with_rules', 'with_no_rules'
 					[$uniqueHandle]
 						['script'] = $templateRowOutput;
 		} else {

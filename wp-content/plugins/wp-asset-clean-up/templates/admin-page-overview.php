@@ -49,6 +49,8 @@ include_once '_top-area.php';
                         </td>
                         <td>
                             <?php
+                            $handleData['handle'] = $handle;
+                            $handleData['asset_type'] = 'styles';
                             $handleChangesOutput = \WpAssetCleanUp\Overview::renderHandleChangesOutput($handleData);
 
                             if (! empty($handleChangesOutput)) {
@@ -115,6 +117,8 @@ include_once '_top-area.php';
                         </td>
                         <td>
 	                        <?php
+                            $handleData['handle'] = $handle;
+	                        $handleData['asset_type'] = 'scripts';
 	                        $handleChangesOutput = \WpAssetCleanUp\Overview::renderHandleChangesOutput($handleData);
 
 	                        if (! empty($handleChangesOutput)) {

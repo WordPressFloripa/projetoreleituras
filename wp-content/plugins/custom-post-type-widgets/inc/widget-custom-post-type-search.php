@@ -51,10 +51,10 @@ class WP_Custom_Post_Type_Widgets_Search extends WP_Widget {
 		/** This filter is documented in wp-includes/widgets/class-wp-widget-pages.php */
 		$title = apply_filters( 'widget_title', $title, $instance, $this->id_base );
 
-		$posttype = ! empty( $instance['posttype'] ) ? $instance['posttype'] : '';
-
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $args['before_widget'];
 		if ( $title ) {
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			echo $args['before_title'] . $title . $args['after_title'];
 		}
 
@@ -62,6 +62,7 @@ class WP_Custom_Post_Type_Widgets_Search extends WP_Widget {
 		get_search_form();
 		remove_filter( 'get_search_form', array( $this, 'add_form_input_post_type' ) );
 
+		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 		echo $args['after_widget'];
 	}
 
@@ -97,8 +98,8 @@ class WP_Custom_Post_Type_Widgets_Search extends WP_Widget {
 	public function form( $instance ) {
 		$title     = isset( $instance['title'] ) ? $instance['title'] : '';
 		$posttype  = isset( $instance['posttype'] ) ? $instance['posttype'] : 'post';
-?>
-		<p><label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php esc_html_e( 'Title:', 'custom-post-type-widgets' ); ?></label> <input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" /></p>
+		?>
+		<p><label for="<?php echo $this->get_field_id( 'title' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>"><?php esc_html_e( 'Title:', 'custom-post-type-widgets' ); ?></label> <input class="widefat" id="<?php echo $this->get_field_id( 'title' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" name="<?php echo $this->get_field_name( 'title' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" type="text" value="<?php echo esc_attr( $title ); ?>" /></p>
 
 		<?php
 		$post_types = get_post_types( array( 'public' => true ), 'objects' );
@@ -106,8 +107,11 @@ class WP_Custom_Post_Type_Widgets_Search extends WP_Widget {
 		printf(
 			'<p><label for="%1$s">%2$s</label>' .
 			'<select class="widefat" id="%1$s" name="%3$s">',
+			/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
 			$this->get_field_id( 'posttype' ),
+			/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
 			__( 'Post Type:', 'custom-post-type-widgets' ),
+			/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
 			$this->get_field_name( 'posttype' )
 		);
 
@@ -115,7 +119,7 @@ class WP_Custom_Post_Type_Widgets_Search extends WP_Widget {
 			'<option value="%s"%s>%s</option>',
 			esc_attr( 'any' ),
 			selected( 'any', $posttype, false ),
-			__( 'All', 'custom-post-type-widgets' )
+			esc_html__( 'All', 'custom-post-type-widgets' )
 		);
 
 		foreach ( $post_types as $post_type => $value ) {
@@ -127,7 +131,7 @@ class WP_Custom_Post_Type_Widgets_Search extends WP_Widget {
 				'<option value="%s"%s>%s</option>',
 				esc_attr( $post_type ),
 				selected( $post_type, $posttype, false ),
-				__( $value->label, 'custom-post-type-widgets' )
+				esc_html__( $value->label, 'custom-post-type-widgets' )
 			);
 
 		}
@@ -147,17 +151,18 @@ class WP_Custom_Post_Type_Widgets_Search extends WP_Widget {
 	 */
 	public function query_search_filter_only_post_type( $query ) {
 		/**
-		* publicly_queryable of 'page' post type is false.
+		* The publicly_queryable of 'page' post type is false.
 		* query_vars 'post_type' is unset, or set 'any'
 		* see function 'parse_request' in wp-includes/class-wp.php
 		* function that set post_type to $query
 		*/
 
+		/* @phpstan-ignore-next-line */
 		if ( $query->is_search ) {
 			$filter_post_type = '';
 
 			$post_types          = get_post_types( array( 'public' => true ), 'objects' );
-			$post_types[ 'any' ] = array();
+			$post_types['any'] = array();
 
 			// 'page' post type only
 			if ( isset( $_GET['post_type'] ) && 'page' === $_GET['post_type'] ) {
@@ -176,6 +181,7 @@ class WP_Custom_Post_Type_Widgets_Search extends WP_Widget {
 			$filter_post_type = apply_filters( 'custom_post_type_widgets/search/filter_post_type', $filter_post_type );
 
 			if ( $filter_post_type && array_key_exists( $filter_post_type, $post_types ) ) {
+				/* @phpstan-ignore-next-line */
 				$query->set( 'post_type', $filter_post_type );
 			}
 		}

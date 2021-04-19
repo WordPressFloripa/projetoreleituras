@@ -24,7 +24,7 @@ class AdminBar
 	public function topBar()
 	{
 		if (Menu::userCanManageAssets() && (! Main::instance()->settings['hide_from_admin_bar'])) {
-			add_action( 'admin_bar_menu', array( $this, 'topBarInfo' ), 999 );
+			add_action( 'admin_bar_menu', array( $this, 'topBarInfo' ), 81 );
 		}
 	}
 
@@ -34,6 +34,63 @@ class AdminBar
 	public function topBarInfo($wp_admin_bar)
 	{
 		$topTitle = WPACU_PLUGIN_TITLE;
+
+		$wpacuUnloadedAssetsStatus = false;
+
+		if (! is_admin()) {
+			$markedCssListForUnload = isset(Main::instance()->allUnloadedAssets['css']) ? array_unique(Main::instance()->allUnloadedAssets['css']) : array();
+			$markedJsListForUnload  = isset(Main::instance()->allUnloadedAssets['js'])  ? array_unique(Main::instance()->allUnloadedAssets['js'])  : array();
+
+			// [wpacu_lite]
+			// Do not print any irrelevant data from the Pro version such as hardcoded CSS/JS
+			$markedCssListForUnload = array_filter($markedCssListForUnload, function($value) {
+				if (strpos($value, 'wpacu_hardcoded_style_') === 0) {
+					return false;
+				}
+
+				return $value;
+			});
+
+			$markedJsListForUnload = array_filter($markedJsListForUnload, function($value) {
+				if (strpos($value, 'wpacu_hardcoded_script_') === 0) {
+					return false;
+				}
+
+				return $value;
+			});
+			// [/wpacu_lite]
+
+			$wpacuUnloadedAssetsStatus = (count($markedCssListForUnload) + count($markedJsListForUnload)) > 0;
+		}
+
+		if ($wpacuUnloadedAssetsStatus) {
+			$cssStyle = <<<HTML
+<style type="text/css">
+#wpadminbar .wpacu-alert-sign-top-admin-bar {
+    font-size: 20px;
+    color: lightyellow;
+    vertical-align: top;
+    margin: -7px 0 0;
+    display: inline-block;
+    box-sizing: border-box;
+}
+
+#wp-admin-bar-assetcleanup-plugin-unload-rules-notice-default .ab-item {
+	min-width: 250px !important;
+}
+
+#wp-admin-bar-assetcleanup-plugin-unload-rules-notice .ab-item > .dashicons-admin-plugins {
+	width: 20px;
+	height: 20px;
+    font-size: 20px;
+    line-height: normal;
+    vertical-align: middle;
+    margin-top: -2px;
+}
+</style>
+HTML;
+			$topTitle .= $cssStyle . '&nbsp;<span class="wpacu-alert-sign-top-admin-bar dashicons dashicons-filter"></span>';
+		}
 
 		if (Main::instance()->settings['test_mode']) {
 			$topTitle .= '&nbsp; <span class="dashicons dashicons-admin-tools"></span> <strong>TEST MODE</strong> is <strong>ON</strong>';
@@ -120,6 +177,63 @@ class AdminBar
 			'href'   => 'https://wordpress.org/support/plugin/wp-asset-clean-up',
 			'meta'   => array('target' => '_blank')
 		));
+
+		// [START LISTING UNLOADED ASSETS]
+		if (! is_admin()) { // Frontend view (show any unloaded handles)
+			$totalUnloadedAssets = count($markedCssListForUnload) + count($markedJsListForUnload);
+
+			if ($totalUnloadedAssets > 0) {
+				$titleUnloadText = sprintf( _n( '%d unload asset rules took effect on this frontend page',
+					'%d unload asset rules took effect on this frontend page', $totalUnloadedAssets, 'wp-asset-clean-up' ),
+					$totalUnloadedAssets );
+
+				$wp_admin_bar->add_menu( array(
+					'parent' => 'assetcleanup-parent',
+					'id'     => 'assetcleanup-asset-unload-rules-notice',
+					'title'  => '<span style="margin: -10px 0 0;" class="wpacu-alert-sign-top-admin-bar dashicons dashicons-filter"></span> &nbsp; '. $titleUnloadText,
+					'href'   => '#'
+				) );
+
+				if ( count( $markedCssListForUnload ) > 0 ) {
+					$wp_admin_bar->add_menu(array(
+						'parent' => 'assetcleanup-asset-unload-rules-notice',
+						'id'     => 'assetcleanup-asset-unload-rules-css',
+						'title'  => 'CSS ('.count( $markedCssListForUnload ).')',
+						'href'   => '#'
+					));
+					sort($markedCssListForUnload);
+
+					foreach ($markedCssListForUnload as $cssHandle) {
+						$wp_admin_bar->add_menu(array(
+							'parent' => 'assetcleanup-asset-unload-rules-css',
+							'id'     => 'assetcleanup-asset-unload-rules-css-'.$cssHandle,
+							'title'  => $cssHandle,
+							'href'   => admin_url('admin.php?page=wpassetcleanup_overview#wpacu-overview-css-'.$cssHandle)
+						));
+					}
+				}
+
+				if ( count( $markedJsListForUnload ) > 0 ) {
+					$wp_admin_bar->add_menu(array(
+						'parent' => 'assetcleanup-asset-unload-rules-notice',
+						'id'     => 'assetcleanup-asset-unload-rules-js',
+						'title'  => 'JavaScript ('.count( $markedJsListForUnload ).')',
+						'href'   => '#'
+					));
+					sort($markedJsListForUnload);
+
+					foreach ($markedJsListForUnload as $jsHandle) {
+						$wp_admin_bar->add_menu(array(
+							'parent' => 'assetcleanup-asset-unload-rules-js',
+							'id'     => 'assetcleanup-asset-unload-rules-js-'.$jsHandle,
+							'title'  => $jsHandle,
+							'href'   => admin_url('admin.php?page=wpassetcleanup_overview#wpacu-overview-js-'.$jsHandle)
+						));
+					}
+				}
+			}
+		}
+		// [END LISTING UNLOADED ASSETS]
 
 		}
 }

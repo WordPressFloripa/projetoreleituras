@@ -18,11 +18,30 @@ class Debug
 			add_action('wp_footer', array($this, 'showDebugOptions'), PHP_INT_MAX);
 		}
 
-		add_action('wp', static function() {
-			if ( isset( $_GET['wpacu_get_cache_dir_size'] ) && Menu::userCanManageAssets() ) { // Only print within the Dashboard
-				self::printCacheDirInfo();
-			}
-		});
+		foreach(array('wp', 'admin_init') as $wpacuActionHook) {
+			add_action( $wpacuActionHook, static function() {
+				if (isset( $_GET['wpacu_get_cache_dir_size'] ) && Menu::userCanManageAssets()) {
+					self::printCacheDirInfo();
+				}
+
+				// For debugging purposes
+				if (isset($_GET['wpacu_get_already_minified']) && Menu::userCanManageAssets()) {
+                    echo '<pre>'; print_r(OptimizeCommon::getAlreadyMarkedAsMinified()); echo '</pre>';
+                    exit();
+                }
+
+				if (isset($_GET['wpacu_remove_already_minified']) && Menu::userCanManageAssets()) {
+					echo '<pre>'; print_r(OptimizeCommon::removeAlreadyMarkedAsMinified()); echo '</pre>';
+					exit();
+				}
+
+				if (isset($_GET['wpacu_limit_already_minified']) && Menu::userCanManageAssets()) {
+					OptimizeCommon::limitAlreadyMarkedAsMinified();
+					echo '<pre>'; print_r(OptimizeCommon::getAlreadyMarkedAsMinified()); echo '</pre>';
+					exit();
+				}
+			} );
+		}
 	}
 
 	/**
@@ -38,15 +57,21 @@ class Debug
 		$markedJsListForUnload  = array_unique(Main::instance()->allUnloadedAssets['js']);
 
 		$allDebugOptions = array(
-			// CSS
-			'wpacu_no_css_unload'    => 'Do not apply any CSS unload rules',
-			'wpacu_no_css_minify'    => 'Do not minify any CSS',
-			'wpacu_no_css_combine'   => 'Do not combine any CSS',
+			// [For CSS]
+			'wpacu_no_css_unload'  => 'Do not apply any CSS unload rules',
+			'wpacu_no_css_minify'  => 'Do not minify any CSS',
+			'wpacu_no_css_combine' => 'Do not combine any CSS',
 
-			// JS
-			'wpacu_no_js_unload'     => 'Do not apply any JavaScript unload rules',
-			'wpacu_no_js_minify'     => 'Do not minify any JavaScript',
-			'wpacu_no_js_combine'    => 'Do not combine any JavaScript',
+			'wpacu_no_css_preload_basic' => 'Do not preload any CSS (Basic)',
+            // [/For CSS]
+
+			// [For JS]
+			'wpacu_no_js_unload'  => 'Do not apply any JavaScript unload rules',
+			'wpacu_no_js_minify'  => 'Do not minify any JavaScript',
+			'wpacu_no_js_combine' => 'Do not combine any JavaScript',
+
+			'wpacu_no_js_preload_basic' => 'Do not preload any JS (Basic)',
+			// [/For JS]
 
 			// Others
 			'wpacu_no_frontend_show' => 'Do not show the bottom CSS/JS managing list',
@@ -178,9 +203,7 @@ class Debug
                                                 <li>From CSS file to Inline: {wpacu_alter_html_source_for_inline_css_exec_time}</li>
                                                 <li>Update Original to Optimized: {wpacu_alter_html_source_original_to_optimized_css_exec_time}</li>
                                                 <li>Preloads: {wpacu_alter_html_source_for_preload_css_exec_time}</li>
-                                                <!-- removeIf(development) -->
-                                                <!--<li>Dynamic Loaded CSS (if any): {wpacu_alter_html_source_for_dynamic_loaded_css_exec_time}</li>-->
-                                                <!-- endRemoveIf(development) -->
+                                                <!-- -->
                                                 <li>Combine: {wpacu_alter_html_source_for_combine_css_exec_time}</li>
                                                 <li>Minify Inline Tags: {wpacu_alter_html_source_for_minify_inline_style_tags_exec_time}</li>
                                                 <li>Unload (ignore dependencies): {wpacu_alter_html_source_unload_ignore_deps_css_exec_time}</li>
@@ -191,9 +214,7 @@ class Debug
                                             <ul>
                                                 <li>Update Original to Optimized: {wpacu_alter_html_source_original_to_optimized_js_exec_time}</li>
                                                 <li>Preloads: {wpacu_alter_html_source_for_preload_js_exec_time}</li>
-                                                <!-- removeIf(development) -->
-	                                            <!--<li>Dynamic Loaded JS (if any): {wpacu_alter_html_source_for_dynamic_loaded_js_exec_time}</li>-->
-                                                <!-- endRemoveIf(development) -->
+                                                <!-- -->
                                                 <li>Combine: {wpacu_alter_html_source_for_combine_js_exec_time}</li>
                                                 <li>Unload (ignore dependencies): {wpacu_alter_html_source_unload_ignore_deps_js_exec_time}</li>
                                                 <li>Move any inline wih jQuery code after jQuery library: {wpacu_alter_html_source_move_inline_jquery_after_src_tag_exec_time}</li>
@@ -252,6 +273,8 @@ class Debug
 				    }
 			    } elseif ($item->isFile()) {
 			    	$appendAfter = '(<em>'.Misc::formatBytes($item->getSize()).'</em>)';
+
+			    	echo '&nbsp;-&nbsp;';
 			    }
 			    echo $item.' '.$appendAfter.'<br />';
 			    if ( $item->isFile() ) {

@@ -24,16 +24,16 @@ class BulkChanges
     public $data = array();
 
     /**
-     * GlobalRules constructor.
+     * BulkChanges constructor.
      */
     public function __construct()
     {
-	    $this->wpacuFor      = Misc::getVar('request', 'wpacu_for', $this->wpacuFor);
-	    $this->wpacuPostType = Misc::getVar('request', 'wpacu_post_type', $this->wpacuPostType);
+	    $this->wpacuFor      = sanitize_text_field(Misc::getVar('request', 'wpacu_for', $this->wpacuFor));
+	    $this->wpacuPostType = sanitize_text_field(Misc::getVar('request', 'wpacu_post_type', $this->wpacuPostType));
 
-	    if (Misc::getVar('request', 'wpacu_update') == 1) {
-		    $this->update();
-	    }
+        if (Misc::getVar('request', 'wpacu_update') == 1) {
+            $this->update();
+        }
     }
 
     /**

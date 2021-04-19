@@ -23,8 +23,8 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
         <strong>&#10141; Total enqueued files (including core files): <?php echo (int)$data['total_styles'] + (int)$data['total_scripts']; ?></strong>
     </div>
     <div class="col-right">
-        <a href="#" id="wpacu-assets-contract-all" class="wpacu-wp-button wpacu-wp-button-secondary">Contract Both Areas</a>&nbsp;
-        <a href="#" id="wpacu-assets-expand-all" class="wpacu-wp-button wpacu-wp-button-secondary">Expand Both Areas</a>
+        <a href="#" id="wpacu-assets-contract-all" class="wpacu-wp-button wpacu-wp-button-secondary">Contract All Groups</a>&nbsp;
+        <a href="#" id="wpacu-assets-expand-all" class="wpacu-wp-button wpacu-wp-button-secondary">Expand All Groups</a>
     </div>
     <div class="wpacu-clearfix"></div>
 </div>
@@ -41,7 +41,6 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
             if (! empty($data['all']['styles'])) {
                 ?>
                 <p><?php echo sprintf(__('Please select the styles &amp; scripts that are %sNOT NEEDED%s from the list below. Not sure which ones to unload? %s Use "Test Mode" (to make the changes apply only to you), while you are going through the trial &amp; error process.', 'wp-asset-clean-up'), '<span style="color: #CC0000;"><strong>', '</strong></span>', '<img draggable="false" class="wpacu-emoji" alt="🤔" src="https://s.w.org/images/core/emoji/12.0.0-1/svg/1f914.svg" />'); ?></p>
-                <p><?php echo __('"Load in on this page (make an exception)" will take effect when a bulk unload rule is used. Otherwise, the asset will load anyway unless you select it for unload.', 'wp-asset-clean-up'); ?></p>
                 <?php
 	            if ($data['plugin_settings']['hide_core_files']) {
 		            ?>
@@ -103,7 +102,6 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
         if (! empty($data['all']['scripts'])) {
             ?>
             <p><?php echo sprintf(__('Please select the styles &amp; scripts that are %sNOT NEEDED%s from the list below. Not sure which ones to unload? %s Use "Test Mode" (to make the changes apply only to you), while you are going through the trial &amp; error process.', 'wp-asset-clean-up'), '<span style="color: #CC0000;"><strong>', '</strong></span>', '<img draggable="false" class="wpacu-emoji" alt="🤔" src="https://s.w.org/images/core/emoji/12.0.0-1/svg/1f914.svg" />'); ?></p>
-            <p><?php echo __('"Load in on this page (make an exception)" will take effect when a bulk unload rule is used. Otherwise, the asset will load anyway unless you select it for unload.', 'wp-asset-clean-up'); ?></p>
             <?php
             if ($data['plugin_settings']['hide_core_files']) {
                 ?>
@@ -142,10 +140,10 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
 </div>
 <?php
 if ( isset( $data['all']['hardcoded'] ) && ! empty( $data['all']['hardcoded'] ) ) {
+	$data['print_outer_html'] = true; // AJAX call from the Dashboard
 	include_once __DIR__ . '/_assets-hardcoded-list.php';
-} elseif ($data['is_frontend_view']) {
-	// The following string will be replaced within a "wp_loaded" action hook
-	echo '{wpacu_assets_collapsible_wrap_hardcoded_list}';
+} elseif (isset($hardcodedManageAreaHtml, $data['is_frontend_view']) && $data['is_frontend_view']) {
+	echo $hardcodedManageAreaHtml; // AJAX call from the front-end view
 }
 
 include '_inline_js.php';

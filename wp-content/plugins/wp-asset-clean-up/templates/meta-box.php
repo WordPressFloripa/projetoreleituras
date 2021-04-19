@@ -22,13 +22,34 @@ if ($data['is_list_fetchable']) {
         }
         ?>
         <div id="wpacu_fetching_assets_list_wrap" <?php if ($data['fetch_assets_on_click']) { echo 'style="display: none;"'; } ?>>
-            <img src="<?php echo admin_url('images/spinner.gif'); ?>" align="top" width="20" height="20" alt="" />&nbsp;
-            <?php echo sprintf(__('Fetching the loaded scripts and styles for <strong>%s</strong> <br /><br /> Please wait... <br /><br /> In case the list does not show consider checking your internet connection and the actual page that is being fetched to see if it loads completely.', 'wp-asset-clean-up'), $data['fetch_url']); ?>
-            <p style="margin-bottom: 0;"><?php echo sprintf(
-                    __('If you believe fetching the page takes too long and the assets should have loaded by now, I suggest you go to "Settings", make sure "Manage in front-end" is checked and then %smanage the assets in the front-end%s.', 'wp-asset-clean-up'),
-                    '<a href="'.$data['fetch_url'].'#wpacu_wrap_assets">',
-                    '</a>'
-                ); ?></p>
+            <?php
+            if ($data['dom_get_type'] === 'direct') {
+	            $wpacuDefaultFetchListStepDefaultStatus   = '<img src="'.admin_url('images/spinner.gif').'" align="top" width="20" height="20" alt="" />&nbsp; Please wait...';
+	            $wpacuDefaultFetchListStepCompletedStatus = '<span style="color: green;" class="dashicons dashicons-yes-alt"></span> Completed';
+	            ?>
+                <div id="wpacu-list-step-default-status" style="display: none;"><?php echo $wpacuDefaultFetchListStepDefaultStatus; ?></div>
+                <div id="wpacu-list-step-completed-status" style="display: none;"><?php echo $wpacuDefaultFetchListStepCompletedStatus; ?></div>
+                <div>
+                    <ul class="wpacu_meta_box_content_fetch_steps">
+                        <li id="wpacu-fetch-list-step-1-wrap"><strong>Step 1</strong>: <?php echo sprintf(__('Fetch the assets from <strong>%s</strong>', 'wp-asset-clean-up'), $data['fetch_url']); ?>... <span id="wpacu-fetch-list-step-1-status"><?php echo $wpacuDefaultFetchListStepDefaultStatus; ?></span></li>
+                        <li id="wpacu-fetch-list-step-2-wrap"><strong>Step 2</strong>: Build the list of the fetched assets and print it... <span id="wpacu-fetch-list-step-2-status"></span></li>
+                    </ul>
+                </div>
+            <?php } else { ?>
+                    <div style="margin: 18px 0;">
+                        <img src="<?php echo admin_url('images/spinner.gif'); ?>" align="top" width="20" height="20" alt="" />&nbsp;
+                        <?php echo sprintf(__('Fetching the loaded scripts and styles for <strong>%s</strong>... Please wait...', 'wp-asset-clean-up'), $data['fetch_url']); ?>
+                    </div>
+            <?php } ?>
+
+            <hr>
+            <div style="margin-top: 20px;">
+                    <strong>Is the fetching taking too long? Please do the following:</strong>
+                    <ul style="margin-top: 8px; margin-left: 20px; padding: 0; list-style: disc;">
+                        <li>Check your internet connection and the actual page that is being fetched to see if it loads completely.</li>
+                        <li>If the targeted page loads fine and your internet connection is working fine, please try managing the assets in the front-end view by going to <em>"Settings" -&gt; "Plugin Usage Preferences" -&gt; "Manage in the Front-end"</em></li>
+                    </ul>
+            </div>
         </div>
         <?php
     } elseif ($data['status'] === 2) {

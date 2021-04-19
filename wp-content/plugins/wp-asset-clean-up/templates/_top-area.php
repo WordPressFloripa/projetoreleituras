@@ -6,6 +6,7 @@ if (! isset($data)) {
 	exit;
 }
 
+use WpAssetCleanUp\Main;
 use WpAssetCleanUp\Misc;
 
 $wpacuTopAreaLinks = array(
@@ -79,6 +80,8 @@ if (! $wpacuCurrentPage) {
 $wpacuDefaultPageUrl = admin_url(Misc::arrayKeyFirst($wpacuTopAreaLinks));
 
 $goBackToCurrentUrl = '&_wp_http_referer=' . urlencode( wp_unslash( $_SERVER['REQUEST_URI'] ) );
+
+$isSettingsCurrentPage = ($wpacuCurrentPage !== WPACU_PLUGIN_ID . '_settings');
 ?>
 <div id="wpacu-top-area">
     <div id="wpacu-logo-wrap">
@@ -94,6 +97,26 @@ $goBackToCurrentUrl = '&_wp_http_referer=' . urlencode( wp_unslash( $_SERVER['RE
 		    'assetcleanup_clear_assets_cache'); ?>">
             <span class="dashicons dashicons-update"></span> <?php _e('Clear CSS/JS Files Cache', 'wp-asset-clean-up'); ?>
         </a>
+        |
+        <?php
+        if ($isSettingsCurrentPage) {
+            echo '<a style="text-decoration: none; color: #74777b;" href="'.admin_url('admin.php?page=wpassetcleanup_settings&wpacu_selected_tab_area=wpacu-setting-test-mode').'">';
+        }
+
+        echo __('TEST MODE', 'wp-asset-clean-up').': ';
+
+        if (Main::instance()->settings['test_mode']) {
+            echo '<strong style="color: green;">ON</strong> ';
+            echo '<span style="font-weight: 300; font-style: italic;">* settings only apply to you (logged-in admin)</span>';
+        } else {
+            echo 'OFF ';
+	        echo '<span style="font-weight: 300; font-style: italic;">* settings apply to any visitor</span>';
+        }
+
+        if ($isSettingsCurrentPage) {
+	        echo '</a>';
+        }
+        ?>
     </div>
 
     <div class="wpacu-clearfix"></div>

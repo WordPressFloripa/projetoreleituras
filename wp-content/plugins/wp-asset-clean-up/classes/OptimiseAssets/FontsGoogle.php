@@ -36,21 +36,30 @@ class FontsGoogle
 	 */
 	public function init()
 	{
+		if (self::preventAnyChange()) {
+			return;
+		}
+
 		add_filter('wp_resource_hints', array($this, 'resourceHints'), PHP_INT_MAX, 2);
 
 		add_action('wp_head',   array($this, 'preloadFontFiles'), 1);
 		add_action('wp_footer', static function() {
-			if ( Plugin::preventAnyChanges() || Main::isTestModeActive() || Main::instance()->settings['google_fonts_remove'] ) {
+			if ( Plugin::preventAnyFrontendOptimization() || Main::isTestModeActive() || Main::instance()->settings['google_fonts_remove'] ) {
 				return;
 			}
 
 			echo self::NOSCRIPT_WEB_FONT_LOADER;
 		}, PHP_INT_MAX);
 
+		add_filter('wpacu_html_source_after_optimization', static function($htmlSource) {
+			// Is the mark still there and wasn't replaced? Strip it
+			return str_replace(FontsGoogle::NOSCRIPT_WEB_FONT_LOADER, '', $htmlSource);
+		});
+
 		add_action('init', function() {
 			// don't apply any changes if not in the front-end view (e.g. Dashboard view)
 			// or test mode is enabled and a guest user is accessing the page
-			if ( Plugin::preventAnyChanges() || Main::isTestModeActive() || Main::instance()->settings['google_fonts_remove'] ) {
+			if ( Plugin::preventAnyFrontendOptimization() || Main::isTestModeActive() || Main::instance()->settings['google_fonts_remove'] ) {
 				return;
 			}
 
@@ -68,7 +77,7 @@ class FontsGoogle
 	{
 		// don't apply any changes if not in the front-end view (e.g. Dashboard view)
 		// or test mode is enabled and a guest user is accessing the page
-		if (is_admin() || Main::isTestModeActive() || Plugin::preventAnyChanges()) {
+		if (is_admin() || Main::isTestModeActive() || Plugin::preventAnyFrontendOptimization()) {
 			return $urls;
 		}
 
@@ -103,7 +112,7 @@ class FontsGoogle
 	{
 		// don't apply any changes if not in the front-end view (e.g. Dashboard view)
 		// or test mode is enabled and a guest user is accessing the page
-		if ( Plugin::preventAnyChanges() || Main::isTestModeActive() ) {
+		if ( Plugin::preventAnyFrontendOptimization() || Main::isTestModeActive() ) {
 			return;
 		}
 
@@ -149,12 +158,12 @@ class FontsGoogle
 		// don't apply any changes if not in the front-end view (e.g. Dashboard view)
 		// or test mode is enabled and a guest user is accessing the page
 		// or an AMP page is accessed
-		if (Plugin::preventAnyChanges() || Main::isTestModeActive()) {
+		if ( Plugin::preventAnyFrontendOptimization() || Main::isTestModeActive()) {
 			return $htmlSource;
 		}
 
 		/*
-		 * Remove Google Fonts and stop here as optimization is no longer relevant
+		 * Remove Google Fonts? Stop here as optimization is no longer relevant
 		 */
 		if (Main::instance()->settings['google_fonts_remove']) {
 			return FontsGoogleRemove::cleanHtmlSource($htmlSource);
@@ -163,83 +172,92 @@ class FontsGoogle
 		/*
 		 * Optimize Google Fonts
 		 */
+		if (Main::instance()->settings['google_fonts_combine'] && stripos($htmlSource, self::$containsStr) !== false) {
+			// Cleaner HTML Source
+			$altHtmlSource = preg_replace( '@<(script|style|noscript)[^>]*?>.*?</\\1>@si', '', $htmlSource ); // strip irrelevant tags for the collection
+			$altHtmlSource = preg_replace( '/<!--[^>]*' . preg_quote( self::$containsStr, '/' ) . '.*?-->/', '', $altHtmlSource ); // strip any comments containing the string
 
-		// Cleaner HTML Source
-		$altHtmlSource = preg_replace('@<(script|style|noscript)[^>]*?>.*?</\\1>@si', '', $htmlSource);
-		$altHtmlSource = preg_replace('/<!--(.|\s)*?-->/', '', $altHtmlSource);
+			// Get all valid LINKs that have the $string within them
+			preg_match_all( '#<link[^>]*' . self::$matchesStr . '.*(>)#Usmi', $altHtmlSource, $matchesFromLinkTags, PREG_SET_ORDER );
 
-		// Get all valid LINKs that have the $string within them
-		preg_match_all('#<link[^>]*' . self::$matchesStr . '.*(>)#Usmi', $altHtmlSource, $matchesFromLinkTags, PREG_SET_ORDER);
+			// Needs to match at least one to carry on with the replacements
+			if ( isset( $matchesFromLinkTags[0] ) && ! empty( $matchesFromLinkTags[0] ) ) {
+				$finalCombinableLinks = $preloadedLinks = array();
 
-		// Needs to match at least one to carry on with the replacements
-		if (isset($matchesFromLinkTags[0]) && ! empty($matchesFromLinkTags[0])) {
-			$finalCombinableLinks = $preloadedLinks = array();
+				foreach ( $matchesFromLinkTags as $linkTagArray ) {
+					$linkTag = $finalLinkTag = trim( trim( $linkTagArray[0], '"\'' ) );
 
-			foreach ($matchesFromLinkTags as $linkIndex => $linkTagArray) {
-				$linkTag = $finalLinkTag = trim(trim($linkTagArray[0], '"\''));
+					// Extra checks to make sure it's a valid LINK tag
+					if ( ( strpos( $linkTag, "'" ) !== false && ( substr_count( $linkTag, "'" ) % 2 ) )
+					     || ( strpos( $linkTag, '"' ) !== false && ( substr_count( $linkTag, '"' ) % 2 ) )
+					     || ( trim( strip_tags( $linkTag ) ) !== '' ) ) {
+						continue;
+					}
 
-				// Extra checks to make sure it's a valid LINK tag
-				if ( (strpos($linkTag, "'") !== false && (substr_count($linkTag, "'") % 2))
-				|| (strpos($linkTag, '"') !== false && (substr_count($linkTag, '"') % 2))
-				|| (trim(strip_tags($linkTag)) !== '')) {
-					continue;
+					// Check if the CSS has any 'data-wpacu-skip' attribute; if it does, do not continue and leave it as it is (non-combined)
+					if ( preg_match( '#data-wpacu-skip([=>/ ])#i', $linkTag ) ) {
+						continue;
+					}
+
+					preg_match_all( '#href=(["\'])' . '(.*)' . '(["\'])#Usmi', $linkTag, $outputMatches );
+					$linkHrefOriginal = $finalLinkHref = trim( $outputMatches[2][0], '"\'' );
+
+					// [START] Remove invalid requests with no font family
+					$urlParse = parse_url( str_replace( '&amp;', '&', $linkHrefOriginal ), PHP_URL_QUERY );
+					parse_str( $urlParse, $qStr );
+
+					if ( isset( $qStr['family'] ) && ! $qStr['family'] ) {
+						$htmlSource = str_replace( $linkTag, '', $htmlSource );
+						continue;
+					}
+					// [END] Remove invalid requests with no font family
+
+					// If anything is set apart from '[none set]', proceed
+					if ( Main::instance()->settings['google_fonts_display'] ) {
+						$newLinkHref = $finalLinkHref = self::alterGoogleFontLink( $linkHrefOriginal );
+
+						if ( $newLinkHref !== $linkHrefOriginal ) {
+							$finalLinkTag = str_replace( $linkHrefOriginal, $newLinkHref, $linkTag );
+
+							// Finally, alter the HTML source
+							$htmlSource = str_replace( $linkTag, $finalLinkTag, $htmlSource );
+						}
+					}
+
+					if ( preg_match( '/rel=(["\'])preload(["\'])/i', $finalLinkTag )
+					     || strpos( $finalLinkTag, 'data-wpacu-to-be-preloaded-basic' ) ) {
+						$preloadedLinks[] = $finalLinkHref;
+					}
+
+					$finalCombinableLinks[] = array( 'href' => $finalLinkHref, 'tag' => $finalLinkTag );
 				}
 
-				preg_match_all('#href=(["\'])' . '(.*)' . '(["\'])#Usmi', $linkTag, $outputMatches);
-				$linkHrefOriginal = $finalLinkHref = trim($outputMatches[2][0], '"\'');
+				$preloadedLinks = array_unique( $preloadedLinks );
 
-				// [START] Remove invalid requests with no font family
-				$urlParse = parse_url(str_replace('&amp;', '&', $linkHrefOriginal), PHP_URL_QUERY);
-				parse_str($urlParse, $qStr);
-
-				if (isset($qStr['family']) && ! $qStr['family']) {
-					$htmlSource = str_replace($linkTag, '', $htmlSource);
-					continue;
-				}
-				// [END] Remove invalid requests with no font family
-
-				// If anything is set apart from '[none set]', proceed
-				if (Main::instance()->settings['google_fonts_display']) {
-					$newLinkHref = $finalLinkHref = self::alterGoogleFontLink($linkHrefOriginal);
-
-					if ($newLinkHref !== $linkHrefOriginal) {
-						$finalLinkTag = str_replace($linkHrefOriginal, $newLinkHref, $linkTag);
-
-						// Finally, alter the HTML source
-						$htmlSource = str_replace($linkTag, $finalLinkTag, $htmlSource);
+				// Remove data for preloaded LINKs
+				if ( ! empty( $preloadedLinks ) ) {
+					foreach ( $finalCombinableLinks as $fclIndex => $combinableLinkData ) {
+						if ( in_array( $combinableLinkData['href'], $preloadedLinks ) ) {
+							unset( $finalCombinableLinks[ $fclIndex ] );
+						}
 					}
 				}
 
-				if (preg_match('/rel=(["\'])preload(["\'])/i', $finalLinkTag)
-				    || strpos($finalLinkTag, 'data-wpacu-to-be-preloaded-basic')) {
-					$preloadedLinks[] = $finalLinkHref;
+				$finalCombinableLinks = array_values( $finalCombinableLinks );
+
+				// Only proceed with the optimization/combine if there's obviously at least 2 combinable URL requests to Google Fonts
+				// OR the loading type is different than render-blocking
+				if ( Main::instance()->settings['google_fonts_combine_type'] || count( $finalCombinableLinks ) > 1 ) {
+					$htmlSource = self::combineGoogleFontLinks( $finalCombinableLinks, $htmlSource );
 				}
-
-				$finalCombinableLinks[] = array('href' => $finalLinkHref, 'tag' => $finalLinkTag);
-			}
-
-			$preloadedLinks = array_unique($preloadedLinks);
-
-			// Remove data for preloaded LINKs
-			if (! empty($preloadedLinks)) {
-				foreach ($finalCombinableLinks as $fclIndex => $combinableLinkData) {
-					if (in_array($combinableLinkData['href'], $preloadedLinks)) {
-						unset($finalCombinableLinks[$fclIndex]);
-					}
-				}
-			}
-
-			// Only proceed with the optimization/combine if there's obviously at least 2 combinable URL requests to Google Fonts
-			// OR the loading type is different than render-blocking
-			if (Main::instance()->settings['google_fonts_combine'] && (Main::instance()->settings['google_fonts_combine_type'] || count($finalCombinableLinks) > 1)) {
-				$htmlSource = self::combineGoogleFontLinks($finalCombinableLinks, $htmlSource);
 			}
 		}
 
+		// "font-display: swap;" if enabled
 		$htmlSource = self::alterGoogleFontUrlFromInlineStyleTags($htmlSource);
-		$htmlSource = str_replace(self::NOSCRIPT_WEB_FONT_LOADER, '', $htmlSource);
 
-		return $htmlSource;
+		// Clear any traces
+		return str_replace(self::NOSCRIPT_WEB_FONT_LOADER, '', $htmlSource);
 	}
 
 	/**
@@ -313,6 +331,11 @@ class FontsGoogle
 		foreach ($styleMatches as $styleInlineArray) {
 			list($styleInlineTag, $styleInlineContent) = $styleInlineArray;
 
+			// Check if the STYLE tag has any 'data-wpacu-skip' attribute; if it does, do not continue
+			if (preg_match('#data-wpacu-skip([=>/ ])#i', $styleInlineTag)) {
+				continue;
+			}
+
 			// Is the content relevant?
 			if (! preg_match('/@import(\s+|)(url|\(|\'|")/i', $styleInlineContent)
 			    || stripos($styleInlineContent, 'fonts.googleapis.com') === false) {
@@ -347,7 +370,7 @@ class FontsGoogle
 			preg_match_all($regExpPattern, $cssContent, $matchesFromInlineCode, PREG_SET_ORDER);
 
 			if (! empty($matchesFromInlineCode)) {
-				foreach ($matchesFromInlineCode as $matchIndex => $matchesFromInlineCodeArray) {
+				foreach ($matchesFromInlineCode as $matchesFromInlineCodeArray) {
 					$cssImportRule = $matchesFromInlineCodeArray[0];
 
 					if ($regExpIndex === 0) {
@@ -572,7 +595,7 @@ HTML;
 			 */
 			if (Main::instance()->settings['google_fonts_combine_type'] === 'async_preload') {
 				$finalPreloadCombinedLink = <<<HTML
-<link rel='preload' as="style" onload="this.rel='stylesheet'" data-wpacu-preload-it-async='1' id='wpacu-combined-google-fonts-css-async-preload' href='https://fonts.googleapis.com/css?family={$finalCombinedParameters}' type='text/css' media='all' />
+<link rel='preload' as="style" onload="this.onload=null;this.rel='stylesheet'" data-wpacu-preload-it-async='1' id='wpacu-combined-google-fonts-css-async-preload' href='https://fonts.googleapis.com/css?family={$finalCombinedParameters}' type='text/css' media='all' />
 HTML;
 				$finalPreloadCombinedLink .= "\n".Misc::preloadAsyncCssFallbackOutput();
 
@@ -600,18 +623,14 @@ HTML;
 
 					// Any types? e.g. 400, 400italic, bold, etc.
 					$hasTypes = false;
-					if (isset($fontValues['types']) && is_array($fontValues['types']) && ! empty($fontValues['types'])) {
-						$wfConfigGoogleFamily .= ':' . implode(',', $fontValues['types']);
+					if (isset($fontValues['types']) && $fontValues['types']) {
+						$wfConfigGoogleFamily .= ':'.$fontValues['types'];
 						$hasTypes = true;
 					}
 
 					if ($subSetsStr) {
-						// No type and has a subset? Add the default "regular" one
-						if (! $hasTypes) {
-							$wfConfigGoogleFamily .= ':regular';
-						}
-
-						$wfConfigGoogleFamily .= ':' . $subSetsStr;
+						// If there are types, continue to use the comma delimiter
+						$wfConfigGoogleFamily .= ($hasTypes ? ',' : ':') . $subSetsStr;
 					}
 
 					// Append extra parameters to the last family from the list
@@ -683,5 +702,17 @@ HTML;
 		sort($newTypes);
 
 		return implode(',', $newTypes);
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function preventAnyChange()
+	{
+		if (defined('WPACU_ALLOW_ONLY_UNLOAD_RULES') && WPACU_ALLOW_ONLY_UNLOAD_RULES) {
+			return true;
+		}
+
+		return false;
 	}
 }

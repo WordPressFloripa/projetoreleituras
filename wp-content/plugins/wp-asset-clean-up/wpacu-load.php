@@ -21,12 +21,18 @@ function includeWpAssetCleanUpClassesAutoload($class)
 
     $pathToClass = WPACU_PLUGIN_CLASSES_PATH.$classFilter.'.php';
 
-    if (file_exists($pathToClass)) {
+    if (is_file($pathToClass)) {
         include_once $pathToClass;
     }
 }
 
 spl_autoload_register('includeWpAssetCleanUpClassesAutoload');
+
+\WpAssetCleanUp\ObjectCache::wpacu_cache_init();
+
+if (isset($GLOBALS['wpacu_object_cache'])) {
+	$wpacu_object_cache = $GLOBALS['wpacu_object_cache']; // just in case
+}
 
 // Main Class
 \WpAssetCleanUp\Main::instance();
@@ -45,11 +51,17 @@ $wpacuOwnAssets->init();
 $wpacuUpdate = new \WpAssetCleanUp\Update;
 $wpacuUpdate->init();
 
-// Various functions
-new \WpAssetCleanUp\Misc;
-
 // Menu
 new \WpAssetCleanUp\Menu;
+
+add_action('plugins_loaded', function() use ($wpacuSettingsClass) {
+	$wpacuSettings = $wpacuSettingsClass->getAll();
+
+// If "Manage in the front-end" is enabled & the admin is logged-in, do not trigger any Autoptimize caching at all
+	if ( $wpacuSettings['frontend_show'] && \WpAssetCleanUp\Menu::userCanManageAssets() && ! defined( 'AUTOPTIMIZE_NOBUFFER_OPTIMIZE' ) ) {
+		define( 'AUTOPTIMIZE_NOBUFFER_OPTIMIZE', true );
+	}
+}, -PHP_INT_MAX);
 
 // Admin Bar (Top Area of the website when user is logged in)
 new \WpAssetCleanUp\AdminBar();
@@ -68,21 +80,6 @@ new \WpAssetCleanUp\Maintenance();
 $wpacuOptimizeCommon = new \WpAssetCleanUp\OptimiseAssets\OptimizeCommon();
 $wpacuOptimizeCommon->init();
 
-// Sometimes when page builders are used such as "Oxygen Builder", it's better to keep the CSS/JS combine/minify disabled
-// The following will only trigger in specific situations (most cases)
-if (\WpAssetCleanUp\Misc::triggerFrontendOptimization()) {
-	/*
-	 * Trigger the CSS & JS combination only in the front-end view in certain conditions (not within the Dashboard)
-	 */
-	// Combine/Minify CSS Files Setup
-	$wpacuOptimizeCss = new \WpAssetCleanUp\OptimiseAssets\OptimizeCss();
-	$wpacuOptimizeCss->init();
-
-	// Combine/Minify JS Files Setup
-	$wpacuOptimizeJs = new \WpAssetCleanUp\OptimiseAssets\OptimizeJs();
-	$wpacuOptimizeJs->init();
-}
-
 if (is_admin()) {
 	/*
 	 * Trigger only within the Dashboard view (e.g. within /wp-admin/)
@@ -97,9 +94,18 @@ if (is_admin()) {
 
 	$wpacuTools = new \WpAssetCleanUp\Tools();
 	$wpacuTools->init();
-
-	\WpAssetCleanUp\Preloads::instance()->init();
 } elseif (\WpAssetCleanUp\Misc::triggerFrontendOptimization()) {
+	/*
+	 * Trigger the CSS & JS combination only in the front-end view in certain conditions (not within the Dashboard)
+	 */
+	// Combine/Minify CSS Files Setup
+	$wpacuOptimizeCss = new \WpAssetCleanUp\OptimiseAssets\OptimizeCss();
+	$wpacuOptimizeCss->init();
+
+	// Combine/Minify JS Files Setup
+	$wpacuOptimizeJs = new \WpAssetCleanUp\OptimiseAssets\OptimizeJs();
+	$wpacuOptimizeJs->init();
+
 	/*
 	 * Trigger only in the front-end view (e.g. Homepage URL, /contact/, /about/ etc.)
 	 */
@@ -112,3 +118,5 @@ if (is_admin()) {
 	$wpacuFontsGoogle = new \WpAssetCleanUp\OptimiseAssets\FontsGoogle();
 	$wpacuFontsGoogle->init();
 }
+
+\WpAssetCleanUp\Preloads::instance()->init();

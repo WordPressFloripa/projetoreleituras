@@ -2,34 +2,37 @@
 Contributors: DaanvandenBergh
 Tags: analytics, host, locally, ga, gtag, analytics, woocommerce, gdpr, cookie notice, leverage browser cache, minimize external requests
 Requires at least: 4.6
-Tested up to: 5.4
-Stable tag: 3.5.2
+Tested up to: 5.7
+Stable tag: 4.0.3
 Requires PHP: 7.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Automagically download and update analytics.js/ga.js/gtag.js, bypass Ad Blockers with Stealth Mode, add the tracking code to your site's footer and tons of other features!
+Automagically download and update analytics.js/gtag.js, bypass Ad Blockers with Stealth Mode, add the tracking code to your site's footer and tons of other features!
 
 == Description ==
 
-CAOS (Complete Analytics Optimization Suite) for Google Analytics allows you to **host analytics.js/gtag.js/ga.js** locally and keep it updated using WordPress' built-in Cron-schedule. Fully automatic!
+CAOS (Complete Analytics Optimization Suite) for Google Analytics allows you to **host analytics.js/gtag.js** locally and keep it updated using WordPress' built-in Cron-schedule. Fully automatic!
+
+Not a big Google Analytics user and just curious about your pageviews? CAOS fully supports [Minimal Analytics](https://minimalanalytics.com), which is basically Google Analytics Lite. An extremely lightweight alternative to Google Analytics' default libraries (analytics.js/gtag.js). *Minimal Analytics also helps you get rid of that annoying **Unused JS** notice in Google PageSpeed Insights!*
 
 Whenever you run an analysis of your website on *Google Pagespeed Insights*, *Pingdom* or *GTMetrix*, it'll tell you to **leverage browser cache** when you're using Google Analytics. Because Google has set the cache expiry time to 2 hours. This plugin will get you a **higher score** on Pagespeed and Pingdom and make **your website load faster**, because the user's browser doesn't have to make a roundtrip to download the file from Google's external server.
 
-Just install the plugin, enter your Tracking-ID and the plugin adds the necessary Tracking Code for Google Analytics to the header (or footer) of your theme, downloads and saves the analytics.js/ga.js/gtag.js-file to your website's server and keeps it updated (automagically) using a scheduled script in wp_cron(). CAOS is a set and forget plugin.
-
-Please keep in mind that, although I try to make the configuration of this plugin as easy as possible, the concept of locally hosting a file or optimizing Google Analytics for *Pagespeed Insights* or *GT Metrix* has proven to be confusing for some people. If you're not sure of what your doing, please consult a SEO expert or Webdeveloper to help you with the configuration of this plugin. Or [hire me to do it for you](https://woosh.dev/wordpress-services/caos-expert-configuration/?utm_source=wordpress&utm_medium=description&utm_campaign=caos).
+Just install the plugin, enter your Tracking-ID and the plugin adds the necessary Tracking Code for Google Analytics to the header (or footer) of your theme, downloads and saves the analytics.js/gtag.js-file to your website's server and keeps it updated (automagically) using a scheduled script in wp_cron(). CAOS is a set and forget plugin.
 
 For more information: [How to setup CAOS](https://daan.dev/wordpress-plugins/caos/?utm_source=wordpress&utm_medium=description&utm_campaign=caos).
 
 == Features ==
-- Host analytics.js, ga.js or gtag.js locally ([What's the difference?](https://daan.dev/wordpress/difference-analyics-gtag-ga-js/?utm_source=wordpress&utm_medium=description&utm_campaign=caos)),
-- Endlessly extensible using the integrated filters and available mini plugins! E.g. [track Google Adwords conversions](https://github.com/Dan0sz/caos-google-adwords) and much, much more!
-- When using gtag.js, the underlying request to analytics.js is also hosted locally!
-- **[Bypass Ad Blockers](https://daan.dev/how-to/bypass-ad-blockers-caos/?utm_source=wordpress&utm_medium=description&utm_campaign=caos)** in Stealth Mode: Sneak past Security and protect your Google Analytics data,
-  - Plugins (e.g. linkid.js or ec.js) are also served from a local source when in Stealth Mode!
-  - *[CAOS Super Stealth Upgrade](https://woosh.dev/wordpress-plugins/caos-super-stealth-upgrade/?utm_source=wordpress&utm_medium=description&utm_campaign=caos) adds compatibility with Enhanced Commerce (ec.js) and gtag.js.*
-- Preconnect to google-analytics.com and CDN URL (if set) to reduce latency and speed up requests,
+- Host analytics.js or gtag.js locally ([What's the difference?](https://daan.dev/wordpress/difference-analyics-gtag-ga-js/?utm_source=wordpress&utm_medium=description&utm_campaign=caos)),
+- Downloaded files are renamed to random strings to avoid ad blockers,
+- Minimal Analytics support,
+- Google Analytics V4 API support,
+- Endlessly extensible for developers by using the integrated filters and available mini plugins! E.g. [track Google Adwords conversions](https://github.com/Dan0sz/caos-google-adwords) and much, much more!
+- **[Bypass Ad Blockers](https://daan.dev/how-to/bypass-ad-blockers-caos/?utm_source=wordpress&utm_medium=description&utm_campaign=caos)** in Stealth Mode,
+  - Plugins (e.g. linkid.js) are also served from a local source when in Stealth Mode!
+  - *[CAOS Super Stealth Upgrade](https://ffw.press/wordpress-plugins/caos-super-stealth-upgrade/?utm_source=wordpress&utm_medium=description&utm_campaign=caos) adds compatibility with Enhanced Ecommerce (ec.js) and Analytics' Ecommerce Features (ecommerce.js).*
+- Preconnect to google-analytics.com to reduce latency and speed up requests (if not using Stealth Mode),
+- Send an event to your Google Analytics dashboard when a visitor is viewing your pages using an Ad Blocker,
 - Capture outbound links,
 - Integrate Google Optimize,
 - Enhanced link attribution,
@@ -37,36 +40,45 @@ For more information: [How to setup CAOS](https://daan.dev/wordpress-plugins/cao
 - **Add tracking code** to header, **footer** or manually,
 - Load the tracking snippet Asynchronous or Default (Synchronous)
 - Fully compatible with [Google Analytics Dashboard Plugin for WP by MonsterInsights](https://daan.dev/wordpress/leverage-browser-caching-host-analytics-local-monster-insights/?utm_source=wordpress&utm_medium=description&utm_campaign=caos), WooCommerce Google Analytics Integration, Google Analytics Dashboard Plugin for WP by Analytify and Google Analytics Dashboard for WP by ExactMetrics,
-- Save analytics.js/ga.js/gtag.js anywhere within the WordPress content (wp-content) directory to avoid detection by WordPress security plugins (such as WordFence) or removal by caching plugins (such as WP Super Cache),
-- Serve analytics.js/ga.js/gtag.js from your CDN,
+- Save analytics.js/gtag.js anywhere within the WordPress content (wp-content) directory to avoid detection by WordPress security plugins (such as WordFence) or removal by caching plugins (such as WP Super Cache),
+- Serve analytics.js/gtag.js from your CDN,
 - Set Cookie Expiry Period,
+- Set Site Speed Sample Rate,
 - Set [Adjusted Bounce Rate](https://daan.dev/wordpress/adjusted-bounce-rate-caos/?utm_source=wordpress&utm_medium=description&utm_campaign=caos),
 - Change enqueue order (prioritize order of loaded scripts),
 - Enable Enhanced Link Attribution (linkid.js),
 - Force disabling display features functionalities,
 - Anonymize IP addresses,
 - Track logged in Administrators,
-- Manually update analytics.js/ga.js/gtag.js with the click of a button!
+- Manually update analytics.js/gtag.js with the click of a button!
 
 == Installation ==
 
 1. Upload the plugin files to the `/wp-content/plugins/host-analyticsjs-local` directory, or install the plugin through the WordPress plugins repository directly.
 1. Activate the plugin through the 'Plugins' screen in WordPress
-1. Use the Settings -> Optimize Analytics screen to configure the plugin
+1. Use the Settings -> Optimize Google Analytics screen to configure the plugin
 
 == Frequently Asked Questions ==
 
 = I have another file I want to host locally. Could you make a plugin? =
 
-Maintaining three plugins besides my daily 9-to-5 job is a handful, so no. If you're looking for a way to host Google Webfonts locally; please install [OMGF](https://wordpress.org/plugins/host-webfonts-local/).. To host other 3rd party scripts and styles locally, try [HELL](https://wordpress.org/plugins/host-everything-local/). For WordPress Speed Optimization, check out [WoOSH!](https://woosh.dev)
+Maintaining multiple plugins besides my daily 9-to-5 job is a handful, so no. If you're looking for a way to host Google Webfonts locally; please install [OMGF](https://wordpress.org/plugins/host-webfonts-local/).
 
-= CAOS says analytics.js/gtag.js/ga.js isn't updated in more than two days. What's going on? =
+= Why am I getting an Unused JS notice on Google PageSpeed Insights for analytics.js/gtag.js? =
 
-This is due to server configuration. Probably a permissions issue. It might be that PHP/WordPress isn't allowed to create files programmatically. If you can upload media files just fine, then this probably isn't the issue. Is your cron running? Try clicking the 'update analytics.js/gtag.js/ga.js' option to update the file manually. Meanwhile, contact your hosting provider so they can help you figure out if your cron is running correctly.
+Google Analytics offers two code libraries: analytics.js and gtag.js. A library offers easy implementation of a certain application, but this wide compatibility range comes at a cost: it probably contains a bunch of code you don't even need.
+
+If you are a light-weight Google Analytics user, you can enable Minimal Analytics in CAOS' Basic Settings: Settings > Optimize Google Analytics > Basic Settings > Snippet Type: Minimal Analytics.
+
+Minimal Analytics is fully compatible with Stealth Mode.
+
+= CAOS says analytics.js/gtag.js isn't updated in more than two days. What's going on? =
+
+This is due to server configuration. Probably a permissions issue. It might be that PHP/WordPress isn't allowed to create files programmatically. If you can upload media files just fine, then this probably isn't the issue. Is your cron running? Try clicking the 'update analytics.js/gtag.js' option to update the file manually. Meanwhile, contact your hosting provider so they can help you figure out if your cron is running correctly.
 
 = Can the gtm/js file used by Google Optimize be hosted locally? =
 
-No, it can't. The gtm/js file is generated using a Client ID, which is unique for each visitor of your site. Saving this file locally would break your A/B tests.
+No, it can't. The gtm/js (or gtm.js) file is generated using a Client ID, which is unique for each visitor of your site. Saving this file locally would break your A/B tests.
 
 = I have disabled the plugin, but the Google Analytics tracking code is still added to the page. What's going on? =
 
@@ -88,37 +100,29 @@ Yes, this is normal. This browser extensions looks for this exact string 'www.go
 
 Yes, it is! CAOS is compatible with several Google Analytics plugins for WooCommerce.
 
-= I use WP Super Cache / W3 Total Cache / Autoptimize or another Caching and/or Minification plugin. Why is it removing analytics.js when I flush my cache? =
+= I use WP Super Cache / W3 Total Cache or another Caching and/or Minification plugin. Why is it removing analytics.js when I flush my cache? =
 
-This happens because analytics.js is saved within the 'cache'-folder and for some reason the cache/minify plugin thinks it should be refreshed. Change the path where analytics.js is saved within CAOS to a path outside the /cache/ folder (e.g. /caos-cache/analytics/). This should resolve any issues you're having.
+This happens because analytics.js is saved within the 'cache'-folder and for some reason the cache/minify plugin thinks it should be refreshed. Change the path where analytics.js is saved within CAOS to a path outside the /uploads/ folder (e.g. /uploads/caos/). This should resolve any issues you're having.
 
-= WordFence (or another security plugin) is detecting file changes in analytics.js/gtag.js/ga.js. What's going on? =
+= WordFence (or another security plugin) is detecting file changes in analytics.js/gtag.js. What's going on? =
 
 This is perfectly normal, since this is the file that was updated by the built-in cronjob in older versions of CAOS. Update to the latest version and change the path where analytics.js is saved within CAOS to a path which is ignored by your security plugin (e.g. /uploads/ or /cache/). This should resolve any issues you're having.
 
 = What is the current update interval of the Analytics-script? =
 
-I have set it to daily, because Google updates the script very often. Also, the daily interval is the longest interval that wp_cron() allows, as far as I know. If you suspect you might've gotten behind (which I doubt) I've implement a manual update button within the CAOS' settings.
-
-= The ga.js/analytics.js/gtag.js-file remains empty! What should I do? =
-
-Make sure you are running the latest version, as I added some compatibility fixes along the way. If this doesn't resolve your issue, then your wp-cron isn't working properly. This is a server related issue. You can add the 'includes/update-analytics.php'-file to [your crontab](http://crontab-generator.org/ "Click here to create a crontab line using Crontab Generator"). As this problem has been resolved many times already, check the forum!
-
-= I just updated to the latest version and the tracking stopped working! =
-
-Probably your gtag.js/analytics.js/ga.js file got overwritten and emptied. Try activating and de-activating the plugin, otherwise this will automatically resolve itself after the cronjob has run.
+I have set it to twice daily, because Google updates the script very often. If you suspect you might've gotten behind (which I doubt) Run a manual update button within CAOS' settings.
 
 = I disabled Demographic Reports in Google Analytics, but the script is still redirecting to doubleclick.net. How do I turn this off? =
 
 Try enabling the option called "Disable all display features functionality?" With this you can enforce the disabling of the DisplayFeatures plugin.
 
-= I've installed your plugin but analytics.js/ga.js/gtag.js is still showing up as an external request in Pingdom e.a.? =
+= I've installed your plugin but analytics.js/gtag.js is still showing up as an external request in Pingdom e.a.? =
 
-CAOS adds a local file called gtag.js/analytics.js/gtag.js (depending on your choice), which enables you to use Analytics, while hosting the necessary files locally. This doesn't mean that it scans your entire plugins or themes directory for other manually/programatically added Analytics tracking-code. I.e. If analytics.js or ga.js is still showing up in the list of requests, this mean that something else (probably the theme you're using or another plugin) is adding this tracking code to your Wordpress Install. Find it. Remove it. And let CAOS take care of sending your needed data to Google Analytics.
+CAOS adds a local file called gtag.js/analytics.js (depending on your choice), which enables you to use Analytics, while hosting the necessary files locally. This doesn't mean that it scans your entire plugins or themes directory for other manually/programatically added Analytics tracking-code. I.e. If analytics.js is still showing up in the list of requests, this mean that something else (probably the theme you're using or another plugin) is adding this tracking code to your Wordpress Install. Find it. Remove it. And let CAOS take care of sending your needed data to Google Analytics.
 
 = I use a CDN. Can I use CAOS in combination with my CDN? =
 
-Yes, you can! Simply add the URL of your CDN within the advanced options and analytics.js/gtag.js/ga.js will be served from your CDN.
+Yes, you can! Simply add the URL of your CDN within the advanced options and analytics.js/gtag.js will be served from your CDN.
 
 == Screenshots ==
 
@@ -126,22 +130,154 @@ N/A
 
 == Changelog ==
 
-= 3.5.2 =
+= 4.0.3 | April 12th, 2021 =
+* Small performance increase by removing unused code and re-factoring code.
+* Google Analytics plugins (e.g. linkid.js, ec.js, etc.) are no longer renamed, because this would cause 404-errors.
+
+= 4.0.2 | April 6th, 2021 =
+* File alias will now only be generated once, and will not change afterwards.
+* Fixed the confirmation notice after saving changes.
+* Don't show file last updated notice if Minimal Analytics is used.
+* Fixed some PHP warnings and notices.
+
+= 4.0.1 | April 2nd, 2021 =
+* Don't show notice when Minimal Analytics is used.
+* Use local path to load JS/CSS assets, instead of URL (what was I thinking?)
+
+= 4.0.0 | March 29th, 2021 =
+* Added 'Cookie value contains' option to Allow Tracking setting, to increase compatibility with plugins like Borlabs Cookie.
+* All downloaded files (e.g. analytics.js or gtag.js) are now renamed to random strings, to avoid being blocked by Ad Blockers.
+* Fixed some console errors, like when CookieValue is null and when document.body doesn't exist (yet)
+* Update analytics.js/gtag.js is now ran directly after Saving Changes in settings screen.
+* GA V4 endpoints are now filterable.
+* GA V4 is marked as beta and Gtag V3 is no longer marked as deprecated.
+* Added extra debug information to Update Script when Debug Mode is enabled.
+* Moved sidebar to separate Help tab leaving more space for settings and descriptions.
+* Admin CSS and JS assets are now loaded inline to stop ad blockers from messing with CAOS' admin functionality.
+* Outbound Link Tracking is no longer locked when (Super) Stealth Mode is enabled, because on same (fast) servers it does work in Stealth Mode.
+* Code clean-up and overall UX improvements.
+* Allround performance improvements and tweaks.
+
+= 3.11.0 | March 19th, 2021 =
+* Added Debug Mode in Advanced Settings
+* Fixed bug in CloudFlare IP Geolocation detection
+
+= 3.10.1 | March 19th, 2021 =
+* Re-factored CAOS_API_Proxy class to make it more readable and logical.
+* Increased CloudFlare compatibility for Stealth Mode (Lite) and Super Stealth:
+  - If CloudFlare's GeoIP Location option is enabled, this will be used to overwrite the location derived from the user's IP address.
+
+= 3.10.0 | March 14th, 2021 =
+* Added Advanced Setting: Site Speed Sample Rate.
+
+= 3.9.4 | Martch 10th, 2021 =
+* Minor code optimizations.
+* Increased compatibility for WP Bedrock configurations.
+* Removed notice stating that gtag.js isn't compatible with Stealth Mode (because it is since 3.9.0.)
+
+= 3.9.3 | March 9th, 2021 =
+* Tested with WP 5.7.
+* Fixed bug in Outbound Links Tracking script.
+
+= 3.9.2 | February 18th, 2021 =
+* As if the previous release wasn't embarrassing enough. This release *really* fixes the bug.
+* Cleaned-up sidebar and added links to documentation.
+
+= 3.9.1 | February 17th, 2021 =
+* Quick patch release, because I'm a bit of a dumdum. Using gtag.js with Stealth Mode would result in requests being sent through the wrong URL.
+
+= 3.9.0 | February 4th, 2021 =
+* Re-introduced Stealth Mode compatibility for gtag.js for Google Analytics V3 API.
+* Reviewed plugins in Compatibility Mode:
+  * Updated MonsterInsights compatibility to also include gtag.js.
+  * Updated WooCommerce Google Analytics Integration to also include Google Analytics' V4 API (Global Site Tag) option.
+* Added Stealth Mode Lite support for Google Analytics V4 API.
+
+= 3.8.1 | January 27th, 2021 =
+* Improved compatiblity with WordPress in Subdirectory installs.
+
+= 3.8.0 | January 2nd, 2021 =
+* Added support for Google Analytics V4 API (Stealth Mode not (yet) supported).
+* Gtag.js (v3 API) is now deprecated in favor of gtag.js (v4 API).
+
+= 3.7.8 | September 15h, 2020 =
+* API endpoints are now registered in front- and backend.
+* Performance improvements for class-loader.
+
+= 3.7.7 =
+* Last update broke Minimal Analytics. Sorry, guys. This fixes it.
+
+= 3.7.6 | August 26th, 2020 =
+* Slowly recovering from extreme sleep deprivation. ;)
+* Updated custom script attributes filter to work with re-factored templating methods.
+* Minor code optimizations in templates.
+* Fixed bug where in some situations the Google Analytics disable script (When cookie is (not) set, etc.) wouldn't load.
+
+= 3.7.5 =
+* Set default value of Cookie Expiry to 30 days to prevent multiple sessions from the same IP.
+
+= 3.7.4 =
+* Tested with WP 5.5.
+* Re-added custom attribute filters for Complianz.io compatibility. Sorry, Aert!
+* Minor re-factors.
+
+= 3.7.3 =
+* Fixed bug where tracking code wouldn't render when Add Manually was selected under Basic Settings.
+* Fixed bug where the Basic Settings tab would be tracked in Google Analytics.
+* Minimal Analytics no longer depends on jQuery.
+
+= 3.7.2 =
+* jQuery is no longer used in the frontend (e.g. for Track Ad Blockers option).
+* Fixed bug where Track Ad Blockers wouldn't work with gtag.js.
+* Replaced jQuery in frontend with vanilla JavaScript to avoid conflicts with JS optimization plugins.
+
+= 3.7.1 =
+* Fixed bug where Minimal Analytics wouldn't run if gtag.js was previously set as remote JS file.
+
+= 3.7.0 | August 9th, 2020 =
+* My daughter, Emma, is exactly one month old now!
+* *Track Ad Blockers* events are now sent *after* the Pageview is sent. Fixing the bug for it to create sessions instead of pageviews.
+* Added Minimal Analytics support to allow (light-weight) users to get rid of that nasty **Unused JS** notice in Google PageSpeed Insights.
+  * This option can be enabled in Basic Settings > Snippet Type.
+* Fixed event category and label for Adjusted Bounce Rate for gtag.js.
+* Moved Capture Outbound Links and Adjusted Bounce Rate options to Extensions tab.
+* Moved Track Logged In Administrators? and Anonymize IP to Basic Settings tab.
+* Added Outbound Link Tracking support for gtag.js.
+* Outbound Link Tracking script is now loaded in line, to prevent blocking by Ad Blockers.
+* Dropped Stealth Mode support for gtag.js, because it has become unusable after an update of Global Site Tag. Will research the possibility of re-adding it.
+  * gtag.js will load analytics.js from google-analytics.com from now on.
+* CAOS now uses the same autoloader as OMGF (or other FFWP plugins -- if installed) removing overhead and effectively increasing performance.
+* Added release dates to the changelog. :)
+
+= 3.6.0 | June 27th, 2020 =
+* CAOS now throws a notice if an Ad Blocker is enabled on CAOS' admin screen, because Ad Blockers block any URL with 'analytics' in it, e.g. host-analyticsjs-local, which'll cause manual updates to not work properly.
+* Added feature to send a custom event to Google Analytics when a page is viewed with an Ad Blocker enabled.
+* DNS-prefetch resource hint to google-analytics.com is now added automatically when Stealth Mode is disabled.
+* Changed CAOS' default cache-path to /uploads/caos/
+* Minor refactors and code optimizations.
+
+= 3.5.3 | May 29th, 2020 =
+* UX improvements and better notices.
+* Updated FAQ.
+
+= 3.5.2 | May 15th, 2020 =
 * Some options in extensions tab are now hidden when Compatibility Mode is enabled.
 * Run cron twice daily to prevent schedule misses.
 
-= 3.5.1 =
+= 3.5.1 | May 12th, 2020 =
 * Added clearer descriptions for some settings in the Extensions tab.
 * Added more filter and action hooks.
 * Added fix for SameSite cookie policy for analytics.js and gtag.js. It's not yet supported for linkid.js.
 
-= 3.5.0 =
+= 3.5.0 | April 26th, 2020 =
 * Plugins (e.g. linkid.js or ec.js) are now handled twice as fast with the new *Extensions* > *Plugin Handling* option set to **Experimental** Mode.
+  * Mind you that loading ec.js in Stealth Mode requires CAOS Super Stealth Upgrade to work.
 
-= 3.4.4 =
+= 3.4.4 | April 21st, 2020 =
+* It's my 35th birthday!
 * Added polyfill for is_plugin_active to fix Fatal Errors in certain WordPress configurations.
 
-= 3.4.3 =
+= 3.4.3 | April 20th, 2020 =
 * [HOTFIX] Fix for Fatal Error: Call to undefined function get_plugins().
 
 = 3.4.2 =
@@ -152,7 +288,7 @@ N/A
 = 3.4.1 =
 * Fixed syntax errors in sidebar.
 
-= 3.4.0 =
+= 3.4.0 | April 19th, 2020 =
 * Code improvements for setting screen.
 * Added support for Enhanced Link Attribution (also works with (Super) Stealth.)
 * Added more filters and hooks for developers to extend CAOS.
@@ -160,7 +296,7 @@ N/A
 * Fixed bug where notices would sometimes be displayed twice.
 * Added several notice to improve UX.
 
-= 3.3.7 =
+= 3.3.7 | April 8th, 2020 =
 * Added filter hooks for when Stealth mode is enabled/disabled, to improve UX.
 * Added filter hooks for tweet and review link, to improve UX.
 
@@ -170,43 +306,43 @@ N/A
 = 3.3.5 =
 * HOTFIX: Stealth Mode filter to be used for Super Stealth Mode.
 
-= 3.3.4 =
+= 3.3.4 | April 4th, 2020=
 * Stealth Mode now respects the Anonymize IP setting.
 * Added some notices and reminders when some settings are changed, to improve UX.
 * Notices are now grouped.
 * When an update of the JS library is required after changing the settings, you will now be notified.
 
-= 3.3.3 =
+= 3.3.3 | March 27th, 2020 =
 * Added tabs in Settings to comply with WordPress plugin conventions == major code clean-up.
 
-= 3.3.2 =
+= 3.3.2 | March 23rd, 2020 =
 * Admin screen is now responsive.
 * Sidebar scrolls on larger screens.
 
 = 3.3.1 =
 * Fixed bug of paths to JS files for Capture Outbound Links and Admin JS.
 
-= 3.3.0 =
+= 3.3.0 | March 22nd, 2020 =
 * Added new notices interface. Notices are now dismissible and CAOS now throws a global notice to notify you of issues with your analytics/gtag file.
 * Revamped settings screen with toggleable interface.
 
-= 3.2.0 =
+= 3.2.0 | January 31st, 2020 =
 CAOS can now preconnect to google-analytics.com and CDN URL (if set).
 
-= 3.1.3 =
+= 3.1.3 | January 21st, 2020 =
 Do not output success message when update-script is executed by CRON.
 Added extra filter to allow further manipulation of the analytics.js tracking code.
 
-= 3.1.2 =
+= 3.1.2 | January 8th, 2020 =
 Added filters on script elements.
 
-= 3.1.1 =
+= 3.1.1 | January 7th, 2020 =
 CAOS now throws a notice if cURL is disabled on the server.
 
-= 3.1.0 =
+= 3.1.0 | January 5th, 2020 =
 Added filter to add additional configuration using the gtag tracking snippet. Updated readme.txt.
 
-= 3.0.1 =
+= 3.0.1 | January 3rd, 2020 =
 Fixed bug where using Adjusted Bounce Rate would trigger two pageviews.
 
 = 3.0.0 =
@@ -252,10 +388,6 @@ Damn Subversion. Had to add new file to versioning.
 = 2.7.7 =
 Stealth Mode now also works for Google Analytics Enhanced Link Attribution plugin.
 
-= 2.7.6 =
-Added fix for Stealth Mode, when using Google Analytics E-commerce features. Known issue: the download
-of ec.js does not bypass all Ad Blockers.
-
 = 2.7.5 =
 Optimized Javascript.
 
@@ -291,7 +423,7 @@ Added support for asynchronous loading of the snippet.
 
 = 2.5.0 =
 When using the gtag.js wrapper, the request to analytics.js is now also loaded from a local source!
-Added link to explain differences between ga.js, analytics.js and gtag.js.
+Added link to explain differences between analytics.js and gtag.js.
 
 = 2.4.3/2.4.4 =
 Oops! Forgot some strings!

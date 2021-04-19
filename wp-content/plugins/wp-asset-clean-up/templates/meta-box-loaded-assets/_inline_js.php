@@ -7,7 +7,8 @@ if (! isset($data)) {
 <script type="text/javascript" data-wpacu-own-inline-script="true">
     var wpacuContentLinks           = document.getElementsByClassName('wpacu-assets-collapsible'),
         wpacuInlineCodeContentLinks = document.getElementsByClassName('wpacu-assets-inline-code-collapsible'),
-        wpacuI, wpacuITwo;
+        wpacuPluginToggleWrapLinks  = document.getElementsByClassName('wpacu-plugin-contracted-wrap-link'),
+        wpacuI, wpacuITwo, wpacuIThree;
 
     // "Styles" & "Scripts" main areas
     for (wpacuI = 0; wpacuI < wpacuContentLinks.length; wpacuI++) {
@@ -118,6 +119,33 @@ if (! isset($data)) {
         <?php
     }
     ?>
+
+    for (wpacuIThree = 0; wpacuIThree < wpacuPluginToggleWrapLinks.length; wpacuIThree++) {
+        wpacuPluginToggleWrapLinks[wpacuIThree].addEventListener('click', function (e) {
+            e.preventDefault();
+
+            var wpacuNext = this.nextElementSibling;
+
+            if (this.classList.contains('wpacu-link-closed')) {
+                // Change Link Class
+                this.classList.remove('wpacu-link-closed');
+                this.classList.add('wpacu-link-open');
+
+                // Change Target Content  Class
+                wpacuNext.classList.remove('wpacu-area-closed');
+                wpacuNext.classList.add('wpacu-area-open');
+            } else {
+                // Change Link Class
+                this.classList.remove('wpacu-link-open');
+                this.classList.add('wpacu-link-closed');
+
+                // Change Target Content  Class
+                wpacuNext.classList.remove('wpacu-area-open');
+                wpacuNext.classList.add('wpacu-area-closed');
+            }
+        });
+    }
+
     /* Source: http://bdadam.com/blog/automatically-adapting-the-height-textarea.html */
     (function() {
         function wpacuAdjustTextareaHeight(el, minHeight) {

@@ -14,6 +14,93 @@ class Overview
 	public $data = array();
 
 	/**
+	 * Overview constructor.
+	 */
+	public function __construct()
+    {
+        // [START] Clear load exceptions for a handle
+	    $transientName = 'wpacu_load_exceptions_cleared';
+	    if ( isset( $_POST['wpacu_action'], $_POST['wpacu_handle'], $_POST['wpacu_asset_type'] )
+	         && ( $wpacuAction = $_POST['wpacu_action'] )
+	         && ( $wpacuHandle = $_POST['wpacu_handle'] )
+	         && ( $wpacuAssetType = $_POST['wpacu_asset_type'] ) && $wpacuAction === 'clear_load_exceptions'
+        ) {
+	        check_admin_referer('wpacu_clear_load_exceptions', 'wpacu_clear_load_exceptions_nonce');
+            Maintenance::removeAllLoadExceptionsFor($wpacuHandle, $wpacuAssetType);
+            set_transient($transientName, array('handle' => $wpacuHandle, 'type' => $wpacuAssetType));
+            wp_redirect(admin_url('admin.php?page=wpassetcleanup_overview'));
+            exit();
+        }
+
+	    if ($transientData = get_transient($transientName)) {
+	        add_action('admin_notices', static function() use ($transientData, $transientName) {
+		        $wpacuAssetTypeToPrint = ($transientData['type'] === 'styles') ? 'CSS' : 'JavaScript';
+	            ?>
+                <div class="notice wpacu-notice-info is-dismissible">
+                    <p><span style="color: #008f9c; font-size: 26px; margin-right: 4px; vertical-align: text-bottom; margin-bottom: 0;" class="dashicons dashicons-yes"></span> <?php echo sprintf(__('The load exception rules for the `<strong>%s</strong>` %s handle have been removed.', 'wp-asset-clean-up'), $transientData['handle'], $wpacuAssetTypeToPrint); ?></p>
+                </div>
+                <?php
+                delete_transient($transientName);
+            }, PHP_INT_MAX);
+        }
+	    // [END] Clear load exceptions for a handle
+
+	    // [START] Clear all rules for the chosen "orphaned" handle
+	    $transientName = 'wpacu_all_rules_cleared';
+	    if ( isset( $_POST['wpacu_action'], $_POST['wpacu_handle'], $_POST['wpacu_asset_type'] )
+	         && ( $wpacuAction = $_POST['wpacu_action'] )
+	         && ( $wpacuHandle = $_POST['wpacu_handle'] )
+	         && ( $wpacuAssetType = $_POST['wpacu_asset_type'] ) && $wpacuAction === 'clear_all_rules'
+	    ) {
+		    check_admin_referer('wpacu_clear_all_rules', 'wpacu_clear_all_rules_nonce');
+		    Maintenance::removeAllRulesFor($wpacuHandle, $wpacuAssetType);
+		    set_transient('wpacu_all_rules_cleared', array('handle' => $wpacuHandle, 'type' => $wpacuAssetType));
+		    wp_redirect(admin_url('admin.php?page=wpassetcleanup_overview'));
+		    exit();
+	    }
+
+	    if ($transientData = get_transient($transientName)) {
+		    add_action('admin_notices', static function() use ($transientData, $transientName) {
+			    $wpacuAssetTypeToPrint = ($transientData['type'] === 'styles') ? 'CSS' : 'JavaScript';
+			    ?>
+                <div class="notice wpacu-notice-info is-dismissible">
+                    <p><span style="color: #008f9c; font-size: 26px; margin-right: 4px; vertical-align: text-bottom; margin-bottom: 0;" class="dashicons dashicons-yes"></span> <?php echo sprintf(__('All the rules were cleared for the orphaned `<strong>%s</strong>` %s handle.', 'wp-asset-clean-up'), $transientData['handle'], $wpacuAssetTypeToPrint); ?></p>
+                </div>
+			    <?php
+			    delete_transient($transientName);
+		    }, PHP_INT_MAX);
+	    }
+	    // [END] Clear all rules for the chosen "orphaned" handle
+
+	    // [START] Clear all redundant unload rules (if the site-wide one is already enabled)
+	    $transientName = 'wpacu_all_redundant_unload_rules_cleared';
+	    if ( isset( $_POST['wpacu_action'], $_POST['wpacu_handle'], $_POST['wpacu_asset_type'] )
+	         && ( $wpacuAction = $_POST['wpacu_action'] )
+	         && ( $wpacuHandle = $_POST['wpacu_handle'] )
+	         && ( $wpacuAssetType = $_POST['wpacu_asset_type'] ) && $wpacuAction === 'clear_all_redundant_unload_rules'
+	    ) {
+		    check_admin_referer('wpacu_clear_all_redundant_rules', 'wpacu_clear_all_redundant_rules_nonce');
+		    Maintenance::removeAllRedundantUnloadRulesFor($wpacuHandle, $wpacuAssetType);
+		    set_transient($transientName, array('handle' => $wpacuHandle, 'type' => $wpacuAssetType));
+		    wp_redirect(admin_url('admin.php?page=wpassetcleanup_overview'));
+		    exit();
+	    }
+
+	    if ($transientData = get_transient($transientName)) {
+		    add_action('admin_notices', static function() use ($transientData, $transientName) {
+			    $wpacuAssetTypeToPrint = ($transientData['type'] === 'styles') ? 'CSS' : 'JavaScript';
+			    ?>
+                <div class="notice wpacu-notice-info is-dismissible">
+                    <p><span style="color: #008f9c; font-size: 26px; margin-right: 4px; vertical-align: text-bottom; margin-bottom: 0;" class="dashicons dashicons-yes"></span> <?php echo sprintf(__('All the redundant unload rules were cleared for the `<strong>%s</strong>` %s handle, leaving the only one relevant: `site-wide (everywhere)`.', 'wp-asset-clean-up'), $transientData['handle'], $wpacuAssetTypeToPrint); ?></p>
+                </div>
+			    <?php
+			    delete_transient($transientName);
+		    }, PHP_INT_MAX);
+	    }
+	    // [END] Clear all redundant unload rules (if the site-wide one is already enabled)
+    }
+
+	/**
 	 * @return array
 	 */
 	public static function handlesWithAtLeastOneRule()
@@ -77,6 +164,26 @@ class Overview
 				    $allHandles['scripts'][$assetHandle]['attrs_no_load']['home_page'] = $assetAttrsNoLoad;
 			    }
 		    }
+	    }
+
+	    // Custom Post Type Load Exceptions
+        // e.g. the asset could be unloaded site-wide and loaded on all pages belonging to a post type such as WooCommerce single 'product' page
+	    $wpacuPostTypeLoadExceptions = get_option(WPACU_PLUGIN_ID . '_post_type_load_exceptions');
+
+	    if ($wpacuPostTypeLoadExceptions) {
+		    $wpacuPostTypeLoadExceptionsArray = @json_decode( $wpacuPostTypeLoadExceptions, ARRAY_A );
+
+            foreach ( $wpacuPostTypeLoadExceptionsArray as $wpacuPostType => $dbAssetHandles ) {
+	            foreach ( array('styles', 'scripts') as $assetType ) {
+	                if (isset($dbAssetHandles[$assetType]) && $dbAssetHandles[$assetType]) {
+	                    foreach ($dbAssetHandles[$assetType] as $assetHandle => $assetValue) {
+	                        if ($assetValue !== '') {
+		                        $allHandles[ $assetType ][ $assetHandle ]['load_exception_post_type'][] = $wpacuPostType;
+	                        }
+	                    }
+	                }
+	            }
+            }
 	    }
 
 	    // Get all Asset CleanUp (Pro) meta keys from all WordPress meta tables where it can be possibly used
@@ -145,15 +252,25 @@ SQL;
 	    $wpacuGlobalData = get_option(WPACU_PLUGIN_ID . '_global_data');
 	    $wpacuGlobalDataArray = @json_decode($wpacuGlobalData, ARRAY_A);
 
+	    $allPossibleDataTypes = array('load_it_logged_in', 'preloads', 'positions', 'notes', 'ignore_child', 'everywhere', 'date', '404', 'search');
+
 	    foreach (array('styles', 'scripts') as $assetType) {
-		    foreach (array('load_it_logged_in', 'preloads', 'positions', 'notes', 'ignore_child', 'everywhere', 'date', '404', 'search') as $dataType) {
+		    if ($assetType === 'scripts' && isset( $wpacuGlobalDataArray[ $assetType ])) {
+                foreach (array_keys($wpacuGlobalDataArray[ $assetType ]) as $dataType) {
+                    if ( strpos( $dataType, 'custom_post_type_archive_' ) !== false ) {
+                        $allPossibleDataTypes[] = $dataType;
+                    }
+                }
+
+			    }
+
+		    foreach ($allPossibleDataTypes as $dataType) {
 			    if ( isset( $wpacuGlobalDataArray[ $assetType ][$dataType] ) && ! empty( $wpacuGlobalDataArray[ $assetType ][$dataType] ) ) {
 				    foreach ( $wpacuGlobalDataArray[ $assetType ][$dataType] as $assetHandle => $dataValue ) {
 					    if ($dataType === 'everywhere' && $assetType === 'scripts' && isset($dataValue['attributes'])) {
 						    if (count($dataValue['attributes']) === 0) {
 							    continue;
 						    }
-
 						    // async/defer applied site-wide
 						    $allHandles[ $assetType ][ $assetHandle ]['script_site_wide_attrs'] = $dataValue['attributes'];
 					    } elseif ($dataType !== 'everywhere' && $assetType === 'scripts' && isset($dataValue['attributes'])) {
@@ -201,7 +318,7 @@ SQL;
 	    }
 
 	    /*
-		* Bulk Unload Rules - post, page, custom post type (e.g. product, download), taxonomy (e.g. category), 404, date, etc.
+		* Bulk Unload Rules - post, page, custom post type (e.g. product, download), taxonomy (e.g. category), 404, date, archive (for custom post type) with pagination etc.
 		*/
 	    $wpacuBulkUnloadData = get_option(WPACU_PLUGIN_ID . '_bulk_unload');
 	    $wpacuBulkUnloadDataArray = @json_decode($wpacuBulkUnloadData, ARRAY_A);
@@ -213,14 +330,14 @@ SQL;
 					    continue;
 				    }
 
-				    // $unloadBulkType could be 'post_type', 'date', '404', 'taxonomy', 'search'
+				    // $unloadBulkType could be 'post_type', 'date', '404', 'taxonomy', 'search', 'custom_post_type_archive_[post_type_name_here]', etc.
 				    if ($unloadBulkType === 'post_type') {
 					    foreach ($unloadBulkValues as $postType => $assetHandles) {
 						    foreach ($assetHandles as $assetHandle) {
 							    $allHandles[ $assetType ][ $assetHandle ]['unload_bulk']['post_type'][] = $postType;
 						    }
 					    }
-				    } elseif (in_array($unloadBulkType, array('date', '404', 'search'))) {
+				    } elseif (in_array($unloadBulkType, array('date', '404', 'search')) || (strpos($unloadBulkType, 'custom_post_type_archive_') !== false)) {
 					    foreach ($unloadBulkValues as $assetHandle) {
 						    $allHandles[ $assetType ][ $assetHandle ]['unload_bulk'][$unloadBulkType] = 1;
 					    }
@@ -285,7 +402,12 @@ SQL;
         }
 
         if ( $for === 'default' ) {
-            $src = (isset( $data['assets_info'][ $assetType ][ $handle ]['src'] ) && $data['assets_info'][ $assetType ][ $handle ]['src']) ? $data['assets_info'][ $assetType ][ $handle ]['src'] : false;
+            // Show the original "src" and "ver, not the altered one
+            // (in case filters such as "wpacu_{$handle}_(css|js)_handle_obj" were used to load alternative versions of the file, depending on the situation)
+            $srcKey = isset($data['assets_info'][ $assetType ][ $handle ]['src_origin']) ? 'src_origin' : 'src';
+	        $verKey = isset($data['assets_info'][ $assetType ][ $handle ]['ver_origin']) ? 'ver_origin' : 'ver';
+
+            $src = (isset( $data['assets_info'][ $assetType ][ $handle ][$srcKey] ) && $data['assets_info'][ $assetType ][ $handle ][$srcKey]) ? $data['assets_info'][ $assetType ][ $handle ][$srcKey] : false;
 
             $isExternalSrc = true;
 
@@ -302,10 +424,10 @@ SQL;
             }
 
 	        $ver = $wp_version; // default
-	        if (isset($data['assets_info'][ $assetType ][ $handle ]['ver'] ) && $data['assets_info'][ $assetType ][ $handle ]['ver'] ) {
-		        $ver = is_array($data['assets_info'][ $assetType ][ $handle ]['ver'] )
-			        ? implode(',', $data['assets_info'][ $assetType ][ $handle ]['ver'] )
-			        : $data['assets_info'][ $assetType ][ $handle ]['ver'] ;
+	        if (isset($data['assets_info'][ $assetType ][ $handle ][$verKey] ) && $data['assets_info'][ $assetType ][ $handle ][$verKey] ) {
+		        $ver = is_array($data['assets_info'][ $assetType ][ $handle ][$verKey] )
+			        ? implode(',', $data['assets_info'][ $assetType ][ $handle ][$verKey] )
+			        : $data['assets_info'][ $assetType ][ $handle ][$verKey] ;
 	        }
 	        ?>
             <strong><span style="color: green;"><?php echo $handle; ?></span></strong>
@@ -367,6 +489,18 @@ SQL;
 		        $handleExtras[24] = '404 Not Found attributes: <strong>'.implode(', ', $handleData['script_attrs']['search']).'</strong>';
 	        }
 
+            // Archive page for Custom Post Type (those created via theme editing or via plugins such as "Custom Post Type UI")
+            $scriptAttrsStr = (isset($handleData['script_attrs']) && is_array($handleData['script_attrs'])) ? implode('', array_keys($handleData['script_attrs'])) : '';
+
+	        if (strpos($scriptAttrsStr, 'custom_post_type_archive_') !== false) {
+	            $keyNo = 225;
+	            foreach ($handleData['script_attrs'] as $scriptAttrsKey => $scriptAttrsValue) {
+	                $customPostTypeName = str_replace('custom_post_type_archive_', '', $scriptAttrsKey);
+		            $handleExtras[$keyNo] = 'Archive custom post type page "'.$customPostTypeName.'" attributes: <strong>'.implode(', ', $handleData['script_attrs'][$scriptAttrsKey]).'</strong>';
+		            $keyNo++;
+	            }
+	        }
+
 	        // Per post page
             if (isset($handleData['script_attrs']['post']) && ! empty($handleData['script_attrs']['post'])) {
 	            $handleExtras[3] = 'Per post attributes: ';
@@ -413,11 +547,15 @@ SQL;
 
 	            foreach ($handleData['script_attrs']['term'] as $termId => $attrList) {
 		            $taxData     = get_term( $termId );
-		            $taxonomy    = $taxData->taxonomy;
-		            $termLink    = get_term_link( $taxData, $taxonomy );
-		            $termRelLink = str_replace( site_url(), '', $termLink );
 
-		            $taxPagesList .= '<a href="' . $termRelLink . '">' . $termRelLink . '</a> - <strong>'.implode(', ', $attrList).'</strong> | ';
+		            if (isset($taxData->errors['invalid_taxonomy']) && ! empty($taxData->errors['invalid_taxonomy'])) {
+			            $taxPagesList .= '<span style="color: darkred; font-style: italic;">Error: Taxonomy with ID '.$termId.' does not exist anymore (rule does not apply)</span> | ';
+		            } else {
+			            $taxonomy    = $taxData->taxonomy;
+			            $termLink    = get_term_link( $taxData, $taxonomy );
+			            $termRelLink = str_replace( site_url(), '', $termLink );
+			            $taxPagesList .= '<a href="' . $termRelLink . '">' . $termRelLink . '</a> - <strong>' . implode( ', ', $attrList ) . '</strong> | ';
+		            }
 	            }
 
 	            $taxPagesList = trim($taxPagesList, ' | ');
@@ -432,7 +570,7 @@ SQL;
 	        if (isset($handleData['script_site_wide_attrs'])) {
 		        $handleExtras[4] = 'Site-wide attributes: ';
 		        foreach ( $handleData['script_site_wide_attrs'] as $attrValue ) {
-			        $handleExtras[4] .= '<strong>' . $attrValue . '</strong>, ';
+			        $handleExtras[4] .= '<strong>' . $attrValue . '</strong>';
 
 			        // Are there any exceptions? e.g. async, defer unloaded site-wide, but loaded on the homepage
 			        if ( isset( $handleData['attrs_no_load'] ) && ! empty( $handleData['attrs_no_load'] ) ) {
@@ -450,12 +588,17 @@ SQL;
 						        $handleAttrsExceptionsList .= ' Date Archive, ';
 					        }
 
-					        if ( $attrSetIn === '404' && in_array($attrValue, $attrSetValues) ) {
+					        if ( (int)$attrSetIn === 404 && in_array($attrValue, $attrSetValues) ) {
 						        $handleAttrsExceptionsList .= ' 404 Not Found, ';
 					        }
 
 					        if ( $attrSetIn === 'search' && in_array($attrValue, $attrSetValues) ) {
 						        $handleAttrsExceptionsList .= ' Search Results, ';
+					        }
+
+					        if (strpos($attrSetIn, 'custom_post_type_archive_') !== false) {
+						        $customPostTypeName = str_replace('custom_post_type_archive_', '', $attrSetIn);
+					            $handleAttrsExceptionsList .= ' Archive "'.$customPostTypeName.'" custom post type, ';
 					        }
 
 					        // Post pages such as posts, pages, product (WooCommerce), download (Easy Digital Downloads), etc.
@@ -489,12 +632,17 @@ SQL;
 						                continue;
                                     }
 
-							        $taxData     = get_term( $termId );
-							        $taxonomy    = $taxData->taxonomy;
-							        $termLink    = get_term_link( $taxData, $taxonomy );
-							        $termRelLink = str_replace( site_url(), '', $termLink );
+							        $taxData = get_term( $termId );
 
-							        $taxPagesList .= '<a href="' . $termRelLink . '">' . $termRelLink . '</a> | ';
+							        if (isset($taxData->errors['invalid_taxonomy']) && ! empty($taxData->errors['invalid_taxonomy'])) {
+								        $taxPagesList .= '<span style="color: darkred; font-style: italic;">Error: Taxonomy with ID '.$termId.' does not exist anymore (rule does not apply)</span> | ';
+							        } else {
+								        $taxonomy    = $taxData->taxonomy;
+								        $termLink    = get_term_link( $taxData, $taxonomy );
+								        $termRelLink = str_replace( site_url(), '', $termLink );
+
+								        $taxPagesList .= '<a href="' . $termRelLink . '">' . $termRelLink . '</a> | ';
+							        }
 						        }
 
 						        if ($taxPagesList) {
@@ -530,6 +678,8 @@ SQL;
 				        $handleExtras[4] .= $handleAttrsExceptionsList;
 				        $handleExtras[4] .= '</em>), ';
 			        }
+
+			        $handleExtras[4] .= ', ';
 		        }
 
 		        $handleExtras[4] = trim($handleExtras[4], ', ');
@@ -540,13 +690,13 @@ SQL;
 	        }
 
             if ( $src ) {
-                $verDb = (isset($data['assets_info'][ $assetType ][ $handle ]['ver']) && $data['assets_info'][ $assetType ][ $handle ]['ver']) ? $data['assets_info'][ $assetType ][ $handle ]['ver'] : false;
+                $verDb = (isset($data['assets_info'][ $assetType ][ $handle ][$verKey]) && $data['assets_info'][ $assetType ][ $handle ][$verKey]) ? $data['assets_info'][ $assetType ][ $handle ][$verKey] : false;
 
 		        $appendAfterSrc = (strpos($src, '?') === false) ? '?' : '&';
 
 		        if ( $verDb ) {
 		            if (is_array($verDb)) {
-			            $appendAfterSrc .= http_build_query(array('ver' => $data['assets_info'][ $assetType ][ $handle ]['ver']));
+			            $appendAfterSrc .= http_build_query(array('ver' => $data['assets_info'][ $assetType ][ $handle ][$verKey]));
                     } else {
 			            $appendAfterSrc .= 'ver='.$ver;
                     }
@@ -556,8 +706,24 @@ SQL;
 		        ?>
                 <div><a <?php if ($isExternalSrc) { ?> data-wpacu-external-source="<?php echo $src . $appendAfterSrc; ?>" <?php } ?> href="<?php echo $src . $appendAfterSrc; ?>" target="_blank"><small><?php echo str_replace( site_url(), '', $src ); ?></small></a> <?php if ($isExternalSrc) { ?><span data-wpacu-external-source-status></span><?php } ?></div>
                 <?php
-	            if ($maybeInactiveAsset = \WpAssetCleanUp\Misc::maybeIsInactiveAsset($src)) { ?>
-                    <div><small><strong>Note:</strong> <span style="color: darkred;">The plugin `<strong><?php echo $maybeInactiveAsset; ?></strong>` seems to be inactive, thus any rules set are also inactive &amp; irrelevant, unless you re-activate the plugin.</span></small></div>
+	            if ($maybeInactiveAsset = \WpAssetCleanUp\Misc::maybeIsInactiveAsset($src)) {
+		            $clearAllRulesConfirmMsg = sprintf(esc_attr(__('This will clear all rules (unloads, load exceptions &amp; other settings) for the `%s` CSS handle', 'wp-asset-clean-up')), $handle)
+                        . esc_js("\n\n") . esc_attr(__('Click `OK` to confirm the action', 'wp-asset-clean-up'));
+		            $wpacuNonceField = wp_nonce_field('wpacu_clear_all_rules', 'wpacu_clear_all_rules_nonce');
+	                ?>
+                    <div>
+                        <small><strong>Note:</strong> <span style="color: darkred;">The plugin `<strong><?php echo $maybeInactiveAsset; ?></strong>` seems to be inactive, thus any rules set are also inactive &amp; irrelevant, unless you re-activate the plugin.</span></small>
+                        <form method="post" action="" style="display: inline-block;">
+                            <input type="hidden" name="wpacu_action" value="clear_all_rules" />
+                            <input type="hidden" name="wpacu_handle" value="<?php echo $handle; ?>" />
+                            <input type="hidden" name="wpacu_asset_type" value="<?php echo $assetType; ?>" />
+                            <?php echo $wpacuNonceField; ?>
+                            <script type="text/javascript">
+                                var wpacuClearAllRulesConfirmMsg = '<?php echo $clearAllRulesConfirmMsg; ?>';
+                            </script>
+                            <button onclick="return confirm(wpacuClearAllRulesConfirmMsg);" type="submit" class="button button-secondary"><span class="dashicons dashicons-trash" style="vertical-align: text-bottom;"></span> Clear all rules for this "orphaned" handle</button>
+                        </form>
+                    </div>
 		            <?php
 	            }
             }
@@ -565,7 +731,7 @@ SQL;
             // Any note?
             if (isset($handleData['notes']) && $handleData['notes']) {
                 ?>
-                <div><small><span class="dashicons dashicons-welcome-write-blog"></span> Note: <em><?php echo ucfirst(htmlspecialchars($data['handles'][$assetType][$handle]['notes'])); ?></em></small></div>
+                <div><small><span class="dashicons dashicons-welcome-write-blog" style="vertical-align: middle;"></span> Note: <em><?php echo ucfirst(htmlspecialchars($data['handles'][$assetType][$handle]['notes'])); ?></em></small></div>
                 <?php
             }
             ?>
@@ -581,13 +747,16 @@ SQL;
 	public static function renderHandleChangesOutput($handleData)
 	{
 		$handleChangesOutput = array();
-		$anyGroupPostUnloadRule = false; // default (turns to true if any unload rule that applies on multiple pages for posts is set)
+		$anyUnloadRule = false; // default (turns to true if at least an unload rule is set)
 		$anyLoadExceptionRule = false; // default (turns to true if any load exception rule is set)
+
+		// It could turn to "true" IF the site-wide rule is turned ON and there are other unload rules on top of it (useless ones in this case)
+		$hasRedundantUnloadRules = false;
 
 		// Site-wide
 		if (isset($handleData['unload_site_wide'])) {
 			$handleChangesOutput['site_wide'] = '<span style="color: #cc0000;">Unloaded site-wide (everywhere)</span>';
-			$anyGroupPostUnloadRule = true;
+			$anyUnloadRule = true;
 		}
 
 		// Bulk unload (on all posts, categories, etc.)
@@ -597,37 +766,15 @@ SQL;
 			if (isset($handleData['unload_bulk']['post_type'])) {
 				foreach ($handleData['unload_bulk']['post_type'] as $postType) {
 					$handleChangesOutput['bulk'] .= ' Unloaded on all pages of <strong>' . $postType . '</strong> post type, ';
-					$anyGroupPostUnloadRule = true;
+					$anyUnloadRule = true;
 				}
-			}
-
-			if (isset($handleData['unload_bulk']['taxonomy']) && ! empty($handleData['unload_bulk']['taxonomy'])) {
-				$handleChangesOutput['bulk'] .= ' Unloaded for all pages belonging to the following taxonomies: <strong>'.implode(', ', $handleData['unload_bulk']['taxonomy']).'</strong>, ';
-				$anyGroupPostUnloadRule = true;
-			}
-
-			if (isset($handleData['unload_bulk']['date']) || isset($handleData['unload_bulk']['404']) || isset($handleData['unload_bulk']['search'])) {
-				foreach ($handleData['unload_bulk'] as $bulkType => $bulkValue) {
-					if ($bulkType === 'date' && $bulkValue === 1) {
-						$handleChangesOutput['bulk'] .= ' Unloaded on all archive `Date` pages (any date), ';
-					}
-					if ($bulkType === 'search' && $bulkValue === 1) {
-						$handleChangesOutput['bulk'] .= ' Unloaded on `Search` page (any keyword), ';
-					}
-					if ($bulkType === '404' && $bulkValue === 1) {
-						$handleChangesOutput['bulk'] .= ' Unloaded on `404 Not Found` page (any URL), ';
-					}
-				}
-			}
-
-			if (isset($handleData['unload_bulk']['author']) && $handleData['unload_bulk']['author']) {
-				$handleChangesOutput['bulk'] .= ' Unloaded on all author pages, ';
 			}
 
 			$handleChangesOutput['bulk'] = rtrim($handleChangesOutput['bulk'], ', ');
 
 			if (isset($handleChangesOutput['site_wide'])) {
-				$handleChangesOutput['bulk'] .= ' * <em>overwritten by the site-wide rule</em>';
+				$handleChangesOutput['bulk'] .= ' * <em>unnecessary, as it\'s already unloaded site-wide</em>';
+				$hasRedundantUnloadRules = true;
 			}
 		}
 
@@ -635,12 +782,16 @@ SQL;
 			$handleChangesOutput['on_home_page'] = '<span style="color: #cc0000;">Unloaded</span> on the <a target="_blank" href="'.Misc::getPageUrl(0).'">homepage</a>';
 
 			if (isset($handleChangesOutput['site_wide'])) {
-				$handleChangesOutput['on_home_page'] .= ' * <em>overwritten by the site-wide rule</em>';
+				$handleChangesOutput['on_home_page'] .= ' * <em>unnecessary, as it\'s already unloaded site-wide</em>';
+				$hasRedundantUnloadRules = true;
 			}
+
+			$anyUnloadRule = true;
         }
 
 		if (isset($handleData['load_exception_on_home_page']) && $handleData['load_exception_on_home_page']) {
 			$handleChangesOutput['load_exception_on_home_page'] = '<span style="color: green;">Loaded (as an exception)</span> on the <a target="_blank" href="'.Misc::getPageUrl(0).'">homepage</a>';
+			$anyLoadExceptionRule = true;
 		}
 
 		// On this page: post, page, custom post type
@@ -661,64 +812,31 @@ SQL;
 			$handleChangesOutput['on_this_post'] .= rtrim($postsList, ', ');
 
 			if (isset($handleChangesOutput['site_wide'])) {
-				$handleChangesOutput['on_this_post'] .= ' * <em>overwritten by the site-wide rule</em>';
+				$handleChangesOutput['on_this_post'] .= ' * <em>unnecessary, as it\'s already unloaded site-wide</em>';
+				$hasRedundantUnloadRules = true;
             }
+
+			$anyUnloadRule = true;
 		}
 
-		// Unload on this page: taxonomy such as 'category', 'product_cat' (specific one, not all categories)
-		if (isset($handleData['unload_on_this_page']['term'])) {
-			$handleChangesOutput['on_this_tax'] = '<span style="color: #cc0000;">Unloaded</span> in the following pages: ';
-
-			$taxList = '';
-
-			sort($handleData['unload_on_this_page']['term']);
-
-			foreach ($handleData['unload_on_this_page']['term'] as $termId) {
-				$taxData   = get_term($termId);
-				$taxonomy = $taxData->taxonomy;
-				$termLink = get_term_link($taxData, $taxonomy);
-				$termRelLink = str_replace(site_url(), '', $termLink);
-
-				$taxList .= '<a target="_blank" href="'.$termLink.'">'.$termRelLink.'</a>, ';
-			}
-
-			$handleChangesOutput['on_this_tax'] .= rtrim($taxList, ', ');
-
-			if (isset($handleChangesOutput['site_wide'])) {
-				$handleChangesOutput['on_this_tax'] .= ' * <em>overwritten by the site-wide rule</em>';
-			}
-		}
-
-		if (isset($handleData['unload_on_this_page']['user'])) {
-			$handleChangesOutput['on_this_tax'] = '<span style="color: #cc0000;">Unloaded</span> in the following author pages: ';
-
-			$taxList = '';
-
-			sort($handleData['unload_on_this_page']['user']);
-
-			foreach ($handleData['unload_on_this_page']['user'] as $userId) {
-				$authorLink = get_author_posts_url(get_the_author_meta('ID', $userId));
-				$authorRelLink = str_replace(site_url(), '', $authorLink);
-
-				$taxList .= '<a target="_blank" href="'.$authorLink.'">'.$authorRelLink.'</a>, ';
-			}
-
-			$handleChangesOutput['on_this_tax'] .= rtrim($taxList, ', ');
-
-			if (isset($handleChangesOutput['site_wide'])) {
-				$handleChangesOutput['on_this_tax'] .= ' * <em>overwritten by the site-wide rule</em>';
-			}
-		}
-
-		// Unload via RegEx
-		if (isset($handleData['unload_regex']) && $handleData['unload_regex']) {
-			$handleChangesOutput['unloaded_via_regex'] = '<span style="color: #cc0000;">Unloads if</span> the request URI (from the URL) matches this RegEx(es): <code>'.nl2br($handleData['unload_regex']).'</code>';
-
-			if (isset($handleChangesOutput['site_wide'])) {
-				$handleChangesOutput['unloaded_via_regex'] .= ' * <em>overwritten by the site-wide rule</em>';
-			}
-
-			$anyGroupPostUnloadRule = true;
+		// Maybe it has other unload rules on top of the site-wide one (which covers everything)
+		if ($hasRedundantUnloadRules) {
+			$clearRedundantUnloadRulesConfirmMsg = sprintf(esc_js(__('This will clear all redundant (useless) unload rules for the `%s` CSS handle as there\'s already a site-wide rule applied.', 'wp-asset-clean-up')), $handleData['handle'])
+			                                       . esc_js("\n\n") . esc_js(__('Click `OK` to confirm the action', 'wp-asset-clean-up'));
+			$wpacuNonceField = wp_nonce_field('wpacu_clear_all_redundant_rules', 'wpacu_clear_all_redundant_rules_nonce');
+			$clearRedundantUnloadRulesArea = <<<HTML
+<form method="post" action="" style="display: inline-block;">
+<input type="hidden" name="wpacu_action" value="clear_all_redundant_unload_rules" />
+<input type="hidden" name="wpacu_handle" value="{$handleData['handle']}" />
+<input type="hidden" name="wpacu_asset_type" value="{$handleData['asset_type']}" />
+{$wpacuNonceField}
+<script type="text/javascript">
+var wpacuClearRedundantUnloadRulesConfirmMsg = '{$clearRedundantUnloadRulesConfirmMsg}';
+</script>
+<button onclick="return confirm(wpacuClearRedundantUnloadRulesConfirmMsg);" type="submit" class="button button-secondary"><span class="dashicons dashicons-trash" style="vertical-align: text-bottom;"></span> Clear all redundant unload rules</button>
+</form>
+HTML;
+			$handleChangesOutput['has_redundant_unload_rules'] = $clearRedundantUnloadRulesArea;
 		}
 
 		if (isset($handleData['ignore_child']) && $handleData['ignore_child']) {
@@ -744,67 +862,19 @@ SQL;
 			$anyLoadExceptionRule = true;
 		}
 
-		// [wpacu_pro]
-        // Load exceptions? Per taxonomy page (e.g. /category/clothes/)
-		if (isset($handleData['load_exception_on_this_page']['term'])) {
-			$handleChangesOutput['load_exception_on_this_taxonomy'] = '<span style="color: green;">Loaded (as an exception)</span> in the following taxonomy pages: ';
+		// e.g. Unloaded site-wide, but loaded on all 'product' (WooCommerce) pages
+		if (isset($handleData['load_exception_post_type'])) {
+			$handleChangesOutput['load_exception_post_type'] = '<span style="color: green;">Loaded (as an exception)</span> in all pages of the following post types: ';
 
-			$postsList = '';
+			$postTypesList = '';
 
-			sort($handleData['load_exception_on_this_page']['term']);
+			sort($handleData['load_exception_post_type']);
 
-			foreach ($handleData['load_exception_on_this_page']['term'] as $termId) {
-				$termData = get_term_by('term_taxonomy_id', $termId);
-				$postsList .= '<a title="" target="_blank" href="'.admin_url('term.php?taxonomy='.$termData->taxonomy.'&tag_ID='.$termId).'">'.$termId.'</a> ('.$termData->name.' / taxonomy: '.$termData->taxonomy.'), ';
+			foreach ($handleData['load_exception_post_type'] as $postType) {
+				$postTypesList .= '<strong>'.$postType.'</strong>, ';
 			}
 
-			$handleChangesOutput['load_exception_on_this_taxonomy'] .= rtrim($postsList, ', ');
-			$anyLoadExceptionRule = true;
-		}
-
-		// Load exceptions? Per user archive page (e.g. /author/john/)
-		if (isset($handleData['load_exception_on_this_page']['user'])) {
-			$handleChangesOutput['load_exception_on_this_user'] = '<span style="color: green;">Loaded (as an exception)</span> in the following user archive pages: ';
-
-			$usersList = '';
-
-			sort($handleData['load_exception_on_this_page']['user']);
-
-			foreach ($handleData['load_exception_on_this_page']['user'] as $userId) {
-				$userData = get_user_by('id', $userId);
-				$usersList .= '<a title="" target="_blank" href="'.admin_url('user-edit.php?user_id='.$userData->ID).'">'.$userData->ID.'</a> ('.$userData->data->user_nicename.'), ';
-			}
-
-			$handleChangesOutput['load_exception_on_this_user'] .= rtrim($usersList, ', ');
-			$anyLoadExceptionRule = true;
-		}
-
-		// Load exceptions? Search page
-		if (isset($handleData['load_exception_on_this_page']['search'])) {
-			$handleChangesOutput['load_exception_on_search_any_term'] = '<span style="color: green;">Loaded (as an exception)</span> in a `Search` page (any term)';
-			$anyLoadExceptionRule = true;
-		}
-
-		// Load exceptions? 404 page
-		if (isset($handleData['load_exception_on_this_page']['404'])) {
-			$handleChangesOutput['load_exception_on_404_page'] = '<span style="color: green;">Loaded (as an exception)</span> in a `404 (Not Found)` page';
-			$anyLoadExceptionRule = true;
-		}
-
-		// Load exceptions? Date archive page
-		if (isset($handleData['load_exception_on_this_page']['date'])) {
-			$handleChangesOutput['load_exception_on_date_archive_page'] = '<span style="color: green;">Loaded (as an exception)</span> in a `Date` archive page';
-			$anyLoadExceptionRule = true;
-		}
-
-		if (isset($handleData['load_regex']) && $handleData['load_regex']) {
-		    if ($anyLoadExceptionRule) {
-		        $textToShow = ' <strong>or</strong> if the request URI (from the URL) matches this RegEx';
-            } else {
-			    $textToShow = '<span style="color: green;">Loaded (as an exception)</span> if the request URI (from the URL) matches this RegEx(es)';
-            }
-
-			$handleChangesOutput['load_exception_regex'] = $textToShow.': <code>'.nl2br($handleData['load_regex']).'</code>';
+			$handleChangesOutput['load_exception_post_type'] .= rtrim($postTypesList, ', ');
 			$anyLoadExceptionRule = true;
 		}
 
@@ -825,8 +895,24 @@ SQL;
 			unset($handleChangesOutput['load_exception_on_this_post'], $handleChangesOutput['load_exception_regex']);
         }
 
-		if (! $anyGroupPostUnloadRule && $anyLoadExceptionRule) {
-			$handleChangesOutput['load_exception_notice'] = '<p><em><small><strong>Note:</strong> Although a load exception rule is added, it is not relevant as there are no rules that would work together with it (e.g. unloaded site-wide, on all posts). This exception can be removed as the file is loaded anyway in all pages.</small></em></p>';
+		if (! $anyUnloadRule && $anyLoadExceptionRule) {
+		    $clearLoadExceptionsConfirmMsg = sprintf(esc_attr(__('This will clear all load exceptions for the `%s` CSS handle', 'wp-asset-clean-up')), $handleData['handle'])
+                . esc_js("\n\n") . esc_js(__('Click `OK` to confirm the action', 'wp-asset-clean-up'));
+		    $wpacuNonceField = wp_nonce_field('wpacu_clear_load_exceptions', 'wpacu_clear_load_exceptions_nonce');
+		    $clearLoadExceptionsArea = <<<HTML
+<form method="post" action="" style="display: inline-block;">
+<input type="hidden" name="wpacu_action" value="clear_load_exceptions" />
+<input type="hidden" name="wpacu_handle" value="{$handleData['handle']}" />
+<input type="hidden" name="wpacu_asset_type" value="{$handleData['asset_type']}" />
+{$wpacuNonceField}
+<script type="text/javascript">
+var wpacuClearLoadExceptionsConfirmMsg = '{$clearLoadExceptionsConfirmMsg}';
+</script>
+<button onclick="return confirm(wpacuClearLoadExceptionsConfirmMsg);" type="submit" class="button button-secondary clear-load-exceptions"><span class="dashicons dashicons-trash" style="vertical-align: text-bottom;"></span> Clear load exceptions for this handle</button>
+</form>
+HTML;
+			$handleChangesOutput['load_exception_notice'] = '<div><em><small><strong>Note:</strong> Although a load exception rule is added, it is not relevant as there are no rules that would work together with it (e.g. unloaded site-wide, on all posts). This exception can be removed as the file is loaded anyway in all pages.</small></em>&nbsp;'.
+                ' '.$clearLoadExceptionsArea.'</div><div style="clear:both;"></div>';
 		}
 
 		return $handleChangesOutput;

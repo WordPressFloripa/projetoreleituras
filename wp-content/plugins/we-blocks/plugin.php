@@ -5,12 +5,12 @@
  * Description: The WE Blocks plugin is great combo of slider blocks. It includes Posts slider, Image slider, Testimonials slider and Client Logo slider block. 
  * Author: WORDPRESTEEM
  * Author URI: https://profiles.wordpress.org/wordpresteem
- * Version: 1.3
+ * Version: 1.3.1
  * Text Domain: we-blocks
  * Contributors: WORDPRESTEEM
  * Requires at least: 4.9
  * Requires PHP: 5.2
- * Tested up to: 5.3.2
+ * Tested up to: 5.6
  * License: GPLv3
  * License URI: http://www.gnu.org/licenses/gpl-3.0.html
  *

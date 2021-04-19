@@ -6,7 +6,7 @@ if (! isset($data, $tagType)) {
 	exit; // no direct access
 }
 
-if ($data['bulk_unloaded_type'] === 'post_type') {
+if (isset($data['bulk_unloaded_type']) && $data['bulk_unloaded_type'] === 'post_type') {
 	?>
 	<div class="wpacu_asset_options_wrap">
 		<ul class="wpacu_asset_options">

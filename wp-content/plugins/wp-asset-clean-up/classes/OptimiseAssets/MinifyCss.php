@@ -21,6 +21,31 @@ class MinifyCss
 	public static function applyMinification($cssContent, $forInlineStyle = false)
 	{
 		if (class_exists('\MatthiasMullie\Minify\CSS')) {
+				$sha1OriginalContent = sha1($cssContent);
+				$checkForAlreadyMinifiedShaOne = mb_strlen($cssContent) > 40000;
+
+				// Let's check if the content is already minified
+				// Save resources as the minify process can take time if the content is very large
+				// Limit the total number of entries tp 100: if it's more than that, it's likely because there's dynamic JS altering on every page load
+				if ($checkForAlreadyMinifiedShaOne && OptimizeCommon::originalContentIsAlreadyMarkedAsMinified($sha1OriginalContent, 'styles')) {
+					return $cssContent;
+				}
+
+				// [CUSTOM BUG FIX]
+				// Encode the special matched content to avoid any wrong minification from the minifier
+				$hasVarWithZeroUnit = false;
+
+				preg_match_all('#--([a-zA-Z0-9_-]+):(\s+)0(em|ex|%|px|cm|mm|in|pt|pc|ch|rem|vh|vw|vmin|vmax|vm)#', $cssContent, $cssVariablesMatches);
+
+				if (isset($cssVariablesMatches[0]) && ! empty($cssVariablesMatches[0])) {
+					$hasVarWithZeroUnit = true;
+
+					foreach ($cssVariablesMatches[0] as $zeroUnitMatch) {
+						$cssContent = str_replace( $zeroUnitMatch, '[wpacu]' . base64_encode( $zeroUnitMatch ) . '[/wpacu]', $cssContent );
+					}
+				}
+				// [/CUSTOM BUG FIX]
+
 				$minifier = new \MatthiasMullie\Minify\CSS( $cssContent );
 
 				if ( $forInlineStyle ) {
@@ -29,7 +54,24 @@ class MinifyCss
 					$minifier->setImportExtensions( array() );
 				}
 
-				return trim( $minifier->minify() );
+				$minifiedContent = trim( $minifier->minify() );
+
+				// [CUSTOM BUG FIX]
+				// Restore the original content
+				if ($hasVarWithZeroUnit) {
+					foreach ( $cssVariablesMatches[0] as $zeroUnitMatch ) {
+						$zeroUnitMatchAlt = str_replace(': 0', ':0', $zeroUnitMatch); // remove the space
+						$minifiedContent = str_replace( '[wpacu]' . base64_encode( $zeroUnitMatch ) . '[/wpacu]', $zeroUnitMatchAlt, $minifiedContent );
+					}
+				}
+				// [/CUSTOM BUG FIX]
+
+				if ($checkForAlreadyMinifiedShaOne && $minifiedContent === $cssContent) {
+					// If the resulting content is the same, mark it as minified to avoid the minify process next time
+					OptimizeCommon::originalContentMarkAsAlreadyMinified( $sha1OriginalContent, 'styles' );
+				}
+
+				return $minifiedContent;
 			}
 
 			return $cssContent;
@@ -37,12 +79,12 @@ class MinifyCss
 		}
 
 	/**
-	 * @param $src
+	 * @param $href
 	 * @param string $handle
 	 *
 	 * @return bool
 	 */
-	public static function skipMinify($src, $handle = '')
+	public static function skipMinify($href, $handle = '')
 	{
 		// Things like WP Fastest Cache Toolbar CSS shouldn't be minified and take up space on the server
 		if ($handle !== '' && in_array($handle, Main::instance()->skipAssets['styles'])) {
@@ -72,8 +114,11 @@ class MinifyCss
 			// Files within /wp-content/uploads/ or /wp-content/cache/
 			// Could belong to plugins such as "Elementor, "Oxygen" etc.
 			'#/wp-content/uploads/elementor/(.*?).css#',
-			'#/wp-content/uploads/oxygen/(.*?).css#',
-			'#/wp-content/cache/(.*?).css#'
+			'#/wp-content/uploads/oxygen/css/(.*?)-(.*?).css#',
+			'#/wp-content/cache/(.*?).css#',
+
+			// Already minified and it also has a random name making the cache folder make bigger
+			'#/wp-content/bs-booster-cache/#',
 
 			);
 
@@ -92,7 +137,7 @@ class MinifyCss
 		}
 
 		foreach ($regExps as $regExp) {
-			if ( preg_match( $regExp, $src ) ) {
+			if ( preg_match( $regExp, $href ) || ( strpos($href, $regExp) !== false ) ) {
 				return true;
 			}
 		}
@@ -111,61 +156,127 @@ class MinifyCss
 			return $htmlSource; // no STYLE tags
 		}
 
-		// DOMDocument extension has to be enabled, otherwise return the HTML source as was (no changes)
-		if (! (function_exists('libxml_use_internal_errors') && function_exists('libxml_clear_errors') && class_exists('\DOMDocument'))) {
-			return $htmlSource;
-		}
-
-		$domTag = new \DOMDocument();
-		libxml_use_internal_errors(true);
-		$domTag->loadHTML($htmlSource);
-
-		$styleTagsObj = $domTag->getElementsByTagName( 'style' );
-
-		if ($styleTagsObj === null) {
-			return $htmlSource;
-		}
-
 		$skipTagsContaining = array(
+			'data-wpacu-skip',
 			'astra-theme-css-inline-css',
 			'astra-edd-inline-css',
 			'et-builder-module-design-cached-inline-styles',
 			'fusion-stylesheet-inline-css',
 			'woocommerce-general-inline-css',
 			'woocommerce-inline-inline-css',
-			'data-wpacu-own-inline-style', // Only shown to the admin, irrelevant for any optimization (save resources)
-			'data-wpacu-inline-css-file' // already minified/optimized since the INLINE was generated from the cached file
+			'data-wpacu-own-inline-style',
+			// Only shown to the admin, irrelevant for any optimization (save resources)
+			'data-wpacu-inline-css-file'
+			// already minified/optimized since the INLINE was generated from the cached file
 		);
 
-		foreach ($styleTagsObj as $styleTagObj) {
-			$originalTag = CleanUp::getOuterHTML($styleTagObj);
+		$fetchType = 'regex';
 
-			// No need to use extra resources as the tag is already minified
-			if (preg_match('('.implode('|', $skipTagsContaining).')', $originalTag)) {
-				continue;
+		if ($fetchType === 'dom') {
+			// DOMDocument extension has to be enabled, otherwise return the HTML source as was (no changes)
+			if (! (function_exists('libxml_use_internal_errors') && function_exists('libxml_clear_errors') && class_exists('\DOMDocument'))) {
+				return $htmlSource;
 			}
 
-			$originalTagContents = (isset($styleTagObj->nodeValue) && trim($styleTagObj->nodeValue) !== '') ? $styleTagObj->nodeValue : false;
+			$domTag = OptimizeCommon::getDomLoadedTag($htmlSource, 'minifyInlineStyleTags');
 
-			if ($originalTagContents) {
-				$newTagContents = OptimizeCss::maybeAlterCssContent($originalTagContents, true, true, array('just_minify'));
+			$styleTagsObj = $domTag->getElementsByTagName( 'style' );
 
-				// Only comments or no content added to the inline STYLE tag? Strip it completely to reduce the number of DOM elements
-				if ($newTagContents === '/**/' || ! $newTagContents) {
-					$htmlSource = str_ireplace('>'.$originalTagContents.'</style', '></style', $htmlSource);
+			if ( $styleTagsObj === null ) {
+				return $htmlSource;
+			}
 
-					preg_match_all('#<style.*?>#si', $originalTag, $matchesFromStyle);
+			foreach ( $styleTagsObj as $styleTagObj ) {
+				$originalTag = CleanUp::getOuterHTML( $styleTagObj );
 
-					if (isset($matchesFromStyle[0][0]) && $styleTagWithoutContent = $matchesFromStyle[0][0]) {
-						$styleTagWithoutContentAlt = str_replace('"', '\'', $styleTagWithoutContent);
-						$htmlSource = str_ireplace(array($styleTagWithoutContent.'</style>', $styleTagWithoutContentAlt.'</style>'), '', $htmlSource);
-					}
-				} else {
-					// It has content; do the replacement
-					$htmlSource = str_ireplace( '>' . $originalTagContents . '</style',
-						'>' . $newTagContents . '</style', $htmlSource );
+				// No need to use extra resources as the tag is already minified
+				if ( preg_match( '(' . implode( '|', $skipTagsContaining ) . ')', $originalTag ) ) {
+					continue;
 				}
-				libxml_clear_errors();
+
+				$originalTagContents = ( isset( $styleTagObj->nodeValue ) && trim( $styleTagObj->nodeValue ) !== '' ) ? $styleTagObj->nodeValue : false;
+
+				if ( $originalTagContents ) {
+					$newTagContents = OptimizeCss::maybeAlterContentForInlineStyleTag( $originalTagContents, true, array( 'just_minify' ) );
+
+					// Only comments or no content added to the inline STYLE tag? Strip it completely to reduce the number of DOM elements
+					if ( $newTagContents === '/**/' || ! $newTagContents ) {
+						$htmlSource = str_ireplace( '>' . $originalTagContents . '</style', '></style', $htmlSource );
+
+						preg_match( '#<style.*?>#si', $originalTag, $matchFromStyle );
+
+						if ( isset( $matchFromStyle[0] ) && $styleTagWithoutContent = $matchFromStyle[0] ) {
+							$styleTagWithoutContentAlt = str_replace( '"', '\'', $styleTagWithoutContent );
+							$htmlSource                = str_ireplace( array(
+								$styleTagWithoutContent . '</style>',
+								$styleTagWithoutContentAlt . '</style>'
+							), '', $htmlSource );
+						}
+					} else {
+						// It has content; do the replacement
+						$htmlSource = str_ireplace(
+							'>' . $originalTagContents . '</style>',
+							'>' . $newTagContents . '</style>',
+							$htmlSource
+						);
+					}
+					libxml_clear_errors();
+				}
+			}
+		} elseif ($fetchType === 'regex') {
+			preg_match_all( '@(<style[^>]*?>).*?</style>@si', $htmlSource, $matchesStyleTags, PREG_SET_ORDER );
+
+			if ( $matchesStyleTags === null ) {
+				return $htmlSource;
+			}
+
+			foreach ($matchesStyleTags as $matchedStyle) {
+				if ( ! (isset($matchedStyle[0]) && $matchedStyle[0]) ) {
+					continue;
+				}
+
+				$originalTag = $matchedStyle[0];
+
+				if (substr($originalTag, -strlen('></style>')) === strtolower('></style>')) {
+					// No empty STYLE tags
+					continue;
+				}
+
+				// No need to use extra resources as the tag is already minified
+				if ( preg_match( '(' . implode( '|', $skipTagsContaining ) . ')', $originalTag ) ) {
+					continue;
+				}
+
+				$tagOpen     = $matchedStyle[1];
+
+				$withTagOpenStripped = substr($originalTag, strlen($tagOpen));
+				$originalTagContents = substr($withTagOpenStripped, 0, -strlen('</style>'));
+
+				if ( $originalTagContents ) {
+					$newTagContents = OptimizeCss::maybeAlterContentForInlineStyleTag( $originalTagContents, true, array( 'just_minify' ) );
+
+					// Only comments or no content added to the inline STYLE tag? Strip it completely to reduce the number of DOM elements
+					if ( $newTagContents === '/**/' || ! $newTagContents ) {
+						$htmlSource = str_replace( '>' . $originalTagContents . '</', '></', $htmlSource );
+
+						preg_match( '#<style.*?>#si', $originalTag, $matchFromStyle );
+
+						if ( isset( $matchFromStyle[0] ) && $styleTagWithoutContent = $matchFromStyle[0] ) {
+							$styleTagWithoutContentAlt = str_ireplace( '"', '\'', $styleTagWithoutContent );
+							$htmlSource                = str_ireplace( array(
+								$styleTagWithoutContent . '</style>',
+								$styleTagWithoutContentAlt . '</style>'
+							), '', $htmlSource );
+						}
+					} else {
+						// It has content; do the replacement
+						$htmlSource = str_replace(
+							'>' . $originalTagContents . '</style>',
+							'>' . $newTagContents . '</style>',
+							$htmlSource
+						);
+					}
+				}
 			}
 		}
 
@@ -185,7 +296,7 @@ class MinifyCss
 		// It will preview the page with CSS minified
 		// Only if the admin is logged-in as it uses more resources (CPU / Memory)
 		if (array_key_exists('wpacu_css_minify', $_GET) && Menu::userCanManageAssets()) {
-			self::isMinifyCssEnabledChecked(true);
+			self::isMinifyCssEnabledChecked('true');
 			return true;
 		}
 
@@ -193,7 +304,7 @@ class MinifyCss
 		     is_admin() || // not for Dashboard view
 		     (! Main::instance()->settings['minify_loaded_css']) || // Minify CSS has to be Enabled
 		     (Main::instance()->settings['test_mode'] && ! Menu::userCanManageAssets()) ) { // Does not trigger if "Test Mode" is Enabled
-			self::isMinifyCssEnabledChecked(false);
+			self::isMinifyCssEnabledChecked('false');
 			return false;
 		}
 
@@ -202,13 +313,13 @@ class MinifyCss
 			$pageOptions = MetaBoxes::getPageOptions( WPACU_CURRENT_PAGE_ID );
 
 			if ( isset( $pageOptions['no_css_minify'] ) && $pageOptions['no_css_minify'] ) {
-				self::isMinifyCssEnabledChecked(false);
+				self::isMinifyCssEnabledChecked('false');
 				return false;
 			}
 		}
 
 		if (OptimizeCss::isOptimizeCssEnabledByOtherParty('if_enabled')) {
-			self::isMinifyCssEnabledChecked(false);
+			self::isMinifyCssEnabledChecked('false');
 			return false;
 		}
 
@@ -221,7 +332,11 @@ class MinifyCss
 	public static function isMinifyCssEnabledChecked($value)
 	{
 		if (! defined('WPACU_IS_MINIFY_CSS_ENABLED')) {
-			define('WPACU_IS_MINIFY_CSS_ENABLED', $value);
+			if ($value === 'true') {
+				define( 'WPACU_IS_MINIFY_CSS_ENABLED', true );
+			} elseif ($value === 'false') {
+				define( 'WPACU_IS_MINIFY_CSS_ENABLED', false );
+			}
 		}
 	}
 }

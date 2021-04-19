@@ -10,6 +10,7 @@ if (! isset($data)) {
 // 3rd party external locations (e.g. Google API Fonts, CND urls such as the ones for Bootstrap etc.)
 $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
 
+$pluginsAreaStatus = $data['plugin_settings']['assets_list_layout_plugin_area_status'] ?: 'expanded';
 /*
 * -------------------------
 * [START] BY EACH LOCATION
@@ -25,7 +26,7 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
             '<span style="color: #CC0000;"><strong>',
             '</strong></span>',
 		    '<img draggable="false" class="wpacu-emoji" style="max-width: 26px; max-height: 26px;" alt="" src="https://s.w.org/images/core/emoji/11.2.0/svg/1f914.svg">'
-        ); ?> <?php echo __('"Load in on this page (make an exception)" will take effect when a bulk unload rule is used. Otherwise, the asset will load anyway unless you select it for unload.', 'wp-asset-clean-up'); ?></p>
+        ); ?></p>
     <?php
     if ($data['plugin_settings']['hide_core_files']) {
         ?>
@@ -47,8 +48,8 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
                 <strong>&#10141; Total enqueued files (including core files): <?php echo (int)$data['total_styles'] + (int)$data['total_scripts']; ?></strong>
             </div>
             <div class="col-right">
-                <a href="#" id="wpacu-assets-contract-all" class="wpacu-wp-button wpacu-wp-button-secondary">Contract All Areas</a>&nbsp;
-                <a href="#" id="wpacu-assets-expand-all" class="wpacu-wp-button wpacu-wp-button-secondary">Expand All Areas</a>
+                <a href="#" id="wpacu-assets-contract-all" class="wpacu-wp-button wpacu-wp-button-secondary">Contract All Groups</a>&nbsp;
+                <a href="#" id="wpacu-assets-expand-all" class="wpacu-wp-button wpacu-wp-button-secondary">Expand All Groups</a>
             </div>
             <div class="wpacu-clearfix"></div>
         </div>
@@ -141,6 +142,9 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
 	                // Total files from all the plugins
 	                $totalFilesArray[$locationMain] = 0;
 
+	                // Default value (not contracted)
+	                $pluginListContracted = false;
+
 	                if ($totalLocationAssets > 0) {
 		                $locI = 1;
 
@@ -175,6 +179,9 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
 				                if ( $locationMain === 'plugins' ) {
 					                $locationChildText = \WpAssetCleanUp\Info::getPluginInfo( $locationChild, $allPlugins, $allActivePluginsIcons );
 
+					                $isLastPluginAsset    = ( count( $values ) - 1 ) === $locationRowCount;
+					                $pluginListContracted = ( $locationMain === 'plugins' && $pluginsAreaStatus === 'contracted' );
+
 					                // Show it if there is at least one available "Unload on this page"
 					                $showUnloadOnThisPageCheckUncheckAll = $totalPluginAssets !== $totalBulkUnloadedAssetsPerPlugin;
 
@@ -189,14 +196,28 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
 
                                 $extraClassesToAppend = '';
 
-				                if ($locI === 1) {
+                                if ( $locationMain === 'plugins' && $isLastPluginAsset ) {
+                                    $extraClassesToAppend .= ' wpacu-area-last ';
+                                }
+
+                                if ($locI === 1) {
                                     $extraClassesToAppend .= ' wpacu-location-child-area-first ';
                                 }
 
 				                // PLUGIN LIST: VIEW THEIR ASSETS
 				                // EXPANDED (DEFAULT)
                                 if ( $locationMain === 'plugins' ) {
-                                ?>
+	                                if ( $pluginListContracted ) {
+		                                // CONTRACTED (+ -)
+		                                ?>
+                                        <a href="#"
+                                           class="wpacu-plugin-contracted-wrap-link wpacu-pro wpacu-link-closed <?php if ( ( count( $values ) - 1 ) === $locationRowCount ) { echo 'wpacu-last-wrap-link'; } ?>">
+                                            <div class="wpacu-plugin-title-contracted wpacu-area-contracted">
+                                                <?php echo $locationChildText; ?> <span style="font-weight: 200;">/</span> <span style="font-weight: 400;"><?php echo $totalPluginAssets; ?></span> files
+                                            </div>
+                                        </a>
+		                                <?php
+	                                } else { ?>
                                         <div data-wpacu-plugin="<?php echo $locationChild; ?>"
                                              class="wpacu-location-child-area wpacu-area-expanded <?php echo $extraClassesToAppend; ?>">
                                             <div class="wpacu-area-title">
@@ -206,7 +227,7 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
 				                                ?>
                                             </div>
                                         </div>
-                                <?php
+	                                <?php }
                                 } elseif ( $locationMain === 'themes' ) {
                                     ?>
                                     <div data-wpacu-plugin="<?php echo $locationChild; ?>"
@@ -225,7 +246,18 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
 			                }
 			                ?>
 
-                            <div class="wpacu-assets-table-list-wrap <?php if ( $locationMain === 'plugins' ) { ?> wpacu-plugin-assets-wrap <?php } ?>">
+                            <div class="wpacu-assets-table-list-wrap <?php if ( $locationMain === 'plugins' ) { ?> wpacu-plugin-assets-wrap <?php } ?> <?php if ( $pluginListContracted ) {
+				                echo 'wpacu-area-closed';
+			                } ?> <?php if ( $pluginListContracted && $isLastPluginAsset ) {
+				                echo 'wpacu-plugin-assets-last';
+			                } ?>">
+				                <?php
+				                // CONTRACTED (+ -)
+				                if ( $locationMain === 'plugins' && $pluginListContracted ) {
+				                    include '_view-by-location/_plugin-list-contracted-actions.php';
+				                }
+				                ?>
+
                                 <table <?php if ( $locationMain === 'plugins' ) {
 					                echo ' data-wpacu-plugin="' . $locationChild . '" ';
 				                } ?> class="wpacu_list_table wpacu_list_by_location wpacu_widefat wpacu_striped">
@@ -245,7 +277,7 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
 		                }
 	                } else {
                         // There are no loaded CSS/JS
-                        $showOxygenMsg = $locationMain === 'themes' && in_array('oxygen/functions.php', apply_filters('active_plugins', get_option('active_plugins')));
+                        $showOxygenMsg = $locationMain === 'themes' && in_array('oxygen/functions.php', apply_filters('active_plugins', get_option('active_plugins', array())));
 
                         if ($showOxygenMsg) {
                         ?>
@@ -273,12 +305,12 @@ $listAreaStatus = $data['plugin_settings']['assets_list_layout_areas_status'];
             }
         }
 
-        if ( isset( $data['all']['hardcoded'] ) && ! empty( $data['all']['hardcoded'] ) ) {
-            include_once __DIR__ . '/_assets-hardcoded-list.php';
-        } elseif ($data['is_frontend_view']) {
-            // The following string will be replaced within a "wp_loaded" action hook
-            echo '{wpacu_assets_collapsible_wrap_hardcoded_list}';
-        }
+	    if ( isset( $data['all']['hardcoded'] ) && ! empty( $data['all']['hardcoded'] ) ) {
+		    $data['print_outer_html'] = true; // AJAX call from the Dashboard
+		    include_once __DIR__ . '/_assets-hardcoded-list.php';
+	    } elseif (isset($hardcodedManageAreaHtml, $data['is_frontend_view']) && $data['is_frontend_view']) {
+		    echo $hardcodedManageAreaHtml; // AJAX call from the front-end view
+	    }
     }
 /*
 * -----------------------

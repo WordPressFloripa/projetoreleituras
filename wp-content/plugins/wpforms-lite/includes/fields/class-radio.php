@@ -17,7 +17,7 @@ class WPForms_Field_Radio extends WPForms_Field {
 		// Define field type information.
 		$this->name     = esc_html__( 'Multiple Choice', 'wpforms-lite' );
 		$this->type     = 'radio';
-		$this->icon     = 'fa-list-ul';
+		$this->icon     = 'fa-dot-circle-o';
 		$this->order    = 110;
 		$this->defaults = array(
 			1 => array(
@@ -281,7 +281,7 @@ class WPForms_Field_Radio extends WPForms_Field {
 							'slug'    => 'show_values',
 							'value'   => isset( $field['show_values'] ) ? $field['show_values'] : '0',
 							'desc'    => esc_html__( 'Show Values', 'wpforms-lite' ),
-							'tooltip' => esc_html__( 'Check this to manually set form field values.', 'wpforms-lite' ),
+							'tooltip' => esc_html__( 'Check this option to manually set form field values.', 'wpforms-lite' ),
 						),
 						false
 					),

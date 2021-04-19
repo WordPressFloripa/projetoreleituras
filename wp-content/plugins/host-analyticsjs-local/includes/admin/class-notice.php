@@ -9,7 +9,7 @@
  *
  * @author   : Daan van den Bergh
  * @url      : https://daan.dev/wordpress-plugins/caos/
- * @copyright: (c) 2020 Daan van den Bergh
+ * @copyright: (c) 2021 Daan van den Bergh
  * @license  : GPL2v2 or later
  * * * * * * * * * * * * * * * * * * * */
 
@@ -31,22 +31,12 @@ class CAOS_Admin_Notice
      * @param string $screen_id
      * @param string $id
      */
-    public static function set_notice($message, $die = true, $type = 'success', $code = 200, $screen_id = 'all', $id = '')
+    public static function set_notice($message, $type = 'success', $screen_id = 'all', $id = '')
     {
         self::$notices                         = get_transient(self::CAOS_ADMIN_NOTICE_TRANSIENT);
         self::$notices[$screen_id][$type][$id] = $message;
 
         set_transient(self::CAOS_ADMIN_NOTICE_TRANSIENT, self::$notices, self::CAOS_ADMIN_NOTICE_EXPIRATION);
-
-        if ($die) {
-            switch ($type) {
-                case 'error':
-                    wp_send_json_error($message, $code);
-                    break;
-                default:
-                    wp_send_json_success($message, $code);
-            }
-        }
     }
 
     /**
@@ -65,13 +55,13 @@ class CAOS_Admin_Notice
                 }
 
                 foreach ($notice as $type => $message) {
-                    ?>
+?>
                     <div id="message" class="notice notice-<?php echo $type; ?> is-dismissible">
-                        <?php foreach ($message as $line): ?>
+                        <?php foreach ($message as $line) : ?>
                             <p><?= $line; ?></p>
                         <?php endforeach; ?>
                     </div>
-                    <?php
+<?php
                 }
             }
         }
@@ -79,4 +69,3 @@ class CAOS_Admin_Notice
         delete_transient(self::CAOS_ADMIN_NOTICE_TRANSIENT);
     }
 }
-

@@ -29,11 +29,11 @@ HTML;
             <td><strong><?php _e('License Price', 'wp-asset-clean-up'); ?></strong> <small>* <?php echo sprintf(
                     __('after the first year, you will save %s off the initial purchase price, and be charged only %s', 'wp-asset-clean-up'),
                     '30%',
-                    '$27<sup>.30</sup>'
+                    '$32<sup>.90</sup>'
                     );
             ?></small></td>
 			<td><span class="txt-top">$</span><span class="txt-l">0</span></td>
-			<td><span class="txt-top">$</span><span class="txt-l">39</span></td>
+			<td><span class="txt-top">$</span><span class="txt-l">47</span></td>
 		</tr>
 		<tr>
 			<td><?php _e('Manage CSS &amp; JavaScript files on Homepage, Posts, Pages &amp; Custom Post Types (e.g. WooCommerce product pages, Easy Digital Downloads download items)', 'wp-asset-clean-up'); ?></td>
@@ -70,43 +70,46 @@ HTML;
 			<td><?php echo $svgTick; ?></td>
 			<td><?php echo $svgTick; ?></td>
 		</tr>
-
 		<tr>
 			<td><?php _e('Site-Wide Unload For Common Elements that are often unused such as: WordPress Emojis, jQuery Migrate, Comment Reply (if not using WP as a blog)', 'wp-asset-clean-up'); ?></td>
 			<td><?php echo $svgTick; ?></td>
 			<td><?php echo $svgTick; ?></td>
 		</tr>
-
 		<tr>
 			<td><?php _e('Disable XML-RPC Protocol Support partially or completely', 'wp-asset-clean-up'); ?></td>
 			<td><?php echo $svgTick; ?></td>
 			<td><?php echo $svgTick; ?></td>
 		</tr>
-
         <tr>
             <td><?php _e('Inline Chosen CSS Files', 'wp-asset-clean-up'); ?> * <a target="_blank" href="https://gtmetrix.com/inline-small-css.html"><small>Read more</small></a></td>
             <td><?php echo $svgTick; ?></td>
             <td><?php echo $svgTick; ?></td>
         </tr>
-
         <tr>
             <td><?php _e('Inline Chosen JavaScript Files', 'wp-asset-clean-up'); ?> * <a target="_blank" href="https://gtmetrix.com/inline-small-javascript.html"><small>Read more</small></a></td>
             <td><span class="na">❌</span></td>
             <td><?php echo $svgTick; ?></td>
         </tr>
-
+        <tr>
+            <td><?php _e('Instruct the browser to download a CSS/JS file based on the visitor\'s screen size (e.g. download it on a desktop device, but not on mobile one)', 'wp-asset-clean-up'); ?></td>
+            <td><span class="na">❌</span></td>
+            <td><?php echo $svgTick; ?></td>
+        </tr>
 		<tr>
 			<td><?php _e('Unload CSS/JS for URLs with request URI matching certain RegEx(es) &amp; add load exceptions based on Regex(es) <small>e.g. you can unload a CSS file site-wide, but keep it loaded if the page URL matches the <code>#/product/#</code> RegEx</small>', 'wp-asset-clean-up'); ?></td>
 			<td><span class="na">❌</span></td>
 			<td><?php echo $svgTick; ?></td>
 		</tr>
-
 		<tr>
-			<td><?php _e('Unload plugins site-wide and via RegEx(es)', 'wp-asset-clean-up'); ?> (go to the next level and unload whole plugins, not just the CSS/JS files loaded through them)</td>
+            <td><?php _e('Unload plugins in the frontend view (for guest visitors)', 'wp-asset-clean-up'); ?> * <small>This will not just unload the CSS/JS files loaded from the plugins, but everything else related to them (e.g. slow database queries)</small></td>
 			<td><span class="na">❌</span></td>
 			<td><?php echo $svgTick; ?></td>
 		</tr>
-
+        <tr>
+            <td><?php _e('Unload plugins within the Dashboard /wp-admin/', 'wp-asset-clean-up'); ?> * <small>Do you have any slow pages that are loading within the Dashboard? You can reduce seconds in page load for some bulky ones or fix plugin conflicts</small></td>
+            <td><span class="na">❌</span></td>
+            <td><?php echo $svgTick; ?></td>
+        </tr>
         <tr>
             <td><?php _e('Defer CSS loaded in the <code>&lt;BODY&gt;</code>', 'wp-asset-clean-up'); ?> to reduce render-blocking resources</td>
             <td><span class="na">❌</span></td>
@@ -133,11 +136,6 @@ HTML;
 			<td><span class="na">❌</span></td>
 			<td><?php echo $svgTick; ?></td>
 		</tr>
-		<tr>
-			<td><?php _e('Show the file sizes for each loaded CSS &amp; JavaScript file including external ones', 'wp-asset-clean-up'); ?></td>
-			<td><span class="na">❌</span></td>
-			<td><?php echo $svgTick; ?></td>
-		</tr>
         <tr>
             <td><?php _e('Priority in releasing new features &amp; other improvements (updates that are meant for both Lite and Pro plugins are first released to the Pro users)', 'wp-asset-clean-up'); ?></td>
             <td><span class="na">❌</span></td>
@@ -158,7 +156,6 @@ HTML;
 				&nbsp;
 				<a class="button button-default button-hero" href="https://www.gabelivan.com/contact/">
 					<span class="dashicons dashicons-admin-comments" style="line-height: 50px;"></span> &nbsp;<?php _e('I have some questions', 'wp-asset-clean-up'); ?></a>
-
 			</td>
 		</tr>
 		</tbody>

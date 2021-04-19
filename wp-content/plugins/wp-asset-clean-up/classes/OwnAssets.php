@@ -24,14 +24,12 @@ class OwnAssets
         add_action('wp_enqueue_scripts',    array($this, 'stylesAndScriptsForPublic'));
 
 	    // Code only for the Dashboard
-	    add_action('admin_head',   array($this, 'inlineAdminCode'));
+	    add_action('admin_head',   array($this, 'inlineAdminHeadCode'));
+	    add_action('admin_footer', array($this, 'inlineAdminFooterCode'));
 
 	    // Code for both the Dashboard and the Front-end view
 	    add_action('admin_head',   array($this, 'inlineCode'));
 	    add_action('wp_head',      array($this, 'inlineCode'));
-
-	    add_action('admin_footer', array($this, 'inlineFooterCode'));
-
 
 	    // Rename ?ver= to ?wpacuversion to prevent other plugins from stripping "ver"
 	    // This is valid in the front-end and the Dashboard
@@ -40,14 +38,45 @@ class OwnAssets
 	    add_filter('script_loader_tag', array($this, 'ownAssetLoaderTag'), 10, 2);
 
 	    add_filter('wpacu_object_data', static function($wpacu_object_data) {
-		    $wpacu_object_data['source_load_error_msg'] = __('It looks like the source is not reachable', 'wp-asset-clean-up');
+		    $wpacu_object_data['source_load_error_msg'] = __('The source might not be reachable', 'wp-asset-clean-up');
 		    $wpacu_object_data['plugin_id'] = WPACU_PLUGIN_ID;
 		    $wpacu_object_data['ajax_url']  = admin_url('admin-ajax.php');
+		    $wpacu_object_data['is_frontend_view'] = false;
+
+		    if (array_key_exists('wpacu_manage_dash', $_GET)) {
+			    $wpacu_object_data['force_manage_dash'] = true;
+            }
+
+		    // Current Page URL (for preloading) in the front-end view
+		    if (! is_admin()) {
+			    $wpacu_object_data['page_url'] = Misc::getCurrentPageUrl();
+			    $wpacu_object_data['is_frontend_view'] = true;
+		    }
+
+		    if (isset($wpacu_object_data['page_url']) && is_admin() && Misc::isHttpsSecure()) {
+			    $wpacu_object_data['page_url'] = str_replace('http://', 'https://', $wpacu_object_data['page_url']);
+		    }
+
+		    // After the CSS/JS manager's form is submitted (e.g. on an edit post/page)
+            $wpacu_object_data['wpacu_ajax_preload_url_nonce'] = wp_create_nonce('wpacu_ajax_preload_url_nonce');
+
+		    // Check file size AJAX
+		    $wpacu_object_data['wpacu_ajax_check_remote_file_size_nonce'] = wp_create_nonce('wpacu_ajax_check_remote_file_size_nonce');
+
+		    // Check external source status (e.g. 200 OK or not)
+            $wpacu_object_data['wpacu_ajax_check_external_urls_nonce'] = wp_create_nonce('wpacu_ajax_check_external_urls_nonce');
 
             $wpacu_object_data['jquery_unload_alert'] = 'jQuery library is a WordPress library that it is used in WordPress plugins/themes most of the time.'."\n\n".
                                         'There are currently other JavaScript "children" files connected to it, that will stop working, if this library is unloaded'."\n\n".
                                         'If you are positive this page does not require jQuery (very rare cases), then you can continue by pressing "OK"'."\n\n".
                                         'Otherwise, it is strongly recommended to keep this library loaded by pressing "Cancel" to avoid breaking the functionality of the website.';
+            // js-cookie
+		    $wpacu_object_data['woo_js_cookie_unload_alert'] = 'Please be careful when unloading "js-cookie" as there are other JS files depending on it that will also be unloaded, including "wc-cart-fragments" which is required for the functionality of the WooCommerce mini cart.'."\n\n".
+                                                        'Click "OK" to continue or "Cancel" if you have any doubts about unloading this file';
+
+		    // wc-cart-fragments
+		    $wpacu_object_data['woo_wc_cart_fragments_unload_alert'] = 'Please be careful when unloading "wc-cart-fragments" as it\'s required for the functionality of the WooCommerce mini cart. Unless you are sure you do not need it on this page, it is advisable to leave it loaded.'."\n\n".
+		                                                       'Click "OK" to continue or "Cancel" if you have any doubts about unloading this file.';
 
             // backbone, underscore, etc.
             $wpacu_object_data['sensitive_library_unload_alert'] = 'Please make sure to properly test this page after this particular JavaScript file is unloaded as it is usually loaded for a reason.'."\n\n".
@@ -95,6 +124,12 @@ class OwnAssets
 			 * [End] Trigger ONLY other plugins'/system caches
 			 */
 
+            $wpacu_object_data['server_returned_404_not_found'] = sprintf(
+                    __('When accessing this page the server responded with a status of %s404 (Not Found)%s. If this page is meant to return this status, you can ignore this message, otherwise you might have a problem with this page if it is meant to return a standard 200 OK status.', 'wp-asset-clean-up'),
+                    '<strong>',
+                    '</strong>'
+            );
+
 		    return $wpacu_object_data;
         });
     }
@@ -139,20 +174,155 @@ class OwnAssets
                 }
             </style>
 			<?php
+			if (wp_style_is(WPACU_PLUGIN_ID . '-style', 'enqueued')) {
+				echo Misc::preloadAsyncCssFallbackOutput();
+			}
 		}
 	}
 
 	/**
 	 *
 	 */
-	public function inlineAdminCode()
+	public function inlineAdminHeadCode()
 	{
 		?>
         <style type="text/css" data-wpacu-own-inline-style="true">
-            .menu-top.toplevel_page_wpassetcleanup_getting_started .wp-menu-image > img { width: 26px; position: absolute; left: 8px; top: -4px; }
+            <?php
+            // For the main languages, leave the style it was always set as it worked well
+            $applyDefaultStyleForCurrentLang = (strpos(get_locale(), 'en_') !== false)
+                || (strpos(get_locale(), 'es_') !== false)
+                || (strpos(get_locale(), 'fr_') !== false)
+                || (strpos(get_locale(), 'de_') !== false);
+
+            if ( (! $applyDefaultStyleForCurrentLang) || Misc::isPluginActive('WPShapere/wpshapere.php') ) {
+                // This would also work well if the language is Arabic (the text shown right to left)
+            ?>
+                /* Compatibility with "Wordpress Admin Theme - WPShapere" plugin - make sure Asset CleanUp's icon is not misaligned */
+                .menu-top.toplevel_page_wpassetcleanup_getting_started .wp-menu-image > img { width: 26px; }
+            <?php
+            } else {
+            ?>
+                .menu-top.toplevel_page_wpassetcleanup_getting_started .wp-menu-image > img { width: 26px; position: absolute; left: 8px; top: -4px; }
+            <?php
+            }
+
+            if (Main::instance()->settings['hide_from_side_bar']) {
+                // Just hide the menu without removing any of its pages from the menu (for sidebar cleanup purposes)
+                ?>
+                #toplevel_page_wpassetcleanup_getting_started { display: none !important; }
+                <?php
+            } elseif (isset($_GET['page']) && strpos($_GET['page'], WPACU_PLUGIN_ID.'_') === 0) {
+                // The menu is shown: make the sidebar area a bit larger so the whole "Asset CleanUp Pro" menu text is seen properly when viewing its pages
+                ?>
+                #adminmenuback, #adminmenuwrap, #adminmenu, #adminmenu .wp-submenu { width: 172px; }
+                #wpcontent, #wpfooter { margin-left: 172px; }
+                <?php
+            }
+            ?>
         </style>
         <?php
     }
+
+	/**
+	 *
+	 */
+	public function inlineAdminFooterCode()
+	{
+		if (defined('WPACU_USE_MODAL_BOX') && WPACU_USE_MODAL_BOX === true) { ?>
+            <script type="text/javascript">
+                jQuery(document).ready(function ($) {
+                    /*
+					 * START WPACU MODAL
+					 */
+                    var wpacuCurrentModal, $wpacuModals = $('.wpacu-modal');
+
+                    if ($wpacuModals.length < 1) {
+                        return;
+                    }
+
+                    $wpacuModals.each(function (wpacuIndex) {
+                       var wpacuModalId = $(this).attr('id');
+                       var wpacuModal = document.getElementById(wpacuModalId);
+
+                        // Get the link/button that opens the modal
+
+                        if ($('#'+ wpacuModalId +'-target').length > 0) {
+                            var wpacuTargetById = document.getElementById(wpacuModalId + '-target');
+                            // When the user clicks the element with "id", open the modal
+                            wpacuTargetById.onclick = function () {
+                                wpacuModal.style.display = 'block';
+                                wpacuCurrentModal = wpacuModal;
+                            };
+                        }
+
+                        if ($('.'+ wpacuModalId +'-target').length > 0) {
+                            // When the user clicks the element with "class", open the modal
+                            $('.'+ wpacuModalId +'-target').each(function (wpacuIndex2) {
+                                // Get the link/button that opens the modal
+                                var wpacuTargetByClass = document.getElementsByClassName(wpacuModalId + '-target')[wpacuIndex2];
+
+                                wpacuTargetByClass.onclick = function () {
+                                    wpacuModal.style.display = 'block';
+                                    wpacuCurrentModal = wpacuModal;
+                                };
+                            });
+                        }
+
+                        // Get the <span> element that closes the modal
+                        var wpacuSpan = document.getElementsByClassName('wpacu-close')[wpacuIndex];
+
+                        // When the user clicks on <span> (x), close the modal
+                        wpacuSpan.onclick = function () {
+                            wpacuModal.style.display = 'none';
+                        };
+                    });
+
+                    // When the user clicks anywhere outside of the modal, close it
+                    window.onclick = function (event) {
+                        if (event.target === wpacuCurrentModal) {
+                            wpacuCurrentModal.style.display = 'none';
+                        }
+                    };
+                    /*
+					 * END WPACU MODAL
+					 */
+                });
+            </script>
+		<?php }
+
+		if (isset($_GET['page']) && $_GET['page'] === WPACU_PLUGIN_ID.'_settings') {
+			// Only relevant in the "Settings" area
+			?>
+            <script type="text/javascript">
+                // Tab Area | Keep selected tab after page reload
+                if (location.href.indexOf('#') !== -1) {
+                    var hashFromUrl = location.href.substr(location.href.indexOf('#'));
+                    //wpacuTabOpenSettingsArea(event, hashFromUrl.substring(1));
+                    //console.log(hashFromUrl);
+                    jQuery('a[href="'+ hashFromUrl +'"]').trigger('click');
+                    //console.log(hashFromUrl.substring(1));
+                }
+            </script>
+			<?php
+		}
+
+		global $current_screen;
+
+		if (isset($current_screen->id) && $current_screen->id === 'plugins') {
+		    // Asset CleanUp Pro needs to have the page reloaded to perform the update 100% correctly
+            // as, for some reason, it sometimes gives an error of "Plugin failed" when updated via an AJAX call (no page reload)
+		    ?>
+            <script type="text/javascript">
+                jQuery(document).ready(function ($) {
+                    $('tr[data-plugin="wp-asset-clean-up-pro/wpacu.php"]')
+                        .find('div.update-message')
+                            .find('.update-link').append(' (via page reload)')
+                            .removeClass('update-link').addClass('wpacu-update-plugin');
+                });
+            </script>
+            <?php
+		}
+	}
 
     /**
      *
@@ -362,48 +532,38 @@ HTML;
 </div>
 HTML;
 
-		$wpacuObjectData['jquery_migration_disable_confirm_msg'] =
-			__('Make sure to properly test your website if you unload the jQuery migration library.',
-				'wp-asset-clean-up') . "\n\n" .
-			__('In some cases, due to old jQuery code triggered from plugins or the theme, unloading this migration library could cause those scripts not to function anymore and break some of the front-end functionality.',
-				'wp-asset-clean-up') . "\n\n" .
-			__('If you are not sure about whether activating this option is right or not, it is better to leave it as it is (to be loaded by default) and consult with a developer.',
-				'wp-asset-clean-up') . "\n\n" .
-			__('Confirm this action to enable the unloading or cancel to leave it loaded by default.',
-				'wp-asset-clean-up');
+	    $wpacuObjectData['jquery_migration_disable_confirm_msg'] =
+		    __('Make sure to properly test your website if you unload the jQuery migration library.', 'wp-asset-clean-up')."\n\n".
+		    __('In some cases, due to old jQuery code triggered from plugins or the theme, unloading this migration library could cause those scripts not to function anymore and break some of the front-end functionality.', 'wp-asset-clean-up')."\n\n".
+		    __('If you are not sure about whether activating this option is right or not, it is better to leave it as it is (to be loaded by default) and consult with a developer.', 'wp-asset-clean-up')."\n\n".
+		    __('Confirm this action to enable the unloading or cancel to leave it loaded by default.', 'wp-asset-clean-up');
 
-		$wpacuObjectData['comment_reply_disable_confirm_msg'] =
-			__('This is worth disabling if you are NOT using the default WordPress comment system (e.g. you are using the website for business purposes, to showcase your products and you are not using it as a blog where people leave comments to your posts).',
-				'wp-asset-clean-up') . "\n\n" .
-			__('If you are not sure about whether activating this option is right or not, it is better to leave it as it is (to be loaded by default).',
-				'wp-asset-clean-up') . "\n\n" .
-			__('Confirm this action to enable the unloading or cancel to leave it loaded by default.',
-				'wp-asset-clean-up');
+	    $wpacuObjectData['comment_reply_disable_confirm_msg'] =
+		    __('This is worth disabling if you are NOT using the default WordPress comment system (e.g. you are using the website for business purposes, to showcase your products and you are not using it as a blog where people leave comments to your posts).', 'wp-asset-clean-up')."\n\n".
+		    __('If you are not sure about whether activating this option is right or not, it is better to leave it as it is (to be loaded by default).', 'wp-asset-clean-up')."\n\n".
+		    __('Confirm this action to enable the unloading or cancel to leave it loaded by default.', 'wp-asset-clean-up');
 
-		// "Tools" - "Reset"
-		$wpacuObjectData['reset_settings_confirm_msg'] =
-			__('Are you sure you want to reset the settings to their default values?', 'wp-asset-clean-up') . "\n\n" .
-			__('This is an irreversible action.', 'wp-asset-clean-up') . "\n\n" .
-			__('Please confirm to continue or "Cancel" to abort it', 'wp-asset-clean-up');
+	    // "Tools" - "Reset"
+	    $wpacuObjectData['reset_settings_confirm_msg'] =
+		    __('Are you sure you want to reset the settings to their default values?', 'wp-asset-clean-up')."\n\n".
+		    __('This is an irreversible action.', 'wp-asset-clean-up')."\n\n".
+		    __('Please confirm to continue or "Cancel" to abort it', 'wp-asset-clean-up');
 
-		$wpacuObjectData['reset_everything_except_settings_confirm_msg'] =
-			__('Are you sure you want to reset everything (unloads, load exceptions etc.) except settings?',
-				'wp-asset-clean-up') . "\n\n" .
-			__('This is an irreversible action.', 'wp-asset-clean-up') . "\n\n" .
-			__('Please confirm to continue or "Cancel" to abort it.', 'wp-asset-clean-up');
+	    $wpacuObjectData['reset_everything_except_settings_confirm_msg'] =
+		    __('Are you sure you want to reset everything (unloads, load exceptions etc.) except settings?', 'wp-asset-clean-up')."\n\n".
+		    __('This is an irreversible action.', 'wp-asset-clean-up')."\n\n".
+		    __('Please confirm to continue or "Cancel" to abort it.', 'wp-asset-clean-up');
 
-		$wpacuObjectData['reset_everything_confirm_msg'] =
-			__('Are you sure you want to reset everything (settings, unloads, load exceptions etc.) to the same point it was when you first activated the plugin?',
-				'wp-asset-clean-up') . "\n\n" .
-			__('This is an irreversible action.', 'wp-asset-clean-up') . "\n\n" .
-			__('Please confirm to continue or "Cancel" to abort it.', 'wp-asset-clean-up');
+	    $wpacuObjectData['reset_everything_confirm_msg'] =
+		    __('Are you sure you want to reset everything (settings, unloads, load exceptions etc.) to the same point it was when you first activated the plugin?', 'wp-asset-clean-up')."\n\n".
+            __('This is an irreversible action.', 'wp-asset-clean-up')."\n\n".
+            __('Please confirm to continue or "Cancel" to abort it.', 'wp-asset-clean-up');
 
-		// "Tools" - "Import & Export"
-		$wpacuObjectData['import_confirm_msg'] =
-			__('This process is NOT reversible.', 'wp-asset-clean-up') . "\n\n" .
-			__('Please make sure you have a backup (e.g. an exported JSON file) before proceeding.',
-				'wp-asset-clean-up') . "\n\n" .
-			__('Please confirm to continue or "Cancel" to abort it.', 'wp-asset-clean-up');
+	    // "Tools" - "Import & Export"
+	    $wpacuObjectData['import_confirm_msg'] =
+            __('This process is NOT reversible.', 'wp-asset-clean-up')."\n\n".
+            __('Please make sure you have a backup (e.g. an exported JSON file) before proceeding.', 'wp-asset-clean-up')."\n\n".
+            __('Please confirm to continue or "Cancel" to abort it.', 'wp-asset-clean-up');
 
 		wp_localize_script(
 			WPACU_PLUGIN_ID . '-script',
@@ -443,30 +603,47 @@ JS;
 			// [End] Chosen Script
         }
 
-		// [wpacu_lite]
 		if ($page === WPACU_PLUGIN_ID . '_assets_manager' || (Misc::getVar('get', 'post') && Misc::getVar('get', 'action') === 'edit')) {
 			// [Start] SweetAlert
+			wp_enqueue_style(
+				WPACU_PLUGIN_ID . '-sweetalert2-style',
+				plugins_url('/assets/sweetalert2/dist/sweetalert2.min.css', WPACU_PLUGIN_FILE),
+				array(),
+				1
+			);
+
 			add_action('admin_head', static function() {
 			?>
 				<style type="text/css" data-wpacu-own-inline-style="true">
-				.swal-overlay {
+                .swal2-popup {
+                    width: 36em;
+                }
+				.swal2-overlay {
 					z-index: 10000000;
 				}
 
-				.swal-text {
+                .swal2-container {
+                    z-index: 100000000;
+                }
+
+                .swal2-html-container {
+                    line-height: 30px;
+                }
+
+				.swal2-text {
 					line-height: 24px;
 				}
 
-				.swal-footer {
+				.swal2-footer {
 					text-align: center;
 					padding: 13px 16px 20px;
 				}
 
-				.swal-button.swal-button--confirm {
+				.swal2-button.swal2-button--confirm {
 					background-color: #008f9c;
 				}
 
-				.swal-button.swal-button--confirm:hover {
+				.swal2-button.swal2-button--confirm:hover {
 					background-color: #006e78;
 				}
 				</style>
@@ -474,42 +651,57 @@ JS;
 			});
 
 			wp_enqueue_script(
-				WPACU_PLUGIN_ID . '-sweetalert-js',
-				plugins_url('/assets/sweetalert/dist/sweetalert.min.js', WPACU_PLUGIN_FILE),
+				WPACU_PLUGIN_ID . '-sweetalert2-js',
+				plugins_url('/assets/sweetalert2/dist/sweetalert2.min.js', WPACU_PLUGIN_FILE),
 				array('jquery'),
 				1
 			);
 
-			$upgradeToProLink = WPACU_PLUGIN_GO_PRO_URL.'?utm_source=manage_hardcoded_assets&utm_medium=go_pro_modal';
+			// [wpacu_lite]
+			$upgradeToProLinkHardcodedAssets = WPACU_PLUGIN_GO_PRO_URL.'?utm_source=manage_hardcoded_assets&utm_medium=go_pro_modal';
+			$upgradeToProLinkMediaQueryLoad = WPACU_PLUGIN_GO_PRO_URL.'?utm_source=media_query_load&utm_medium=go_pro_modal';
 
-			$sweetAlertScriptInline = <<<JS
+			$sweetAlertTwoScriptInline = <<<JS
 jQuery(document).ready(function($) { 
-   $(document).on('click', '.wpacu-manage-hardcoded-assets-requires-pro-popup', function(e) {
+    /* [Hardcoded Assets] */
+    $(document).on('click', '.wpacu-manage-hardcoded-assets-requires-pro-popup', function(e) {
        e.preventDefault();
-       wpacuTriggerGoProHardcodedModal();
-   });
+       Swal.fire({
+            text: "Managing hardcoded (non-enqueued) LINK/STYLE/SCRIPT tags is a feature available for Pro users.",
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonText: 'Upgrade to the Pro version',
+            cancelButtonText: 'Maybe later'
+        }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.replace("{$upgradeToProLinkHardcodedAssets}");
+            }
+        });
+    });
+    /* [/Hardcoded Assets] */
+    
+    /* [Media Query Load] */
+    $(document).on('click', '.wpacu-media-query-load-requires-pro-popup', function(e) {
+       e.preventDefault();
+       Swal.fire({
+            text: "Instructing the browser to load a file based on the screen size of the visitor's device (e.g. desktop or mobile view) is a feature available for Pro users.",
+            icon: "info",
+            showCancelButton: true,
+            confirmButtonText: 'Upgrade to the Pro version',
+            cancelButtonText: 'Maybe later'
+        }).then((result) => {
+            if (result.isConfirmed) {
+              window.location.replace("{$upgradeToProLinkMediaQueryLoad}");
+            }
+        });
+    });
+    /* [/Media Query Load] */
 });
-
-function wpacuTriggerGoProHardcodedModal()
-{
-	swal({
-		text: "Managing hardcoded (non-enqueued) LINK/STYLE/SCRIPT tags is a feature available for Pro users.",
-		icon: "info",
-		buttons: {
-		  confirm: "Upgrade to the Pro version",
-		  cancel: "Maybe later",
-		}
-	}).then((value) => {
-		if (value) {
-		  window.location.replace("{$upgradeToProLink}");
-		}
-	});
-}
 JS;
-			wp_add_inline_script(WPACU_PLUGIN_ID . '-sweetalert-js', $sweetAlertScriptInline);
-			// [ENd] SweetAlert
+			wp_add_inline_script(WPACU_PLUGIN_ID . '-sweetalert2-js', $sweetAlertTwoScriptInline);
+			// [wpacu_lite]
+			// [End] SweetAlert
         }
-	    // [/wpacu_lite]
 
 		if (in_array($page, array(WPACU_PLUGIN_ID . '_overview', WPACU_PLUGIN_ID . '_bulk_unloads'))) {
 			// [Start] Tooltipster Style
@@ -560,8 +752,11 @@ JS;
 		    WPACU_PLUGIN_ID . '-script',
 		    'wpacu_object',
 		    apply_filters('wpacu_object_data', array(
-                'ajax_url' => admin_url('admin-ajax.php'),
-                'plugin_id' => WPACU_PLUGIN_ID
+                'ajax_url'    => admin_url('admin-ajax.php'),
+                'plugin_id'   => WPACU_PLUGIN_ID,
+                'plugin_name' => WPACU_PLUGIN_ID,
+                'start_del_h' => Main::START_DEL_HARDCODED,
+                'end_del_h'   => Main::END_DEL_HARDCODED
             ))
 	    );
 	    // [/wpacu_pro]
@@ -610,80 +805,9 @@ JS;
     {
 		// Useful in case jQuery library is deferred too (rare situations)
 		if ($handle === WPACU_PLUGIN_ID . '-script') {
-			$tag = str_replace(' src=', ' data-wpacu-plugin-script defer=\'defer\' src=', $tag);
+			$tag = str_replace(' src=', ' data-wpacu-plugin-script src=', $tag);
 		}
 
 		return $tag;
 	}
-
-	/**
-	 *
-	 */
-	public function inlineFooterCode()
-    {
-        if (defined('WPACU_USE_MODAL_BOX') && WPACU_USE_MODAL_BOX === true) { ?>
-        <script type="text/javascript">
-            jQuery(document).ready(function ($) {
-                /*
-                 * START WPACU MODAL
-                 */
-                var wpacuCurrentModal, $wpacuModals = $('.wpacu-modal');
-
-                if ($wpacuModals.length < 1) {
-                    return;
-                }
-
-                $wpacuModals.each(function (wpacuIndex) {
-                    var wpacuModalId = $(this).attr('id');
-
-                    // Get the modal
-                    var wpacuModal = document.getElementById(wpacuModalId);
-
-                    // Get the link/button that opens the modal
-                    var wpacuTarget = document.getElementById(wpacuModalId + '-target');
-
-                    // When the user clicks the button, open the modal
-                    wpacuTarget.onclick = function () {
-                        wpacuModal.style.display = 'block';
-                        wpacuCurrentModal = wpacuModal;
-                    };
-
-                    // Get the <span> element that closes the modal
-                    var wpacuSpan = document.getElementsByClassName('wpacu-close')[wpacuIndex];
-
-                    // When the user clicks on <span> (x), close the modal
-                    wpacuSpan.onclick = function () {
-                        wpacuModal.style.display = 'none';
-                    };
-                });
-
-                // When the user clicks anywhere outside of the modal, close it
-                window.onclick = function (event) {
-                    if (event.target === wpacuCurrentModal) {
-                        wpacuCurrentModal.style.display = 'none';
-                    }
-                };
-                /*
-                 * END WPACU MODAL
-                 */
-            });
-        </script>
-        <?php }
-
-        if (isset($_GET['page']) && $_GET['page'] === WPACU_PLUGIN_ID.'_settings') {
-            // Only relevant in the "Settings" area
-            ?>
-            <script type="text/javascript">
-                // Tab Area | Keep selected tab after page reload
-                if (location.href.indexOf('#') !== -1) {
-                    var hashFromUrl = location.href.substr(location.href.indexOf('#'));
-                    //wpacuTabOpenSettingsArea(event, hashFromUrl.substring(1));
-                    //console.log(hashFromUrl);
-                    jQuery('a[href="'+ hashFromUrl +'"]').trigger('click');
-                    //console.log(hashFromUrl.substring(1));
-                }
-            </script>
-            <?php
-        }
-    }
 }

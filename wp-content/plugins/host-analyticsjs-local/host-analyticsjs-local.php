@@ -1,11 +1,12 @@
 <?php
+
 /**
  * @formatter:off
  * Plugin Name: CAOS
  * Plugin URI: https://daan.dev/wordpress-plugins/caos/
- * Description: Completely optimize Google Analytics for your Wordpress Website - host analytics.js/gtag.js/ga.js locally, bypass Ad Blockers in Stealth Mode, capture outbound links, serve from CDN, place tracking code in footer, and much more!
- * Version: 3.5.2
- * Author: Daan van den Bergh
+ * Description: Completely optimize Google Analytics for your Wordpress Website - host analytics.js/gtag.js locally or use Minimal Analytics, bypass Ad Blockers in Stealth Mode, capture outbound links, and much more!
+ * Version: 4.0.3
+ * Author: Daan from FFW.Press
  * Author URI: https://daan.dev
  * License: GPL2v2 or later
  * Text Domain: host-analyticsjs-local
@@ -19,7 +20,7 @@ defined('ABSPATH') || exit;
  */
 define('CAOS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('CAOS_PLUGIN_FILE', __FILE__);
-define('CAOS_STATIC_VERSION', '3.4.1');
+define('CAOS_STATIC_VERSION', '4.0.0');
 
 /**
  * Takes care of loading classes on demand.
@@ -36,27 +37,13 @@ function caos_autoload($class)
         return;
     }
 
-    $filename = '';
-
-    if (count($path) == 1) {
-        $filename = 'class-' . strtolower(str_replace('_', '-', $class)) .  '.php';
-    } elseif (count($path) == 2) {
-        array_shift($path);
-        $filename = 'class-' . strtolower($path[0]) . '.php';
-    } else {
-        array_shift($path);
-        end($path);
-        $i = 0;
-
-        while ($i < key($path)) {
-            $filename .= strtolower($path[$i]) . '/';
-            $i++;
-        }
-
-        $filename .= 'class-' . strtolower($path[$i]) . '.php';
+    if (!class_exists('FFWP_Autoloader')) {
+        require_once(CAOS_PLUGIN_DIR . 'ffwp-autoload.php');
     }
 
-    return include CAOS_PLUGIN_DIR . 'includes/' . $filename;
+    $autoload = new FFWP_Autoloader($class);
+
+    return include CAOS_PLUGIN_DIR . 'includes/' . $autoload->load();
 }
 
 spl_autoload_register('caos_autoload');

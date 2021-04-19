@@ -7,7 +7,7 @@ if (! isset($data)) {
 }
 ?>
 <p>For the <em>homepage</em>, you can go to "CSS/JS Load Manager" -&gt; "<a href="<?php echo admin_url('admin.php?page='.WPACU_PLUGIN_ID.'_assets_manager') ?>">Homepage</a>" from the plugin's menu and you will notice the list of all the styles &amp;scripts files that are loading there. For each file, you will see options that you can enabled/disable.</p>
-<p>For <em>posts, pages &amp; custom post types</em>, you can edit the page within the Dashboard or via the front-end view (if you enabled the option in "Settings") and scroll to "Asset CleanUp: CSS & JavaScript Manager" metabox area (if not hidden from "Settings" -&gt; "Plugin Usage Preferences") where you can manage all the CSS &amp; JS files loading on that post/page.</p>
+<p>For <em>posts, pages &amp; custom post types</em>, you can edit the page within the Dashboard or via the front-end view (if you enabled the option in "Settings") and scroll to "<?php echo WPACU_PLUGIN_TITLE; ?>: CSS &amp; JavaScript Manager" metabox area (if not hidden from "Settings" -&gt; "Plugin Usage Preferences") where you can manage all the CSS &amp; JS files loading on that post/page.</p>
 <p>To view all the WordPress pages where <?php echo WPACU_PLUGIN_TITLE; ?> can do optimization for, go to "<a href="<?php echo admin_url('admin.php?page='.WPACU_PLUGIN_ID.'_assets_manager&wpacu_for=homepage'); ?>"><?php _e('CSS/JS Load Manager', 'wp-asset-clean-up'); ?></a>".</p>
 <hr />
 

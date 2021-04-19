@@ -47,12 +47,8 @@ class FontsGoogleRemove
 	 */
 	public static function cleanLinkTags($htmlSource)
 	{
-		// Cleaner HTML Source
-		$altHtmlSource = preg_replace('@<(script|style)[^>]*?>.*?</\\1>@si', '', $htmlSource);
-		$altHtmlSource = preg_replace('/<!--(.|\s)*?-->/', '', $altHtmlSource);
-
 		// Do not continue if there is no single reference to the string we look for in the clean HTML source
-		if (stripos($altHtmlSource, FontsGoogle::$containsStr) === false) {
+		if (stripos($htmlSource, FontsGoogle::$containsStr) === false) {
 			return $htmlSource;
 		}
 
@@ -63,14 +59,28 @@ class FontsGoogleRemove
 
 		$strContainsFormat = implode('|', $strContainsArray);
 
-		preg_match_all('#<link[^>]*(' . $strContainsFormat . ').*(>)#Usmi', $altHtmlSource, $matchesFromLinkTags, PREG_SET_ORDER);
+		preg_match_all('#<link[^>]*(' . $strContainsFormat . ').*(>)#Usmi', $htmlSource, $matchesFromLinkTags, PREG_SET_ORDER);
+
+		$stripLinksList = array();
 
 		// Needs to match at least one to carry on with the replacements
 		if (isset($matchesFromLinkTags[0]) && ! empty($matchesFromLinkTags[0])) {
 			foreach ($matchesFromLinkTags as $linkIndex => $linkTagArray) {
 				$linkTag = trim(trim($linkTagArray[0], '"\''));
-				$htmlSource = str_ireplace(array($linkTag."\n", $linkTag), '', $htmlSource);
+
+				if (strip_tags($linkTag) !== '') {
+					continue; // Something might be funny there, make sure the tag is valid
+				}
+
+				// Check if the Google Fonts CSS has any 'data-wpacu-skip' attribute; if it does, do not remove it
+				if (preg_match('#data-wpacu-skip([=>/ ])#i', $linkTag)) {
+					continue;
+				}
+
+				$stripLinksList[$linkTag] = '';
 			}
+
+			$htmlSource = strtr($htmlSource, $stripLinksList);
 		}
 
 		return $htmlSource;
@@ -96,6 +106,11 @@ class FontsGoogleRemove
 		// Go through each STYLE tag
 		foreach ($styleMatches as $styleInlineArray) {
 			list($styleInlineTag, $styleInlineContent) = $styleInlineArray;
+
+			// Check if the STYLE tag has any 'data-wpacu-skip' attribute; if it does, do not continue
+			if (preg_match('#data-wpacu-skip([=>/ ])#i', $styleInlineTag)) {
+				continue;
+			}
 
 			$newStyleInlineTag = $styleInlineTag;
 			$newStyleInlineContent = $styleInlineContent;
@@ -155,6 +170,10 @@ class FontsGoogleRemove
 	 */
 	public static function stripReferencesFromJsCode($jsContent)
 	{
+		if (self::preventAnyChange()) {
+			return $jsContent;
+		}
+
 		$webFontConfigReferenceOne = "#src(\s+|)=(\s+|)(?<startDel>'|\")(\s+|)((http:|https:|)(".implode('|', self::$possibleWebFontConfigCdnPatterns).")(\s+|))(?<endDel>'|\")#si";
 
 		if (stripos($jsContent, 'WebFontConfig') !== false
@@ -186,6 +205,10 @@ class FontsGoogleRemove
 	 */
 	public static function cleanFontFaceReferences($cssContent)
 	{
+		if (self::preventAnyChange()) {
+			return $cssContent;
+		}
+
 		preg_match_all('#@font-face(|\s+){(.*?)}#si', $cssContent, $matchesFromCssCode, PREG_SET_ORDER);
 
 		if (! empty($matchesFromCssCode)) {
@@ -200,5 +223,17 @@ class FontsGoogleRemove
 		}
 
 		return $cssContent;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public static function preventAnyChange()
+	{
+		if (defined('WPACU_ALLOW_ONLY_UNLOAD_RULES') && WPACU_ALLOW_ONLY_UNLOAD_RULES) {
+			return true;
+		}
+
+		return false;
 	}
 }

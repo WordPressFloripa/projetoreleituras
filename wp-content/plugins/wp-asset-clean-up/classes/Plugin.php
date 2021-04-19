@@ -14,11 +14,9 @@ class Plugin
 	/**
 	 *
 	 */
-	const RATE_URL = 'https://wordpress.org/support/plugin/wp-asset-clean-up/reviews/?filter=5#new-post';
+	const RATE_URL = 'https://wordpress.org/support/plugin/wp-asset-clean-up/reviews/#new-post';
 
 	/**
-	 * The functions below are only called within the Dashboard
-	 *
 	 * Plugin constructor.
 	 */
 	public function __construct()
@@ -89,6 +87,14 @@ class Plugin
 	 */
 	public function whenActivated()
 	{
+	    if (WPACU_WRONG_PHP_VERSION === 'true') {
+		    $recordMsg = __( '"Asset CleanUp" plugin has not been activated because the PHP version used on this server is below 5.6.',
+			    'wp-asset-clean-up' );
+		    deactivate_plugins( WPACU_PLUGIN_BASE );
+		    error_log( $recordMsg );
+		    wp_die($recordMsg);
+	    }
+
 		// Is the plugin activated for the first time?
 		// Prepare for the redirection to the WPACU_ADMIN_PAGE_ID_START plugin page
 		if (! get_transient(WPACU_PLUGIN_ID.'_do_activation_redirect_first_time')) {
@@ -96,7 +102,7 @@ class Plugin
 			set_transient(WPACU_PLUGIN_ID . '_redirect_after_activation', 1, 15);
 		}
 
-		// Make a record when Asset CleanUp is used for the first time
+		// Make a record when Asset CleanUp (Pro) is used for the first time
 		self::triggerFirstUsage();
 
 		/**
@@ -109,14 +115,10 @@ class Plugin
 		 * /wp-content/cache/asset-cleanup/css/
          * /wp-content/cache/asset-cleanup/css/item/
 		 * /wp-content/cache/asset-cleanup/css/index.php
-		 * /wp-content/cache/asset-cleanup/css/logged-in/
-		 * /wp-content/cache/asset-cleanup/css/logged-in/index.php
          *
          * /wp-content/cache/asset-cleanup/js/
          * /wp-content/cache/asset-cleanup/js/item/
          * /wp-content/cache/asset-cleanup/js/index.php
-         * /wp-content/cache/asset-cleanup/js/logged-in/
-         * /wp-content/cache/asset-cleanup/js/logged-in/index.php
          *
 		 */
 		self::createCacheFoldersFiles(array('css','js'));
@@ -192,6 +194,11 @@ SQL;
 	public static function removeCacheDirWithoutAssets()
     {
 	    $pathToCacheDir    = WP_CONTENT_DIR . OptimizeCommon::getRelPathPluginCacheDir();
+
+	    if (! is_dir($pathToCacheDir)) {
+	        return;
+        }
+
 	    $pathToCacheDirCss = WP_CONTENT_DIR . OptimizeCss::getRelPathCssCacheDir();
 	    $pathToCacheDirJs  = WP_CONTENT_DIR . OptimizeJs::getRelPathJsCacheDir();
 
@@ -220,7 +227,7 @@ SQL;
 
 		    // Then, remove the empty dirs in descending order (up to the root)
             foreach ($allDirs as $dir) {
-                @rmdir($dir);
+                Misc::rmDir($dir);
             }
 	    }
     }
@@ -255,21 +262,24 @@ HTACCESS;
 		    }
 
 		    if ( ! is_file( $cacheDir . 'index.php' ) ) {
-			    // /wp-content/cache/asset-cleanup/cache/{$assetType}/index.php
+			    // /wp-content/cache/asset-cleanup/cache/(css|js)/index.php
 			    FileSystem::file_put_contents( $cacheDir . 'index.php', $emptyPhpFileContents );
 		    }
 
-		    if ( ! is_dir( $cacheDir . 'logged-in' ) ) {
-			    @mkdir( $cacheDir . 'logged-in', 0755 );
-		    }
-
 			if ( ! is_dir( $cacheDir . OptimizeCommon::$optimizedSingleFilesDir ) ) {
+				// /wp-content/cache/asset-cleanup/cache/(css|js)/item/
 				@mkdir( $cacheDir . OptimizeCommon::$optimizedSingleFilesDir, 0755 );
 			}
 
-			if ( ! is_file( $cacheDir . 'logged-in/index.php' ) ) {
-			    // /wp-content/cache/asset-cleanup/cache/{$assetType}/logged-in/index.html
-			    FileSystem::file_put_contents( $cacheDir . 'logged-in/index.php', $emptyPhpFileContents );
+			// For large inline STYLE & SCRIPT tags
+			if ( ! is_dir( $cacheDir . OptimizeCommon::$optimizedSingleFilesDir.'/inline' ) ) {
+				// /wp-content/cache/asset-cleanup/cache/(css|js)/item/inline/
+			    @mkdir( $cacheDir . OptimizeCommon::$optimizedSingleFilesDir.'/inline', 0755 );
+		    }
+
+		    if ( ! is_file( $cacheDir . OptimizeCommon::$optimizedSingleFilesDir.'/inline/index.php' ) ) {
+			    // /wp-content/cache/asset-cleanup/cache/(css|js)/item/inline/index.php
+			    FileSystem::file_put_contents( $cacheDir . OptimizeCommon::$optimizedSingleFilesDir.'/inline/index.php', $emptyPhpFileContents );
 		    }
 
 		    $htAccessFilePath = dirname( $cacheDir ) . '/.htaccess';
@@ -285,10 +295,18 @@ HTACCESS;
 		    }
 	    }
 
+	    // Storage directory for JSON/TEXT files (information purpose)
 		$storageDir = WP_CONTENT_DIR . OptimiseAssets\OptimizeCommon::getRelPathPluginCacheDir() . '_storage/';
 
 		if ( ! is_dir($storageDir . OptimizeCommon::$optimizedSingleFilesDir) ) {
 			@mkdir( $storageDir . OptimizeCommon::$optimizedSingleFilesDir, 0755, true );
+		}
+
+		// Storage directory for the most recent items (these ones are never deleted from the cache)
+		$storageDirRecentItems = WP_CONTENT_DIR . OptimiseAssets\OptimizeCommon::getRelPathPluginCacheDir() . '_storage/_recent_items/';
+
+		if ( ! is_dir($storageDirRecentItems) ) {
+			@mkdir( $storageDirRecentItems, 0755, true );
 		}
 
 		$siteStorageCache = $storageDir.'/'.str_replace(array('https://', 'http://', '//'), '', site_url());
@@ -346,7 +364,7 @@ HTACCESS;
 	}
 
 	/**
-	 * Make a record when Asset CleanUp is used for the first time (if it's not there already)
+	 * Make a record when Asset CleanUp (Pro) is used for the first time (if it's not there already)
 	 */
 	public static function triggerFirstUsage()
 	{
@@ -358,12 +376,12 @@ HTACCESS;
 
 	/**
      * This works like /?wpacu_no_load with a fundamental difference:
-     * It needs to be triggered through a very early 'init' action hook after all plugins are loaded, thus it can't be used in /early-triggers.php
-     * e.g. in situations when the page is an AMP one, prevent any changes to the HTML source by Asset CleanUp Pro
+     * It needs to be triggered through a very early 'init' / 'setup_theme' action hook after all plugins are loaded, thus it can't be used in /early-triggers.php
+     * e.g. in situations when the page is an AMP one, prevent any changes to the HTML source by Asset CleanUp (Pro)
      *
 	 * @return bool
 	 */
-	public static function preventAnyChanges()
+	public static function preventAnyFrontendOptimization()
     {
         // Only relevant if all the plugins are already loaded
 	    // and in the front-end view
@@ -371,8 +389,17 @@ HTACCESS;
             return false;
         }
 
-        if (defined('WPACU_PREVENT_ANY_CHANGES')) {
-	        return WPACU_PREVENT_ANY_CHANGES;
+        // Perhaps the editor from "Pro" (theme.co) is on
+	    if (apply_filters('wpacu_prevent_any_frontend_optimization', false)) {
+	        if (! defined('WPACU_PREVENT_ANY_FRONTEND_OPTIMIZATION')) {
+		        define( 'WPACU_PREVENT_ANY_FRONTEND_OPTIMIZATION', true );
+	        }
+
+		    return true;
+	    }
+
+        if (defined('WPACU_PREVENT_ANY_FRONTEND_OPTIMIZATION')) {
+	        return WPACU_PREVENT_ANY_FRONTEND_OPTIMIZATION;
         }
 
 	    // e.g. /amp/ - /amp? - /amp/? - /?amp or ending in /amp
@@ -383,15 +410,24 @@ HTACCESS;
 	         || ($isAmpInRequestUri && Misc::isPluginActive('amp/amp.php')) // "AMP – WordPress plugin"
 	         || (function_exists('is_wp_amp') && Misc::isPluginActive('wp-amp/wp-amp.php') && is_wp_amp()) // "WP AMP — Accelerated Mobile Pages for WordPress and WooCommerce" (Premium plugin)
 	    ) {
-		    define('WPACU_PREVENT_ANY_CHANGES', true);
+		    define('WPACU_PREVENT_ANY_FRONTEND_OPTIMIZATION', true);
 		    return true; // do not print anything on an AMP page
 	    }
 
+	    // Some pages are AMP but their URI does not end in /amp
+	    if ( Misc::isPluginActive('accelerated-mobile-pages/accelerated-mobile-pages.php')
+            || Misc::isPluginActive('amp/amp.php')
+            || Misc::isPluginActive('wp-amp/wp-amp.php')
+        ) {
+		    define('WPACU_DO_EXTRA_CHECKS_FOR_AMP', true);
+	    }
+
 	    if (array_key_exists('wpacu_clean_load', $_GET)) {
+		    define('WPACU_PREVENT_ANY_FRONTEND_OPTIMIZATION', true);
 	        return true;
         }
 
-	    define('WPACU_PREVENT_ANY_CHANGES', false);
+	    define('WPACU_PREVENT_ANY_FRONTEND_OPTIMIZATION', false);
 	    return false;
     }
 }

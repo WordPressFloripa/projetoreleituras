@@ -30,16 +30,20 @@ class Settings
         'frontend_show',
         'frontend_show_exceptions',
 
+		// Allow managing assets to:
+		'allow_manage_assets_to',
+		'allow_manage_assets_to_list',
+
+		// Hide plugin's menus to make the top admin bar / left sidebar within the Dashboard cleaner (if the plugin is not used much)
 		'hide_from_admin_bar',
+		'hide_from_side_bar', // Since v1.1.7.1 (Pro)
 
 		// The way the CSS/JS list is showing (various ways depending on the preference)
 		'assets_list_layout',
 		'assets_list_layout_areas_status',
 		'assets_list_inline_code_status',
 
-		// [wpacu_pro]
         'assets_list_layout_plugin_area_status',
-		// [/wpacu_pro]
 
 		// Fetch automatically, Fetch on click
         'assets_list_show_status',
@@ -52,10 +56,15 @@ class Settings
 		// Combine loaded CSS (remaining ones after unloading the useless ones) into fewer files
 		'combine_loaded_css',
 		'combine_loaded_css_exceptions',
-		'combine_loaded_css_for_admin_only', // Since v1.1.1.4 (Pro) & v1.3.1.1 (Lite)
+
+		// Added since v1.1.7.3 (Pro) & v1.3.6.4 (Lite)
+		'combine_loaded_css_for',
+		'combine_loaded_js_for',
+
+		// No longer used since v1.1.7.3 (Pro) & v1.3.6.4 (Lite)
+		//'combine_loaded_css_for_admin_only', // Since v1.1.1.4 (Pro) & v1.3.1.1 (Lite)
 
         // [wpacu_pro]
-        'combine_loaded_css_append_handle_extra', // Adds any associated inline STYLE tags content to the combined files
         'defer_css_loaded_body',
         // [/wpacu_pro]
 
@@ -84,10 +93,7 @@ class Settings
 		'combine_loaded_js_exceptions',
         'combine_loaded_js_for_admin_only',
         'combine_loaded_js_defer_body', // Applies defer="defer" to the combined file(s) within BODY tag
-
-        // [wpacu_pro]
-        'combine_loaded_js_append_handle_extra', // Adds any CDATA and other associated inline SCRIPT tags content to the combined files
-        // [/wpacu_pro]
+        'combine_loaded_js_try_catch', // try {} catch (e) {} for each individual file within a combined file
 
 		// Minify each loaded CSS (remaining ones after unloading the useless ones)
 		'minify_loaded_css',
@@ -207,14 +213,15 @@ class Settings
 	                                       .'vc_editable=true'."\n"
 	                                       .'preview_nonce='."\n",
 
+	        'allow_manage_assets_to' => 'any_admin',
+	        'allow_manage_assets_to_list' => array(),
+
 	        // Since v1.2.9.3 (Lite) and version 1.1.0.8 (Pro), the default value is "by-location" (All Styles & All Scripts - By Location (Theme, Plugins, Custom & External))
 	        // Prior to that it's "two-lists" (All Styles & All Scripts - 2 separate lists)
 	        'assets_list_layout'              => 'by-location',
 	        'assets_list_layout_areas_status' => 'expanded',
 
-	        // [wpacu_pro]
 	        'assets_list_layout_plugin_area_status' => 'expanded',
-	        // [/wpacu_pro]
 
 	        // "contracted" since 1.1.0.8 (Pro)
 	        'assets_list_inline_code_status' => 'contracted', // takes less space overall
@@ -232,20 +239,16 @@ class Settings
             'move_scripts_to_body_exceptions' => '//cdn.ampproject.org/',
             // [/wpacu_pro]
 
-	        'combine_loaded_css_exceptions' => '/plugins/wd-instagram-feed/(.*?).css',
-            'combine_loaded_css_append_handle_extra' => '1',
+	        // Since v1.1.7.3 (Pro) & v1.3.6.4 (Lite)
+            'combine_loaded_css_for' => 'guests',
+	        'combine_loaded_js_for'  => 'guests',
 
+	        'combine_loaded_css_exceptions' => '/plugins/wd-instagram-feed/(.*?).css',
 	        'combine_loaded_js_exceptions'  => '/plugins/wd-instagram-feed/(.*?).js',
-	        // [wpacu_pro]
-	        'combine_loaded_js_append_handle_extra' => '1',
-	        // [/wpacu_pro]
 
 	        // [wpacu_pro]
             'defer_css_loaded_body' => 'moved',
 	        // [/wpacu_pro]
-
-            'cache_dynamic_loaded_css' => 1,
-	        'cache_dynamic_loaded_js'  => 1,
 
 	        'input_style' => 'enhanced',
 
@@ -254,7 +257,16 @@ class Settings
 
             'fetch_cached_files_details_from' => 'disk', // Do not add more rows to the database by default (options table can become quite large)
 
-            'clear_cached_files_after' => '10'
+            'clear_cached_files_after' => '4',
+
+            // Starting from v1.3.6.9 (Lite) & v1.1.7.9 (Pro), /cart/ & /checkout/ pages are added to the exclusion list by default
+            'do_not_load_plugin_patterns' => '/cart/'. "\n". '/checkout/',
+
+	        // [Hidden Settings]
+            // They are prefixed with underscore _
+	        '_combine_loaded_css_append_handle_extra' => '1',
+	        '_combine_loaded_js_append_handle_extra'  => '1'
+	        // [/Hidden Settings]
         );
     }
 
@@ -271,11 +283,11 @@ class Settings
 
 	        if (function_exists('curl_init')) {
 		        // Check if the website supports HTTP/2 protocol and based on that advise the admin that combining CSS/JS is likely unnecessary
-		        add_action( 'admin_footer', array($this, 'ajaxCheckHttp2ProtocolSupportJsCode') );
+		        add_action( 'admin_footer', array($this, 'adminFooterSettings') );
 	        }
         }
 
-	    add_action( 'wp_ajax_' . WPACU_PLUGIN_ID . '_check_http2_protocol_support', array( $this, 'ajaxCheckHttp2ProtocolSupport' ) );
+	    add_action( 'wp_ajax_' . WPACU_PLUGIN_ID . '_do_verifications',  array( $this, 'ajaxDoVerifications' ) );
     }
 
 	/**
@@ -395,12 +407,16 @@ class Settings
         return false;
     }
 
-    /**
-     * @return array
-     */
-    public function getAll()
+	/**
+	 * @param false $forceRefetch
+	 *
+	 * @return array|mixed
+	 */
+	public function getAll($forceRefetch = false)
     {
-        if (! empty($this->currentSettings)) {
+        if ($forceRefetch) {
+	        $GLOBALS['wp_object_cache']->delete(WPACU_PLUGIN_ID . '_settings', 'options');
+        } else if ( ! empty( $this->currentSettings ) ) { // default check
             return $this->currentSettings;
         }
 
@@ -463,8 +479,16 @@ class Settings
 	 */
 	public function updateOption($key, $value)
     {
-	    $settings = $this->getAll();
-	    $settings[$key] = $value;
+	    $settings = $this->getAll(true);
+
+	    if ( ! is_array($key) ) { // not an array (e.g. a string)
+		    $settings[ $key ] = $value;
+	    } else {
+	        foreach ($key as $keyIndex => $keyValue) { // Array, loop through it
+		        $settings[ $keyValue ] = $value[$keyIndex];
+	        }
+	    }
+
 	    $this->update($settings, false);
     }
 
@@ -473,7 +497,7 @@ class Settings
 	 */
 	public function deleteOption($key)
 	{
-		$settings = $this->getAll();
+		$settings = $this->getAll(true);
 		$settings[$key] = '';
 		$this->update($settings, false);
 	}
@@ -495,6 +519,21 @@ class Settings
 		    $settings['test_mode'] = false;
         }
 
+		// Oxygen Builder is triggered and some users might want to trigger unload rules there to make the editor faster, especially plugin unload rules
+        // We will prevent minify/combine and other functions that will requires caching any files to avoid any errors
+		if (defined('WPACU_ALLOW_ONLY_UNLOAD_RULES') && WPACU_ALLOW_ONLY_UNLOAD_RULES) {
+		    $settings['minify_loaded_css']
+                = $settings['minify_loaded_js']
+                = $settings['combine_loaded_css']
+                = $settings['combine_loaded_js']
+                = $settings['inline_css_files']
+                = $settings['inline_js_files']
+                = $settings['google_fonts_combine']
+                = $settings['google_fonts_remove']
+                = false;
+		}
+
+
 		// /?wpacu_skip_inline_css
         if (array_key_exists('wpacu_skip_inline_css_files', $_GET)) {
 	        $settings['inline_css_files'] = false;
@@ -503,6 +542,28 @@ class Settings
 		// /?wpacu_skip_inline_js
 		if (array_key_exists('wpacu_skip_inline_js_files', $_GET)) {
 			$settings['inline_js_files'] = false;
+		}
+
+		// /?wpacu_manage_front -> "Manage in the Front-end" via query string request
+        // Useful when working for a client and you prefer him to view the pages (while logged-in) without the CSS/JS list at the bottom
+		if (array_key_exists('wpacu_manage_front', $_GET)) {
+			$settings['frontend_show'] = true;
+		}
+
+		// /?wpacu_manage_dash -> "Manage in the Dashboard" via query string request
+		// For debugging purposes
+		if (is_admin() && (array_key_exists('wpacu_manage_dash', $_REQUEST) || array_key_exists('force_manage_dash', $_REQUEST))) {
+			$settings['dashboard_show'] = true;
+		}
+
+		// Google Fonts Removal is enabled; make sure other related settings are nulled
+		if ($settings['google_fonts_remove']) {
+            $settings['google_fonts_combine']
+                = $settings['google_fonts_combine_type']
+                = $settings['google_fonts_display']
+                = $settings['google_fonts_preconnect']
+                = $settings['google_fonts_preload_files']
+                = '';
 		}
 
 		if (isset($_GET['wpacu_settings']) && is_array($_GET['wpacu_settings']) && ! empty($_GET['wpacu_settings'])) {
@@ -551,6 +612,23 @@ class Settings
 
 	    // The following are only triggered IF the user submitted the form from "Settings" area
         if (Misc::getVar('post', 'wpacu_settings_nonce')) {
+	        // By default, these hidden settings are enabled; In case they do not exist (older database), add them
+	        // Only keep them enabled if WordPress version is >= 5.5
+	        $appendInlineCodeToCombinedAssets = ( Misc::isWpVersionAtLeast('5.5') ) ? 1 : '';
+
+	        if ( $appendInlineCodeToCombinedAssets === '' ) {
+		        // WordPress version < 5.5 (do not enable it)
+		        $settings['_combine_loaded_css_append_handle_extra'] = $settings['_combine_loaded_js_append_handle_extra'] = '';
+	        } else {
+		        // WordPress version >= 5.5 (make it enabled by default if not set)
+		        if ( ! isset( $settings['_combine_loaded_css_append_handle_extra'] ) ) {
+			        $settings['_combine_loaded_css_append_handle_extra'] = 1; // default
+		        }
+		        if ( ! isset( $settings['_combine_loaded_js_append_handle_extra'] ) ) {
+			        $settings['_combine_loaded_js_append_handle_extra'] = 1; // default
+		        }
+	        }
+
 	        // "Site-Wide Common Unloads" tab
 	        $disableGutenbergCssBlockLibrary = isset( $_POST[ WPACU_PLUGIN_ID . '_global_unloads' ]['disable_wp_block_library'] );
 	        $disableJQueryMigrate            = isset( $_POST[ WPACU_PLUGIN_ID . '_global_unloads' ]['disable_jquery_migrate'] );
@@ -575,6 +653,10 @@ class Settings
 		        $mainVarToUse['wpacu_ignore_child']['styles']['dashicons'] = 1;
 				Update::updateIgnoreChild($mainVarToUse);
 	        }
+
+	        if ($appendInlineCodeToCombinedAssets) {
+		        $settings = self::toggleAppendInlineAssocCodeHiddenSettings($settings);
+	        }
         }
 
 	    Misc::addUpdateOption(WPACU_PLUGIN_ID . '_settings', json_encode(Misc::filterList($settings)));
@@ -582,10 +664,61 @@ class Settings
         // New Plugin Update (since 6 April 2020): the cache is cleared after page load via AJAX
 	    // This is done in case the cache directory is large and more time is required to clear it
 	    // This offers the admin a better user experience (no one likes to wait too much until a page is reloaded, which sometimes could cause confusion)
-
 	    if ($redirectAfterUpdate) {
 		    $this->redirectAfterUpdate();
 	    }
+    }
+
+	/**
+	 * @param $settings
+	 * @param false $doSettingUpdate (e.g. if called from a WP Cron)
+	 *
+	 * @return mixed
+	 */
+	public static function toggleAppendInlineAssocCodeHiddenSettings($settings, $doSettingUpdate = false)
+    {
+	    // Are there too many files in WP_CONTENT_DIR . WpAssetCleanUp\OptimiseAssets\OptimizeCommon::getRelPathPluginCacheDir() . '(css|js)/' directory?
+	    // Deactivate the appending of the inline CSS/JS code (extra, before or after)
+	    $mbLimitForFiles = array(
+		    'css' => 700,
+		    'js'  => 700 // This is the one that usually has non-unique inline JS code
+	    );
+
+	    if ($doSettingUpdate) {
+	        $settingsClass = new Settings();
+	    }
+
+	    foreach ( $mbLimitForFiles as $assetType => $mbLimit ) { // Go through both .css and .js
+	        $combineSettingsKey = 'combine_loaded_'.$assetType;
+	        $isCombineAssetsEnabled = isset($settings[$combineSettingsKey]) && $settings[$combineSettingsKey];
+
+		    if ( ! $isCombineAssetsEnabled ) {
+			    continue; // Only do the checking if combine CSS/JS is enabled
+		    }
+
+		    $wpacuPathToCombineDirSize = Misc::getSizeOfDirectoryRootFiles(
+			    array(
+				    WP_CONTENT_DIR . OptimizeCommon::getRelPathPluginCacheDir() . $assetType . '/',
+				    WP_CONTENT_DIR . OptimizeCommon::getRelPathPluginCacheDir() . $assetType . '/logged-in/' // just in case "Apply it for all visitors (not recommended)" has been enabled
+			    ),
+			    '.' . $assetType
+		    );
+
+		    if ( isset( $wpacuPathToCombineDirSize['total_size_mb'] ) && $wpacuPathToCombineDirSize['total_size_mb'] > $mbLimit ) {
+			    $settings['_combine_loaded_'.$assetType.'_append_handle_extra'] = '';
+		    } else {
+			    $settings['_combine_loaded_'.$assetType.'_append_handle_extra'] = 1;
+		    }
+
+		    if ($doSettingUpdate) {
+			    $settingsClass->updateOption(
+                    '_combine_loaded_'.$assetType.'_append_handle_extra',
+                    $settings['_combine_loaded_'.$assetType.'_append_handle_extra']
+                );
+		    }
+	    }
+
+	    return $settings;
     }
 
 	/**
@@ -675,7 +808,7 @@ class Settings
 	 */
 	public function redirectAfterUpdate()
     {
-	    $tabArea = Misc::getVar('post', 'wpacu_selected_tab_area', 'wpacu-setting-plugin-usage-settings');
+	    $tabArea    = Misc::getVar('post', 'wpacu_selected_tab_area', 'wpacu-setting-plugin-usage-settings');
 	    $subTabArea = Misc::getVar('post', 'wpacu_selected_sub_tab_area', '');
 
 	    set_transient('wpacu_settings_updated', 1, 30);
@@ -697,31 +830,48 @@ class Settings
 	/**
 	 *
 	 */
-	public function ajaxCheckHttp2ProtocolSupport()
+	public function ajaxDoVerifications()
     {
 	    if (! isset($_POST['action']) || ! Menu::userCanManageAssets()) {
 		    return;
 	    }
 
+	    $result = array();
+
 	    $ch = curl_init();
 
-	    curl_setopt_array($ch, array(
+	    $curlParams = array(
 		    CURLOPT_URL            => get_site_url(),
 		    CURLOPT_HEADER         => true,
 		    CURLOPT_NOBODY         => true,
-		    CURLOPT_RETURNTRANSFER => true,
-		    CURLOPT_HTTP_VERSION   => CURL_HTTP_VERSION_2_0, // cURL will attempt to make an HTTP/2.0 request (can downgrade to HTTP/1.1)
-	    ));
+		    CURLOPT_RETURNTRANSFER => true
+	    );
+
+	    if (defined('CURLOPT_HTTP_VERSION') && defined('CURL_HTTP_VERSION_2_0')) {
+		    // cURL will attempt to make an HTTP/2.0 request (can downgrade to HTTP/1.1)))
+		    $curlParams[CURLOPT_HTTP_VERSION] = CURL_HTTP_VERSION_2_0;
+	    }
+
+	    curl_setopt_array($ch, $curlParams);
 
 	    $response = curl_exec($ch);
-
-	    if ($response !== false && strpos($response, 'HTTP/2') === 0) {
-		    echo 1;
-	    } else {
+	    if (! $response) {
 		    echo curl_error($ch); // something else happened causing the request to fail
 	    }
 
+	    if (strpos($response, 'HTTP/2') === 0) {
+		    $result['has_http2'] = '1'; // Has HTTP/2 Support
+	    }
+
+	    if ((strpos($response, 'cf-cache-status:') !== false) &&
+            (strpos($response, 'cf-request-id:') !== false) &&
+            (strpos($response, 'cf-ray:') !== false)) {
+		    $result['uses_cloudflare'] = '1'; // Uses Cloudflare
+	    }
+
 	    curl_close($ch);
+
+	    echo json_encode($result);
 
 	    exit();
     }
@@ -729,22 +879,64 @@ class Settings
 	/**
 	 *
 	 */
-	public function ajaxCheckHttp2ProtocolSupportJsCode()
+	public function adminFooterSettings()
     {
-    	?>
+	    if ( ! (defined('CURLOPT_HTTP_VERSION') && defined('CURL_HTTP_VERSION_2_0')) ) {
+	        ?>
+            <script type="text/javascript">
+                jQuery(document).ready(function($) {
+                    $('.wpacu_verify_http2_protocol').removeClass('wpacu_hide');
+                });
+            </script>
+            <?php
+		    return; // Stop here! "CURL_HTTP_VERSION_2_0" constant has to be defined
+	    }
+	    ?>
 	    <script type="text/javascript">
 		    jQuery(document).ready(function($) {
                 $.post('<?php echo admin_url('admin-ajax.php'); ?>', {
-                    'action': '<?php echo WPACU_PLUGIN_ID; ?>_check_http2_protocol_support'
-                }, function (result) {
-                    if (result === '1') {
-                        $('.wpacu_http2_protocol_is_supported').removeClass('wpacu_hide');
+                    'action': '<?php echo WPACU_PLUGIN_ID; ?>_do_verifications'
+                }, function (obj) {
+                    let result = jQuery.parseJSON(obj);
+                    console.log(result);
+
+                    if (result.has_http2 === '1') {
+                        $('.wpacu-combine-notice-http-2-detected').removeClass('wpacu_hide');
                     } else {
-                        $('.wpacu_verify_http2_protocol').removeClass('wpacu_hide');
+                        $('.wpacu-combine-notice-default').removeClass('wpacu_hide');
+                    }
+
+                    if (result.uses_cloudflare === '1') {
+                        $('#wpacu-site-uses-cloudflare').show();
                     }
                 });
 		    });
 	    </script>
 	    <?php
+    }
+
+	/**
+	 * @param $value
+     * @param $name
+	 *
+	 * @return false|string
+	 */
+	public static function generateAssetsListLayoutDropDown($value, $name)
+    {
+        ob_start();
+        ?>
+        <select id="wpacu_assets_list_layout" style="max-width: inherit;" name="<?php echo $name; ?>">
+            <option <?php if ($value === 'by-location') { echo 'selected="selected"'; } ?> value="by-location"><?php _e('Grouped by location (themes, plugins, core &amp; external)', 'wp-asset-clean-up'); ?></option>
+            <option <?php if ($value === 'by-position') { echo 'selected="selected"'; } ?> value="by-position"><?php _e('Grouped by tag position: &lt;head&gt; &amp; &lt;body&gt;', 'wp-asset-clean-up'); ?></option>
+            <option <?php if ($value === 'by-preload') { echo 'selected="selected"'; } ?> value="by-preload"><?php _e('Grouped by preloaded or not-preloaded status', 'wp-asset-clean-up'); ?></option>
+            <option <?php if ($value === 'by-parents') { echo 'selected="selected"'; } ?> value="by-parents"><?php _e('Grouped by dependencies: Parents, Children, Independent', 'wp-asset-clean-up'); ?></option>
+            <option <?php if ($value === 'by-loaded-unloaded') { echo 'selected="selected"'; } ?> value="by-loaded-unloaded"><?php _e('Grouped by loaded or unloaded status', 'wp-asset-clean-up'); ?></option>
+            <option <?php if ($value === 'by-size') { echo 'selected="selected"'; } ?> value="by-size"><?php _e('Grouped by their size (sorted in descending order)', 'wp-asset-clean-up'); ?></option>
+            <option <?php if ($value === 'by-rules') { echo 'selected="selected"'; } ?> value="by-rules"><?php _e('Grouped by having at least one rule &amp; no rules', 'wp-asset-clean-up'); ?></option>
+            <option <?php if (in_array($value, array('two-lists', 'default'))) { echo 'selected="selected"'; } ?> value="two-lists"><?php _e('All enqueued CSS, followed by all enqueued JavaScript', 'wp-asset-clean-up'); ?></option>
+            <option <?php if ($value === 'all') { echo 'selected="selected"'; } ?> value="all"> <?php _e('All enqueues in one list', 'wp-asset-clean-up'); ?></option>
+        </select>
+        <?php
+        return ob_get_clean();
     }
 }

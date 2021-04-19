@@ -46,7 +46,7 @@ class Preloads
 	 */
 	public function __construct()
 	{
-	    if (is_admin()) {
+	    if (is_admin() || self::preventPreload()) {
 	        return;
         }
 
@@ -63,6 +63,10 @@ class Preloads
 	 */
 	public function init()
 	{
+	    if (self::preventPreload()) {
+	        return;
+        }
+
 		if (! is_admin()) { // Trigger only in the front-end
 		    add_filter('style_loader_tag', array($this, 'preloadCss'), 10, 2);
 		    add_filter('script_loader_tag', array($this, 'preloadJs'), 10, 2);
@@ -89,13 +93,15 @@ class Preloads
 	 */
 	public function doChanges($htmlSource)
     {
+        if (self::preventPreload()) {
+            return $htmlSource;
+        }
+
 	    $preloads = $this->getPreloads();
 
 	    if (isset($preloads['styles']) && ! empty($preloads['styles'])) {
-		    $htmlSource = self::appendPreloadsForStylesToHead($htmlSource);
+		    $htmlSource = self::appendPreloadsForStylesToHead($htmlSource, array_keys($preloads['styles']));
 	    }
-
-	    $htmlSource = str_replace(self::DEL_STYLES_PRELOADS, '', $htmlSource);
 
 	    return $htmlSource;
     }
@@ -106,6 +112,10 @@ class Preloads
 	 */
 	public function enablePreloads($for)
 	{
+	    if (self::preventPreload()) {
+	        return false;
+        }
+
 	    if ($for === 'css' && ! (isset($this->preloads['styles']) && ! empty($this->preloads['styles']))) {
 			return false;
 		}
@@ -210,7 +220,7 @@ class Preloads
 	 */
 	public function preloadCss($htmlTag, $handle)
 	{
-	    if (Plugin::preventAnyChanges()) {
+	    if (Plugin::preventAnyFrontendOptimization() || self::preventPreload()) {
 	        return $htmlTag;
         }
 
@@ -229,7 +239,12 @@ class Preloads
 		}
 
 		if (array_key_exists($handle, $this->preloads['styles']) && $this->preloads['styles'][$handle]) {
-			return str_replace('<link ', '<link data-wpacu-to-be-preloaded-basic=\'1\' ', $htmlTag);
+            if (isset($_GET['wpacu_no_css_preload_basic'])) { // do not apply it for debugging purposes
+	            return str_replace('<link ', '<link data-wpacu-skip-preload=\'1\' ', $htmlTag);
+            }
+
+			ObjectCache::wpacu_cache_set($handle, 1, 'wpacu_basic_preload_handles');
+            return str_replace('<link ', '<link data-wpacu-to-be-preloaded-basic=\'1\' ', $htmlTag);
 		}
 
 		return $htmlTag;
@@ -242,9 +257,13 @@ class Preloads
 	 */
 	public function preloadJs($htmlTag, $handle)
 	{
-		if (Plugin::preventAnyChanges()) {
+		if (Plugin::preventAnyFrontendOptimization() || self::preventPreload()) {
 			return $htmlTag;
 		}
+
+		if (isset($_GET['wpacu_no_js_preload_basic'])) {
+			return str_replace('<script ', '<script data-wpacu-skip-preload=\'1\' ', $htmlTag);
+        }
 
 		// For testing purposes: Check how the page loads with the requested JS preloaded
 		if ($wpacuJsPreloadHandle = Misc::getVar('get', 'wpacu_preload_js')) {
@@ -269,25 +288,55 @@ class Preloads
 
 	/**
 	 * @param $htmlSource
+	 * @param $preloadedHandles
 	 *
 	 * @return mixed
 	 */
-	public static function appendPreloadsForStylesToHead($htmlSource)
+	public static function appendPreloadsForStylesToHead($htmlSource, $preloadedHandles)
 	{
-		// Highest accuracy via DOMDocument
-		if (function_exists('libxml_use_internal_errors') && function_exists('libxml_clear_errors') && class_exists('DOMDocument')) {
+	    if (self::preventPreload()) {
+	        return $htmlSource;
+        }
+
+		// Perhaps it's not applicable in the current page (no LINK tags are loaded that should be preloaded)
+		if (strpos($htmlSource, 'data-wpacu-to-be-preloaded-basic') === false) {
+			return $htmlSource;
+		}
+
+		// Use the RegEx as it's much faster and very accurate in this situation
+		// If there are issues, fallback to DOMDocument
+		$strContainsFormat = preg_quote('data-wpacu-to-be-preloaded-basic', '/');
+		preg_match_all('#<link[^>]*'.$strContainsFormat.'[^>]*' . '\shref=(\'|"|)(.*)(\\1?\s)' . '.*(>)#Usmi', $htmlSource, $matchesSourcesFromLinkTags, PREG_SET_ORDER);
+
+		$stickToRegEx = true; // default
+
+		foreach ($matchesSourcesFromLinkTags as $linkTagArray) {
+			$linkTag = $linkTagArray[0];
+
+			preg_match_all('#id=([\'"])(.*?)(\\1)#', $linkTag, $matchId);
+			$matchedCssId = isset($matchId[2][0]) ? $matchId[2][0] : '';
+			$matchedCssHandle = substr($matchedCssId, 0, -4);
+
+			if (! in_array($matchedCssHandle, $preloadedHandles)) {
+				$stickToRegEx = false;
+				break;
+			}
+		}
+
+		// Something might not be right with the RegEx; Fallback to DOMDocument, more accurate, but slower
+		if (! $stickToRegEx && function_exists('libxml_use_internal_errors') && function_exists('libxml_clear_errors') && class_exists('\DOMDocument')) {
 			$documentForCSS = new \DOMDocument();
 			libxml_use_internal_errors(true);
 
-			$documentForCSS->loadHTML($htmlSource);
+			$htmlSourceAlt = preg_replace( '@<(noscript|style|script)[^>]*?>.*?</\\1>@si', '', $htmlSource );
+			$documentForCSS->loadHTML($htmlSourceAlt);
+
             $linkTags = $documentForCSS->getElementsByTagName( 'link' );
 
-			$matchesSourcesFromLinkTags = array();
+			$matchesSourcesFromLinkTags = array(); // reset its value; new fetch method was used
 
 			foreach ( $linkTags as $tagObject ) {
-				if (! $tagObject->hasAttributes()) {
-					continue;
-				}
+				if (empty($tagObject->attributes)) { continue; }
 
 				$linkAttributes = array();
 
@@ -301,10 +350,7 @@ class Preloads
 			}
 
 			libxml_clear_errors();
-        } else { // RegEx Fallback
-            $strContainsFormat = preg_quote('data-wpacu-to-be-preloaded-basic=\'1\'', '/');
-            preg_match_all('#<link[^>]'.$strContainsFormat.'[^>]*' . 'href=([\'"])(.*)([\'"])' . '.*(>)#Usmi', $htmlSource, $matchesSourcesFromLinkTags, PREG_SET_ORDER);
-		}
+        }
 
 		foreach ($matchesSourcesFromLinkTags as $linkTagArray) {
 			$linkHref = isset($linkTagArray[2]) ? $linkTagArray[2] : false;
@@ -328,6 +374,10 @@ class Preloads
 	 */
 	public static function linkPreloadCssFormat($linkHref)
 	{
+		if (self::preventPreload()) {
+			return $linkHref;
+		}
+
 		if (OptimizeCss::wpfcMinifyCssEnabledOnly()) {
 		    // [wpacu_lite]
 			return '<link rel=\'preload\' data-from-rel=\'stylesheet\' as=\'style\' href=\''.esc_attr($linkHref).'\' data-wpacu-preload-css-basic=\'1\' />' . "\n";
@@ -344,6 +394,10 @@ class Preloads
 	 */
 	public static function appendPreloadsForScriptsToHead($htmlSource)
 	{
+	    if (self::preventPreload()) {
+	        return $htmlSource;
+        }
+
 		$strContainsFormat = preg_quote('data-wpacu-to-be-preloaded-basic=\'1\'', '/');
 
 		preg_match_all('#<script[^>]*'.$strContainsFormat.'[^>]*' . 'src=([\'"])(.*)([\'"])' . '.*(>)#Usmi', $htmlSource, $matchesSourcesFromScriptTags, PREG_SET_ORDER);
@@ -389,23 +443,27 @@ class Preloads
 		$existingListData = Main::instance()->existingList($existingListJson, $existingListEmpty);
 		$existingList = $existingListData['list'];
 
-		foreach ($_POST['wpacu_preloads']['styles'] as $styleHandle => $stylePreload) {
-			$stylePreload = trim($stylePreload);
+		if ( isset( $_POST['wpacu_preloads']['styles'] ) && ! empty( $_POST['wpacu_preloads']['styles'] ) ) {
+			foreach ( $_POST['wpacu_preloads']['styles'] as $styleHandle => $stylePreload ) {
+				$stylePreload = trim( $stylePreload );
 
-			if ($stylePreload === '' && isset($existingList['styles'][$globalKey][$styleHandle])) {
-				unset($existingList['styles'][$globalKey][$styleHandle]);
-			} elseif ($stylePreload !== '') {
-				$existingList['styles'][$globalKey][$styleHandle] = $stylePreload;
+				if ( $stylePreload === '' && isset( $existingList['styles'][ $globalKey ][ $styleHandle ] ) ) {
+					unset( $existingList['styles'][ $globalKey ][ $styleHandle ] );
+				} elseif ( $stylePreload !== '' ) {
+					$existingList['styles'][ $globalKey ][ $styleHandle ] = $stylePreload;
+				}
 			}
 		}
 
-		foreach ($_POST['wpacu_preloads']['scripts'] as $scriptHandle => $scriptPreload) {
-			$scriptPreload = trim($scriptPreload);
+		if ( isset( $_POST['wpacu_preloads']['scripts'] ) && ! empty( $_POST['wpacu_preloads']['scripts'] ) ) {
+			foreach ( $_POST['wpacu_preloads']['scripts'] as $scriptHandle => $scriptPreload ) {
+				$scriptPreload = trim( $scriptPreload );
 
-			if ($scriptPreload === '' && isset($existingList['scripts'][$globalKey][$scriptHandle])) {
-				unset($existingList['scripts'][$globalKey][$scriptHandle]);
-			} elseif ($scriptPreload !== '') {
-				$existingList['scripts'][$globalKey][$scriptHandle] = $scriptPreload;
+				if ( $scriptPreload === '' && isset( $existingList['scripts'][ $globalKey ][ $scriptHandle ] ) ) {
+					unset( $existingList['scripts'][ $globalKey ][ $scriptHandle ] );
+				} elseif ( $scriptPreload !== '' ) {
+					$existingList['scripts'][ $globalKey ][ $scriptHandle ] = $scriptPreload;
+				}
 			}
 		}
 
@@ -477,4 +535,16 @@ class Preloads
 		</div>
 		<?php
 	}
+
+	/**
+	 * @return bool
+	 */
+	public static function preventPreload()
+    {
+        if (defined('WPACU_ALLOW_ONLY_UNLOAD_RULES') && WPACU_ALLOW_ONLY_UNLOAD_RULES) {
+            return true;
+        }
+
+        return false;
+    }
 }

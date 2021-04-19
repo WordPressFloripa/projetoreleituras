@@ -173,13 +173,17 @@ class Menu
 	 */
 	public static function userCanManageAssets()
 	{
+		if (is_super_admin()) {
+			return true; // For security reasons, super admins will always be able to access the plugin's settings
+		}
+
 		// Has self::$_capability been changed? Just user current_user_can()
 		if (self::getAccessCapability() !== self::$_capability) {
 			return current_user_can(self::getAccessCapability());
 		}
 
-		// self::$_capability default value; also check if the user can activate plugins
-		return current_user_can(self::getAccessCapability()) && current_user_can('activate_plugins');
+		// self::$_capability default value: "administrator"
+		return current_user_can(self::getAccessCapability());
 	}
 
 	/**

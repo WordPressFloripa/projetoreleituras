@@ -125,6 +125,10 @@ if (isset($data['page_template'])) {
 
 $viewAssetsMode = 'default'; // All Styles & All Scripts (two lists)
 
+if ($data['plugin_settings']['assets_list_layout'] === 'all') {
+	$viewAssetsMode = 'all'; // All Styles & Scripts (one list)
+}
+
 if ($data['plugin_settings']['assets_list_layout'] === 'by-location') {
 	$viewAssetsMode = 'by-location'; // Plugins, Theme(s), Core Files, External etc.
 }
@@ -145,30 +149,40 @@ if ($data['plugin_settings']['assets_list_layout'] === 'by-loaded-unloaded') {
 	$viewAssetsMode = 'by-loaded-unloaded'; // Parent or Child/Independent (two lists)
 }
 
+if ($data['plugin_settings']['assets_list_layout'] === 'by-size') {
+	$viewAssetsMode = 'by-size'; // Local Files (in descending order based on the size) and External Files (or files that can't have the size determined)
+}
+
+if ($data['plugin_settings']['assets_list_layout'] === 'by-rules') {
+	$viewAssetsMode = 'by-rules'; // Enqueued Files with at least one rule & Enqueued Files with no rules
+}
+
 $data['page_unload_text'] = __('Unload on this page', 'wp-asset-clean-up');
-wp_cache_set('wpacu_data_page_unload_text', $data['page_unload_text']);
+
+if (is_singular()) {
+    global $post;
+    ?>
+    <input type="hidden" name="wpacu_is_singular_page" value="<?php echo $post->ID; ?>" />
+    <?php
+}
+
+\WpAssetCleanUp\ObjectCache::wpacu_cache_set('wpacu_data_page_unload_text', $data['page_unload_text']);
 
 // Assets List Layout - added here to convenience - to avoid going to "Settings"
 // it could make debugging faster
 ob_start();
 ?>
 <label for="wpacu_assets_list_layout"><strong>Assets List Layout:</strong></label> <small>* any new change will take effect after you use the "Update" button</small>
-<p style="margin: 8px 0;"><select id="wpacu_assets_list_layout"
-                                  style="max-width: inherit;"
-        name="wpacu_assets_list_layout">
-    <option <?php if ($data['plugin_settings']['assets_list_layout'] === 'by-location') { echo 'selected="selected"'; } ?> value="by-location"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by location (themes, plugins, core &amp; external)', 'wp-asset-clean-up'); ?></option>
-    <option <?php if ($data['plugin_settings']['assets_list_layout'] === 'by-position') { echo 'selected="selected"'; } ?> value="by-position"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by tag position: &lt;head&gt; &amp; &lt;body&gt;', 'wp-asset-clean-up'); ?></option>
-    <option <?php if ($data['plugin_settings']['assets_list_layout'] === 'by-preload') { echo 'selected="selected"'; } ?> value="by-preload"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by preloaded or not-preloaded status', 'wp-asset-clean-up'); ?></option>
-    <option <?php if ($data['plugin_settings']['assets_list_layout'] === 'by-parents') { echo 'selected="selected"'; } ?> value="by-parents"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by dependencies: Parents, Children, Independent', 'wp-asset-clean-up'); ?></option>
-    <option <?php if ($data['plugin_settings']['assets_list_layout'] === 'by-loaded-unloaded') { echo 'selected="selected"'; } ?> value="by-loaded-unloaded"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Grouped by loaded or unloaded status', 'wp-asset-clean-up'); ?></option>
-    <option <?php if (in_array($data['plugin_settings']['assets_list_layout'], array('two-lists', 'default'))) { echo 'selected="selected"'; } ?> value="two-lists"><?php _e('All Styles', 'wp-asset-clean-up'); ?> + <?php _e('All Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('Two lists', 'wp-asset-clean-up'); ?></option>
-    <option disabled="disabled" value="all"><?php _e('All Styles &amp; Scripts', 'wp-asset-clean-up'); ?> &#10230; <?php _e('One list', 'wp-asset-clean-up'); ?> (<?php _e('Pro Version', 'wp-asset-clean-up'); ?>)</option>
-</select></p>
+<p style="margin: 8px 0;"><?php echo \WpAssetCleanUp\Settings::generateAssetsListLayoutDropDown($data['plugin_settings']['assets_list_layout'], 'wpacu_assets_list_layout'); ?></p>
 <?php
 $data['assets_list_layout_output'] = ob_get_clean();
 ?>
 <div class="<?php if ($data['plugin_settings']['input_style'] !== 'standard') { ?>wpacu-switch-enhanced<?php } else { ?>wpacu-switch-standard<?php } ?>">
     <?php
+    if (isset($data['is_frontend_view']) && $data['is_frontend_view']) {
+	    $hardcodedManageAreaHtml = \WpAssetCleanUp\HardcodedAssets::getHardCodedManageAreaForFrontEndView($data);
+    }
+
     include_once __DIR__.'/meta-box-loaded-assets/view-'.$viewAssetsMode.'.php';
     ?>
 </div>
@@ -193,4 +207,5 @@ if ($metaBoxLoadedFine) {
            id="wpacu_unload_assets_area_loaded"
            name="wpacu_unload_assets_area_loaded"
            value="1" />
-<?php } ?>
+    <?php
+}

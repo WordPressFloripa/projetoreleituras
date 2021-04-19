@@ -1,6 +1,8 @@
 <?php
 namespace WpAssetCleanUp;
 
+use WpAssetCleanUp\OptimiseAssets\OptimizeCommon;
+
 /**
  * Class Misc
  * contains various common functions that are used by the plugin
@@ -32,16 +34,6 @@ class Misc
 	public $activeCachePlugins = array();
 
     /**
-     * Misc constructor.
-     */
-    public function __construct()
-    {
-        if (isset($_REQUEST['wpacuNoAdminBar'])) {
-	        self::noAdminBarLoad();
-        }
-    }
-
-    /**
      * @var
      */
     public static $showOnFront;
@@ -52,7 +44,7 @@ class Misc
 	public function getActiveCachePlugins()
 	{
 		if (empty($this->activeCachePlugins)) {
-			$activePlugins = get_option( 'active_plugins' );
+			$activePlugins = get_option( 'active_plugins', array() );
 
 			foreach ( self::$potentialCachePlugins as $cachePlugin ) {
 				if ( in_array( $cachePlugin, $activePlugins ) ) {
@@ -189,12 +181,59 @@ class Misc
         return $postUrl;
     }
 
+	/**
+	 * @return bool
+	 */
+	public static function isElementorMaintenanceModeOn()
+    {
+	    // Elementor's maintenance or coming soon mode
+	    if (class_exists('\Elementor\Maintenance_Mode') && Misc::isPluginActive('elementor/elementor.php')) {
+		    try {
+			    $elementorMaintenanceMode = \Elementor\Maintenance_Mode::get( 'mode' ); // if any
+			    if ( $elementorMaintenanceMode && in_array($elementorMaintenanceMode, array('maintenance', 'coming_soon')) ) {
+					return true;
+				    }
+		    } catch (\Exception $err) {}
+	    }
+
+	    return false;
+    }
+
+	/**
+	 * @return bool
+	 */
+	public static function isElementorMaintenanceModeOnForCurrentAdmin()
+    {
+    	if ( defined('WPACU_IS_ELEMENTOR_MAINTENANCE_MODE_TEMPLATE_ID') ) {
+    		return true;
+	    }
+
+	    if (class_exists('\Elementor\Maintenance_Mode') && Misc::isPluginActive('elementor/elementor.php')) {
+		    try {
+			    // Elementor Template ID (Chosen for maintenance or coming soon mode)
+			    $elementorMaintenanceModeTemplateId = \Elementor\Maintenance_Mode::get( 'template_id' );
+
+			    if ( isset( $GLOBALS['post']->ID ) && (int)$elementorMaintenanceModeTemplateId === (int)$GLOBALS['post']->ID ) {
+				    define( 'WPACU_IS_ELEMENTOR_MAINTENANCE_MODE_TEMPLATE_ID', $elementorMaintenanceModeTemplateId );
+				    return true;
+			    }
+		    } catch (\Exception $err) {}
+	    }
+
+	    return false;
+    }
+
     /**
      * @return mixed
      */
     public static function isHomePage()
     {
 	    // Docs: https://codex.wordpress.org/Conditional_Tags
+
+	    // Elementor's Maintenance Mode is ON
+	    if (defined('WPACU_IS_ELEMENTOR_MAINTENANCE_MODE_TEMPLATE_ID')) {
+		    return false;
+	    }
 
 	    // "Your latest posts" -> sometimes it works as is_front_page(), sometimes as is_home())
 	    // "A static page (select below)" -> In this case is_front_page() should work
@@ -337,6 +376,50 @@ class Misc
     }
 
 	/**
+	 * @param bool $clean
+	 *
+	 * @return mixed|string
+	 */
+	public static function getCurrentPageUrl($clean = true)
+    {
+	    $currentPageUrl = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http') . '://' . parse_url(site_url(), PHP_URL_HOST) . $_SERVER['REQUEST_URI'];
+
+	    if ($clean && strpos($currentPageUrl, '?') !== false) {
+		    list($currentPageUrl) = explode('?', $currentPageUrl);
+	    }
+
+	    return $currentPageUrl;
+    }
+
+	/**
+	 * @param $src
+	 * @param $assetKey
+	 *
+	 * @return string|string[]
+	 */
+	public static function assetFromHrefToRelativeUri($src, $assetKey)
+    {
+	    // Make the "src" relative in case the information will be imported from Staging to Live, it won't show the handle's link referencing to the staging URL in the "Overview" page and other similar pages as it's confusing
+	    $localAssetPath = OptimizeCommon::getLocalAssetPath($src, (($assetKey === 'styles') ? 'css' : 'js'));
+
+	    $relSrc = $src;
+
+	    if ($localAssetPath) {
+		    $relSrc = str_replace(ABSPATH, '', $relSrc);
+	    }
+
+	    $relSrc = str_replace(site_url(), '', $relSrc);
+
+	    // Does it start with '//'? (protocol is missing) - the replacement above wasn't made
+	    if (strpos($relSrc, '//') === 0) {
+		    $siteUrlNoProtocol = str_replace(array('http:', 'https:'), '', site_url());
+		    $relSrc = str_replace($siteUrlNoProtocol, '', $relSrc);
+	    }
+
+	    return $relSrc;
+    }
+
+	/**
 	 * @return bool
 	 */
 	public static function isBlogPage()
@@ -356,14 +439,6 @@ class Misc
         return self::$showOnFront;
     }
 
-    /**
-     *
-     */
-    public static function noAdminBarLoad()
-    {
-        add_filter('show_admin_bar', '__return_false');
-    }
-
 	/**
 	 * @param $plugin
 	 *
@@ -371,7 +446,7 @@ class Misc
 	 */
 	public static function isPluginActive($plugin)
 	{
-    	return in_array($plugin, apply_filters('active_plugins', get_option('active_plugins')));
+    	return in_array($plugin, apply_filters('active_plugins', get_option('active_plugins', array())));
     }
 
 	/**
@@ -379,6 +454,11 @@ class Misc
 	 */
 	public static function isWpRocketMinifyHtmlEnabled()
     {
+    	// Only relevant if WP Rocket's version is below 3.7
+	    if (defined('WP_ROCKET_VERSION') && version_compare(WP_ROCKET_VERSION, '3.7') >= 0) {
+	    	return false;
+	    }
+
 		if (self::isPluginActive('wp-rocket/wp-rocket.php')) {
 			if (function_exists('get_rocket_option')) {
 				$wpRocketMinifyHtml = trim(get_rocket_option('minify_html')) ?: false;
@@ -418,27 +498,33 @@ class Misc
 	 */
 	public static function getW3tcMasterConfig()
 	{
-		if (! wp_cache_get('wpacu_w3tc_master_config')) {
+		if (! ObjectCache::wpacu_cache_get('wpacu_w3tc_master_config')) {
 			$w3tcConfigMasterFile = WP_CONTENT_DIR . '/w3tc-config/master.php';
 			$w3tcMasterConfig = FileSystem::file_get_contents($w3tcConfigMasterFile);
-			wp_cache_set('wpacu_w3tc_master_config', trim($w3tcMasterConfig));
+			ObjectCache::wpacu_cache_set('wpacu_w3tc_master_config', trim($w3tcMasterConfig));
 		} else {
-			$w3tcMasterConfig = wp_cache_get('wpacu_w3tc_master_config');
+			$w3tcMasterConfig = ObjectCache::wpacu_cache_get('wpacu_w3tc_master_config');
 		}
 
 		return $w3tcMasterConfig;
 	}
 
 	/**
+	 * @param bool $forceReturn
 	 *
+	 * @return string
 	 */
-	public static function preloadAsyncCssFallbackOutput()
+	public static function preloadAsyncCssFallbackOutput($forceReturn = false)
 	{
-		if (defined('WPACU_PRELOAD_ASYNC_SCRIPT_SHOWN')) {
-			return ''; // already printed
-		}
+		// Unless it has to be returned (e.g. for debugging purposes), check it if it was returned before
+		// To avoid duplicated HTML code
+		if (! $forceReturn) {
+			if ( defined( 'WPACU_PRELOAD_ASYNC_SCRIPT_SHOWN' ) ) {
+				return '';
+			}
 
-		define('WPACU_PRELOAD_ASYNC_SCRIPT_SHOWN', 1);
+			define( 'WPACU_PRELOAD_ASYNC_SCRIPT_SHOWN', 1 ); // mark it as already printed
+		}
 
 		return <<<HTML
 <script id="wpacu-preload-async-css-fallback">
@@ -560,6 +646,12 @@ HTML;
 		    return;
 	    }
 
+    	// Empty array encoded into JSON; No point in keeping the option in the database
+    	if ($optionValue === '[]') {
+    		delete_option($optionName);
+    		return;
+	    }
+
     	// Value is in the database already | Update it
     	update_option($optionName, $optionValue, $autoload);
     }
@@ -674,7 +766,7 @@ SQL;
 				} elseif (in_array($bulkUnloadedType, array('post_type', 'taxonomy'))) {
 					foreach (array('styles', 'scripts') as $assetType) {
 						if ( isset( $bulkUnloadArray[$assetType][ $bulkUnloadedType ] ) && ! empty( $bulkUnloadArray[$assetType][ $bulkUnloadedType ] ) ) {
-							foreach ( $bulkUnloadArray[$assetType][ $bulkUnloadedType ] as $objectType => $objectValues ) {
+							foreach ( $bulkUnloadArray[$assetType][ $bulkUnloadedType ] as $objectValues ) {
 								$unloadedTotalAssets += count( $objectValues );
 							}
 						}
@@ -684,6 +776,46 @@ SQL;
 		}
 
 		return $unloadedTotalAssets;
+	}
+
+	/**
+	 * @param $data
+	 * @param $assetTypeKey
+	 *
+	 * @return bool
+	 */
+	public static function handleHasAtLeastOneRule($data, $assetTypeKey)
+	{
+		// Is it unloaded?
+		if (strpos($data['row']['class'], 'wpacu_not_load') !== false) {
+			return true;
+		}
+
+		$isAssetPreloaded = (isset($data['preloads'][$assetTypeKey][$data['row']['obj']->handle]) && $data['preloads'][$assetTypeKey][$data['row']['obj']->handle])
+			? $data['preloads'][$assetTypeKey][$data['row']['obj']->handle]
+			: false;
+
+		// Preloaded? (either 'basic' for any CSS/JS or 'async' for CSS files)
+		if ($isAssetPreloaded) {
+			return true;
+		}
+
+		// Is it a Google Font request that was stripped site-wide?
+		if ($assetTypeKey === 'styles') {
+			$isGoogleFontLink = stripos($data['row']['obj']->srcHref, '//fonts.googleapis.com/') !== false;
+
+			if ($isGoogleFontLink && $data['plugin_settings']['google_fonts_remove']) {
+				return true;
+			}
+		}
+
+		// Was a filer hook used to load an alternative version of the handle?
+		if (isset($data['row']['obj']->src_origin, $data['row']['obj']->ver_origin)) {
+			return true;
+		}
+
+		// Finally, return false as the asset has no rules set
+		return false;
 	}
 
 	/**
@@ -699,7 +831,7 @@ SQL;
 		if (isset($matches[1][0]) && $matches[1][0]) {
 			$pluginDirName = $matches[1][0];
 
-			$activePlugins = get_option( 'active_plugins' );
+			$activePlugins = get_option( 'active_plugins', array() );
 			$activePluginsStr = implode(',', $activePlugins);
 
 			if (strpos($activePluginsStr, $pluginDirName.'/') === false) {
@@ -721,8 +853,8 @@ SQL;
 
 		$relSrc = str_replace( site_url(), '', $srcAlt );
 
-		if (strpos($relSrc, '/wp-content/plugins') !== 0) {
-			list (,$relSrc) = '/wp-content/plugins' . explode('/wp-content/plugins', $relSrc);
+		if (strpos($relSrc, '/wp-content/plugins') !== false) {
+			list (,$relSrc) = explode('/wp-content/plugins', $relSrc);
 		}
 
 		if (strpos($relSrc, $relPluginsUrl) !== false) {
@@ -732,7 +864,7 @@ SQL;
 			if (strpos($relSrc, '/') !== false) {
 				list ( $pluginDirName, ) = explode( '/', $relSrc );
 
-				$activePlugins = get_option( 'active_plugins' );
+				$activePlugins = get_option( 'active_plugins', array() );
 				$activePluginsStr = implode(',', $activePlugins);
 
 				if (strpos($activePluginsStr, $pluginDirName.'/') === false) {
@@ -766,7 +898,7 @@ SQL;
     		return array();
 	    }
 
-	    $allActivePlugins = get_option('active_plugins');
+	    $allActivePlugins = array_unique(get_option('active_plugins', array()));
 
 	    if (empty($allActivePlugins)) {
 	    	return array();
@@ -873,7 +1005,7 @@ SQL;
 
 	    $allActivePluginsIcons = self::fetchActiveFreePluginsIcons(true) ?: array();
 
-	    foreach (get_option('active_plugins') as $activePlugin) {
+	    foreach (array_unique(get_option('active_plugins', array())) as $activePlugin) {
 		    if (strpos($activePlugin, '/') !== false) {
 			    list ($pluginSlug) = explode('/', $activePlugin);
 
@@ -907,7 +1039,6 @@ SQL;
 	    foreach ($themesIcons as $themesIcon) {
 	    	if (strpos($themesIcon, $themeName.'.') !== false) {
 				return $themesIconsUrlDir . $themesIcon;
-				break;
 		    }
 	    }
 
@@ -968,23 +1099,34 @@ SQL;
 	 *
 	 * @param $size
 	 * @param int $precision
+	 * @param string $getItIn
 	 *
 	 * @return string
 	 */
-	public static function formatBytes($size, $precision = 2)
+	public static function formatBytes($size, $precision = 2, $getItIn = '')
 	{
 		if ((int)$size === 0) {
-			return '<span style="vertical-align: middle;" class="dashicons dashicons-warning"></span> <strong>'.__('The file appears to be empty', 'wp-asset-clean-up').'</strong>';
+			return '<span style="vertical-align: middle;" class="dashicons dashicons-warning"></span> '.__('The file appears to be empty', 'wp-asset-clean-up');
 		}
 
 		// In case a string is passed, make it to float
 		$size = (float)$size;
 
-		if (! ($size > 0)) {
-			return 'N/A';
+		// Just for internal usage (no printing in nice format)
+		if ($getItIn === 'bytes') {
+			return $size;
+		}
+
+		if ($getItIn === 'KB') {
+			return round(($size / 1024), $precision);
+		}
+
+		if ($getItIn === 'MB') {
+			return round((($size / 1024) / 1024), $precision);
 		}
 
 		$base = log($size, 1024);
+
 		$suffixes = array('bytes', 'KB', 'MB');
 
 		$floorBase = floor($base);
@@ -999,7 +1141,13 @@ SQL;
 			$precision
 		);
 
-		$output = $result.' '. $suffixes[$floorBase];
+		$resultForPrint = $result;
+
+		if ($suffixes[$floorBase] === 'KB' && $floorBase !== 1) {
+			$resultForPrint = str_replace('.', '<span style="font-size: 80%; font-weight: 200;">.', $result).'</span>';
+		}
+
+		$output = $resultForPrint.' '. $suffixes[$floorBase];
 
 		// If KB, also show the MB equivalent
 		if ($floorBase === 1) {
@@ -1007,6 +1155,89 @@ SQL;
 		}
 
 		return $output;
+	}
+
+	/**
+	 * @param array $targetDirs
+	 * @param string $filterExt
+	 *
+	 * @return array|bool
+	 */
+	public static function getSizeOfDirectoryRootFiles($targetDirs = array(), $filterExt = '')
+	{
+		if ( empty($targetDirs) ) {
+			return array(); // no relevant target dirs set as a parameter
+		}
+
+		$totalSize = 0;
+
+		foreach ( $targetDirs as $targetDir ) {
+			if ( ! is_dir($targetDir) ) {
+				continue; // skip it as the directory does not exist
+			}
+
+			$listOfFiles = scandir( $targetDir );
+
+			if ( ! empty( $listOfFiles ) ) {
+				foreach ( $listOfFiles as $fileName ) {
+					// Only relevant root files matter
+					if ( $fileName === '.' || $fileName === '..' || $fileName === 'index.php' || is_dir( $fileName ) ) {
+						continue;
+					}
+
+					// If .js is specified, then do not consider any other extension
+					if ( $filterExt !== '' && ! strrchr( $fileName, $filterExt ) ) {
+						continue;
+					}
+
+					$totalSize += filesize( $targetDir . $fileName );
+				}
+			}
+		}
+
+		if ($totalSize > 0) {
+			$totalSizeMb = self::formatBytes( $totalSize, 2, 'MB' );
+
+			return array(
+				'total_size'    => $totalSize,
+				'total_size_mb' => $totalSizeMb
+			);
+		}
+
+		return array(); // no relevant files
+	}
+
+	/**
+	 * @param $targetDir
+	 */
+	public static function rmDir($targetDir)
+	{
+		if (! is_dir($targetDir)) {
+			return;
+		}
+
+		$scanDirResult = @scandir($targetDir);
+
+		if (! is_array($scanDirResult)) {
+			return;
+		}
+
+		$totalFiles = count($scanDirResult) - 2; // exclude . and ..
+
+		if ($totalFiles < 1) { // could be 0 or negative
+			@rmdir($targetDir); // @ was appended just in case
+		}
+	}
+
+	/**
+	 * @param $targetVersion
+	 *
+	 * @return bool
+	 */
+	public static function isWpVersionAtLeast($targetVersion)
+	{
+		global $wp_version;
+		return ( version_compare($wp_version, $targetVersion) >= 0 );
 	}
 
 	/**
@@ -1055,6 +1286,40 @@ SQL;
 	}
 
 	/**
+	 * Single value (no multiple RegExes)
+	 *
+	 * @param $regexValue
+	 *
+	 * @return mixed|string
+	 */
+	public static function purifyRegexValue($regexValue)
+	{
+		try {
+			if ( class_exists( '\CleanRegex\Pattern' )
+			     && class_exists( '\SafeRegex\preg' )
+			     && method_exists( '\CleanRegex\Pattern', 'delimitered' )
+			     && method_exists( '\SafeRegex\preg', 'match' ) ) {
+					$cleanRegexPattern = new \CleanRegex\Pattern( $regexValue );
+					$delimiteredValue  = $cleanRegexPattern->delimitered(); // auto-correct it if there's no delimiter
+
+					if ( $delimiteredValue ) {
+						// Tip: https://stackoverflow.com/questions/4440626/how-can-i-validate-regex
+						// Validate it and if it doesn't match, do not add it to the list
+						@preg_match( $delimiteredValue, null );
+
+						if ( preg_last_error() !== PREG_NO_ERROR ) {
+							return $regexValue;
+						}
+
+						}
+				$regexValue = trim($regexValue);
+			}
+		} catch( \Exception $e) {} // if T-Regx library didn't load as it should, the textarea value will be kept as it is
+
+		return $regexValue;
+	}
+
+	/**
 	 * @param $name
 	 * @param $action
 	 *
@@ -1071,16 +1336,10 @@ SQL;
 
 		if ($action === 'start') {
 			$startTime = (microtime(true) * 1000);
-
-			// Do not overwrite it if it's already there (e.g. in a function called several times)
-			if (wp_cache_get($wpacuStartTimeName, 'wpacu_exec_time')) {
-				return '';
-			}
-
-			wp_cache_set($wpacuStartTimeName, $startTime, 'wpacu_exec_time');
+			ObjectCache::wpacu_cache_set($wpacuStartTimeName, $startTime, 'wpacu_exec_time');
 		}
 
-		if ($action === 'end' && ($startTime = wp_cache_get($wpacuStartTimeName, 'wpacu_exec_time'))) {
+		if ($action === 'end' && ($startTime = ObjectCache::wpacu_cache_get($wpacuStartTimeName, 'wpacu_exec_time'))) {
 			// End clock time in seconds
 			$endTime = (microtime(true) * 1000);
 			$scriptExecTime = ($endTime !== $startTime && $endTime > $startTime) ? ($endTime - $startTime) : 0;
@@ -1088,11 +1347,11 @@ SQL;
 			// Calculate script execution time
 			// Is there an existing exec time (e.g. from a function called several times)?
 			// Append it to the total execution time
-			if ($scriptExecTimeExisting = wp_cache_get($wpacuExecTimeName, 'wpacu_exec_time')) {
+			if ($scriptExecTimeExisting = ObjectCache::wpacu_cache_get($wpacuExecTimeName, 'wpacu_exec_time')) {
 				$scriptExecTime += $scriptExecTimeExisting;
 			}
 
-			wp_cache_set($wpacuExecTimeName, $scriptExecTime, 'wpacu_exec_time');
+			ObjectCache::wpacu_cache_set($wpacuExecTimeName, $scriptExecTime, 'wpacu_exec_time');
 			return $scriptExecTime;
 		}
 
@@ -1106,10 +1365,10 @@ SQL;
 	 */
 	public static function getTimingValues($wpacuCacheKey)
 	{
-		$wpacuExecTiming = wp_cache_get( $wpacuCacheKey, 'wpacu_exec_time' ) ?: 0;
+		$wpacuExecTiming = ObjectCache::wpacu_cache_get( $wpacuCacheKey, 'wpacu_exec_time' ) ?: 0;
 
 		$wpacuTimingFormatMs = str_replace('.00', '', number_format($wpacuExecTiming, 2));
-		$wpacuTimingFormatS  = str_replace('.00', '', number_format(($wpacuExecTiming / 1000), 3));
+		$wpacuTimingFormatS  = str_replace(array('.00', ','), '', number_format(($wpacuExecTiming / 1000), 3));
 
 		return array('ms' => $wpacuTimingFormatMs, 's' => $wpacuTimingFormatS);
 	}
@@ -1127,7 +1386,7 @@ SQL;
 		$wpacuTimingFormatMs = $timingValues['ms'];
 		$wpacuTimingFormatS  = $timingValues['s'];
 
-		$htmlSource = str_replace(
+		return str_replace(
 			array(
 				'{' . $wpacuCacheKey . '}',
 				'{' . $wpacuCacheKey . '_sec}'
@@ -1137,7 +1396,5 @@ SQL;
 				$wpacuTimingFormatS . 's',
 			), // clean it up
 			$htmlSource );
-
-		return $htmlSource;
 	}
 }

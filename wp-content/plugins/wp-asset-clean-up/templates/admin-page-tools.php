@@ -59,8 +59,8 @@ do_action('wpacu_admin_notices');
 
                     <p><?php _e('This action is usually taken if:', 'wp-asset-clean-up'); ?></p>
                     <ul>
-                        <li><?php _e('You believe you have applied some changes (such as unloading the wrong CSS / JavaScript file(s)) that broke the website and you need a quick fix to make it work the way it used to. Note that for this option, you can also enable "Test Mode" from the plugin\'s settings which will only apply the changes to you (logged-in administrator), while the regular visitors will view the website as if Asset CleanUp is deactivated.', 'wp-asset-clean-up'); ?></li>
-                        <li><?php _e('You want to uninstall Asset CleanUp and remove the traces left in the database (this is not the same thing as deactivating and activating the plugin again, as any changes applied would be preserved in this scenario)', 'wp-asset-clean-up'); ?></li>
+                        <li><?php echo sprintf(__('You believe you have applied some changes (such as unloading the wrong CSS / JavaScript file(s)) that broke the website and you need a quick fix to make it work the way it used to. Note that for this option, you can also enable "Test Mode" from the plugin\'s settings which will only apply the changes to you (logged-in administrator), while the regular visitors will view the website as if %s is deactivated.', 'wp-asset-clean-up'), WPACU_PLUGIN_TITLE); ?></li>
+                        <li><?php echo sprintf(__('You want to uninstall Asset CleanUp and remove the traces left in the database (this is not the same thing as deactivating and activating the plugin again, as any changes applied would be preserved in this scenario)', 'wp-asset-clean-up'), WPACU_PLUGIN_TITLE); ?></li>
                     </ul>
                 </div>
 
@@ -124,6 +124,9 @@ do_action('wpacu_admin_notices');
 			        echo '<span style="color: green;"><span class="dashicons dashicons-yes"></span> '.__('writable', 'wp-asset-clean-up').'</span>';
 		        } ?>
             </p>
+
+            <p><?php echo __('Depending on the current settings, a storage caching directory of the optimized files is needed', 'wp-asset-clean-up'); ?>. Reason being that specific CSS/JS files had to be altered and they are retrieved faster from the caching directory, rather than altering then "on the fly" on every page load. <span style="color: #004567;" class="dashicons dashicons-info"></span> <a target="_blank" href="https://assetcleanup.com/docs/?p=526">Read more</a></p>
+
             <?php
 	        $storageStats = \WpAssetCleanUp\OptimiseAssets\OptimizeCommon::getStorageStats();
 
@@ -132,9 +135,34 @@ do_action('wpacu_admin_notices');
                 <p><?php _e('Total storage files', 'wp-asset-clean-up'); ?>: <strong><?php echo $storageStats['total_files']; ?></strong>, <?php echo $storageStats['total_size']; ?> of which <strong><?php echo $storageStats['total_files_assets']; ?></strong> are CSS/JS assets, <?php echo $storageStats['total_size_assets']; ?></p>
 		        <?php
 	        }
+
+	        $cssJsDirMarker = '<span class="dashicons dashicons-yes-alt" style="font-size: 19px; vertical-align: top; color: green;"></span>';
+	        ?>
+            <p>The following list prints each directory (local path) and its size. Only the ones marked with <?php echo $cssJsDirMarker; ?> have CSS/JS files there. The other unmarked ones contain .json (for reference purposes), index.php or .htaccess file types.</p>
+            <div class="wpacu-clearfix"></div>
+            <?php
+	        echo '<ul style="margin-top: 0;margin-left: 25px; list-style: disc;">';
+
+	        foreach ($storageStats['dirs_files_sizes'] as $localDirPath => $localDirFileSizes) {
+		        $localDirPath = trim($localDirPath);
+		        $totalDirSize = array_sum($localDirFileSizes);
+
+		        $cssJsDirMarkerOutput = '';
+		        if (in_array($localDirPath, $storageStats['dirs_css_js'])) {
+			        $cssJsDirMarkerOutput = $cssJsDirMarker;
+		        }
+
+		        $rowStyle = '';
+		        if ($cssJsDirMarkerOutput) {
+			        $rowStyle = 'background: rgba(0,0,0,.07); padding: 4px; display: inline;';
+		        }
+
+                echo '<li><div style="'.$rowStyle.'">'.$localDirPath.': <strong>'.\WpAssetCleanUp\Misc::formatBytes($totalDirSize).'</strong> '.$cssJsDirMarkerOutput.'</div></li>';
+	        }
+
+	        echo '</ul>';
             ?>
             <hr />
-            <p><?php _e('If either of the Minify &amp; Combine CSS/JS features is enabled, a storage directory of the minified &amp; concatenated files is needed.', 'wp-asset-clean-up'); ?></p>
             <p><?php echo sprintf(__('On certain hosting platforms such as Pantheon, the number of writable directories is limited, in this case you have to change it to %s', 'wp-asset-clean-up'), '<code><strong>/uploads/asset-cleanup/</strong></code>'); ?></p>
             <p>
                 <?php echo sprintf(
@@ -148,7 +176,7 @@ do_action('wpacu_admin_notices');
             <p><?php echo sprintf(
                     __('Note that the relative path is appended to %s', 'wp-asset-clean-up'),
                     '<em>'.WP_CONTENT_DIR.'/</em>'
-                ); ?></p>
+                ); ?> which is the WordPress content directory.</p>
             <?php
         }
 

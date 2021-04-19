@@ -59,7 +59,7 @@ class WP_Custom_Post_Type_Widgets_Recent_Posts extends WP_Widget {
 		$show_date = ! empty( $instance['show_date'] ) ? (bool) $instance['show_date'] : false;
 
 		$post_types          = get_post_types( array( 'public' => true ), 'objects' );
-		$post_types[ 'any' ] = array();
+		$post_types['any'] = array();
 
 		if ( array_key_exists( $posttype, (array) $post_types ) ) {
 			/**
@@ -74,7 +74,7 @@ class WP_Custom_Post_Type_Widgets_Recent_Posts extends WP_Widget {
 			 *
 			 * @param array  $args     An array of arguments used to retrieve the recent posts.
 			 * @param array  $instance Array of settings for the current widget.
-			 * @param string $this->id Widget id.
+			 * @param string $id Widget id.
 			 * @param string $posttype Post type.
 			 */
 			$r = new WP_Query(
@@ -97,9 +97,12 @@ class WP_Custom_Post_Type_Widgets_Recent_Posts extends WP_Widget {
 				return;
 			}
 			?>
-			<?php echo $args['before_widget']; ?>
 			<?php
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
+			echo $args['before_widget'];
+
 			if ( $title ) {
+				// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 				echo $args['before_title'] . $title . $args['after_title'];
 			}
 
@@ -149,7 +152,7 @@ class WP_Custom_Post_Type_Widgets_Recent_Posts extends WP_Widget {
 						$recent_post
 					);
 					?>
-					<a href="<?php the_permalink( $recent_post->ID ); ?>"><?php echo $title; ?></a>
+					<a href="<?php the_permalink( $recent_post->ID ); ?>"><?php echo esc_html( $title ); ?></a>
 					<?php if ( $show_date ) : ?>
 						<span class="post-date"><?php echo get_the_date( '', $recent_post->ID ); ?></span>
 					<?php endif; ?>
@@ -196,6 +199,7 @@ class WP_Custom_Post_Type_Widgets_Recent_Posts extends WP_Widget {
 				$instance
 			);
 
+			// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
 			echo $args['after_widget'];
 		}
 	}
@@ -236,16 +240,19 @@ class WP_Custom_Post_Type_Widgets_Recent_Posts extends WP_Widget {
 		$posttype  = isset( $instance['posttype'] ) ? $instance['posttype'] : 'post';
 		$number    = isset( $instance['number'] ) ? absint( $instance['number'] ) : 5;
 		$show_date = ! empty( $instance['show_date'] ) ? (bool) $instance['show_date'] : false;
-?>
-		<p><label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php esc_html_e( 'Title:', 'custom-post-type-widgets' ); ?></label>
-		<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" /></p>
+		?>
+		<p><label for="<?php echo $this->get_field_id( 'title' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>"><?php esc_html_e( 'Title:', 'custom-post-type-widgets' ); ?></label>
+		<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" name="<?php echo $this->get_field_name( 'title' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" type="text" value="<?php echo esc_attr( $title ); ?>" /></p>
 
 		<?php
 		printf(
 			'<p><label for="%1$s">%2$s</label>' .
 			'<select class="widefat" id="%1$s" name="%3$s">',
+			/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
 			$this->get_field_id( 'posttype' ),
+			/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
 			__( 'Post Type:', 'custom-post-type-widgets' ),
+			/* phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped */
 			$this->get_field_name( 'posttype' )
 		);
 
@@ -253,7 +260,7 @@ class WP_Custom_Post_Type_Widgets_Recent_Posts extends WP_Widget {
 			'<option value="%s"%s>%s</option>',
 			esc_attr( 'any' ),
 			selected( 'any', $posttype, false ),
-			__( 'All', 'custom-post-type-widgets' )
+			esc_html__( 'All', 'custom-post-type-widgets' )
 		);
 
 		$post_types = get_post_types( array( 'public' => true ), 'objects' );
@@ -267,18 +274,18 @@ class WP_Custom_Post_Type_Widgets_Recent_Posts extends WP_Widget {
 				'<option value="%s"%s>%s</option>',
 				esc_attr( $post_type ),
 				selected( $post_type, $posttype, false ),
-				__( $value->label, 'custom-post-type-widgets' )
+				esc_html__( $value->label, 'custom-post-type-widgets' )
 			);
 
 		}
 		echo '</select></p>';
-?>
+		?>
 
-		<p><label for="<?php echo $this->get_field_id( 'number' ); ?>"><?php esc_html_e( 'Number of posts to show:', 'custom-post-type-widgets' ); ?></label>
-		<input id="<?php echo $this->get_field_id( 'number' ); ?>" name="<?php echo $this->get_field_name( 'number' ); ?>" type="text" value="<?php echo esc_attr( $number ); ?>" size="3" /></p>
+		<p><label for="<?php echo $this->get_field_id( 'number' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>"><?php esc_html_e( 'Number of posts to show:', 'custom-post-type-widgets' ); ?></label>
+		<input id="<?php echo $this->get_field_id( 'number' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" name="<?php echo $this->get_field_name( 'number' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" type="text" value="<?php echo esc_attr( $number ); /* @phpstan-ignore-line */ ?>" size="3" /></p>
 
-		<p><input class="checkbox" type="checkbox" <?php checked( $show_date ); ?> id="<?php echo $this->get_field_id( 'show_date' ); ?>" name="<?php echo $this->get_field_name( 'show_date' ); ?>" />
-		<label for="<?php echo $this->get_field_id( 'show_date' ); ?>"><?php esc_html_e( 'Display post date?', 'custom-post-type-widgets' ); ?></label></p>
-<?php
+		<p><input class="checkbox" type="checkbox" <?php checked( $show_date ); ?> id="<?php echo $this->get_field_id( 'show_date' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" name="<?php echo $this->get_field_name( 'show_date' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>" />
+		<label for="<?php echo $this->get_field_id( 'show_date' ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped ?>"><?php esc_html_e( 'Display post date?', 'custom-post-type-widgets' ); ?></label></p>
+		<?php
 	}
 }
