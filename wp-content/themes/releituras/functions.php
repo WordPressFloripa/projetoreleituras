@@ -18,19 +18,24 @@ function onepress_parent_theme_enqueue_styles() {
 		get_stylesheet_directory_uri() . '/style.css',
 		array( 'onepress-style' )
 	);
-	require_once get_template_directory() . '/class-wp-bootstrap-navwalker.php';
-
 	//require_once get_template_directory() . '/inc/template-tags.php';
 }
 
 /*criando menu social*/
-
 register_nav_menus(
 	array(
 		'menu-social'  => esc_html__( 'Menu Social', 'releituras' ),
 		'menu-social-footer'  => esc_html__( 'Menu Social Rodapé', 'releituras' ),
 	)
 );
+
+/**
+ * Register Custom Navigation Walker
+ */
+function register_navwalker(){
+	require_once get_stylesheet_directory() . '/class-wp-bootstrap-navwalker.php';
+}
+add_action( 'after_setup_theme', 'register_navwalker' );
 
 /*Add imagem para lista de audiolivros*/
 add_image_size( 'img-lista-audiolivros', 200, 200, true );

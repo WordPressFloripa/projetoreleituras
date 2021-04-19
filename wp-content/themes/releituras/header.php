@@ -12,6 +12,18 @@
 ?><!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-164544145-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-164544145-1');
+</script>
+
+
 <meta charset="<?php bloginfo( 'charset' ); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="profile" href="http://gmpg.org/xfn/11">
@@ -26,13 +38,13 @@
     <div class="bg-preto">
         <div class="container">
             <div id="menu-social" role="contentinfo">
-                <?php
+                 <?php
                     wp_nav_menu(
                         array(
                             'theme_location' => 'menu-social',
                             'menu_class' => 'lista-inline',
-                            'fallback_cb' => 'WP_Bootstrap_Navwalker::fallback',
-                            'walker' => new WP_Bootstrap_Navwalker()
+                            'fallback_cb'     => 'WP_Bootstrap_Navwalker::fallback',
+                            'walker'          => new WP_Bootstrap_Navwalker(),
                         )
                     );
                 ?>

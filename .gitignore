@@ -1,4 +1,5 @@
 # ignora TUDO na "wp-content" 
+wp-config.php
 wp-content/*
 wp-config.php
 wp-content/cache
