@@ -4,10 +4,12 @@ Theme URI: https://www.famethemes.com/themes/onepress/
 Author: FameThemes
 Author URI: http://www.famethemes.com
 Description: OnePress is an outstanding creative and flexible WordPress one page theme well suited for business website, portfolio, digital agency, product showcase, freelancers and everyone else who appreciate good design. The theme overall is an elegant and classic one, a fine example of Bootstrap 4 WordPress theme which compatibility with latest version of WooCommerce. (Live preview : https://demos.famethemes.com/onepress)
-Version: 2.2.4
+Version: 2.2.7
 License: GNU General Public License v2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: onepress
+Tested up to: 5.6
+Requires PHP: 5.6
 Tags: one-column, two-columns, left-sidebar, right-sidebar, custom-menu, featured-images, full-width-template, sticky-post, theme-options, threaded-comments, translation-ready, e-commerce, blog, portfolio
 
 This theme, like WordPress, is licensed under the GPL.
@@ -40,13 +42,16 @@ Nicolas Gallagher and Jonathan Neal http://necolas.github.com/normalize.css/
 /*--------------------------------------------------------------
 2.0 Document Setup
 --------------------------------------------------------------*/
+html, body {
+  height: 100%;
+}
+
 /*------------------------------
 	2.1 Typography
 ------------------------------*/
 html, body {
   margin: 0;
   padding: 0;
-  height: 100%;
 }
 
 html {
@@ -67,7 +72,6 @@ html {
 
 body {
   background: #ffffff;
-  height: 100%;
 }
 
 .site {
@@ -2124,6 +2128,9 @@ section > .customize-partial-edit-shortcut button {
 }
 .section-inverse .section-title-area .section-subtitle::after {
   background: rgba(255, 255, 255, 0.8);
+}
+.section-inverse .pricing-table .pricing__item ul p {
+  color: #777777;
 }
 
 .section-inverse-extended {

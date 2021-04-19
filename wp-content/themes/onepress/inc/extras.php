@@ -90,10 +90,10 @@ if ( ! function_exists( 'onepress_get_media_url' ) ) {
 			$media,
 			array(
 				'url' => '',
-				'id' => '',
+				'id'  => '',
 			)
 		);
-		$url = '';
+		$url   = '';
 		if ( $media['id'] != '' ) {
 			if ( strpos( get_post_mime_type( $media['id'] ), 'image' ) !== false ) {
 				$image = wp_get_attachment_image_src( $media['id'], $size );
@@ -135,7 +135,7 @@ if ( ! function_exists( 'onepress_get_media_url' ) ) {
  * 10 wpautop
  * 10 shortcode_unautop
  * 10 prepend_attachment
- * 10 wp_make_content_images_responsive
+ * 10 wp_filter_content_tags || wp_make_content_images_responsive
  * 11 capital_P_dangit
  * 11 do_shortcode
  * 20 convert_smilies
@@ -147,7 +147,11 @@ add_filter( 'onepress_the_content', 'wptexturize' );
 add_filter( 'onepress_the_content', 'wpautop' );
 add_filter( 'onepress_the_content', 'shortcode_unautop' );
 add_filter( 'onepress_the_content', 'prepend_attachment' );
-add_filter( 'onepress_the_content', 'wp_make_content_images_responsive' );
+if ( function_exists( 'wp_filter_content_tags' ) ) {
+	add_filter( 'onepress_the_content', 'wp_filter_content_tags' );
+} else {
+	add_filter( 'onepress_the_content', 'wp_make_content_images_responsive' );
+}
 add_filter( 'onepress_the_content', 'capital_P_dangit' );
 add_filter( 'onepress_the_content', 'do_shortcode' );
 add_filter( 'onepress_the_content', 'convert_smilies' );
@@ -227,13 +231,6 @@ if ( class_exists( 'WooCommerce' ) ) {
 }
 
 /**
- * Support Elementor plugin
- */
-if ( ! defined( 'ELEMENTOR_PARTNER_ID' ) ) {
-	define( 'ELEMENTOR_PARTNER_ID', 2123 );
-}
-
-/**
  * Support WPForms plugin
  */
 if ( ! defined( 'WPFORMS_SHAREASALE_ID' ) ) {
@@ -266,7 +263,7 @@ if ( ! function_exists( 'onepress_before_section' ) ) {
 
 		if ( ! class_exists( 'OnePress_Plus' ) ) {
 			if ( $section_id == 'videolightbox' ) {
-				$image = onepress_get_video_lightbox_image();
+				$image     = onepress_get_video_lightbox_image();
 				$image_url = wp_get_attachment_image_url( $image, 'full' );
 				$image_alt = get_post_meta( $image, '_wp_attachment_image_alt', true );
 				if ( $image || onepress_is_selective_refresh() ) {
@@ -282,17 +279,18 @@ if ( ! function_exists( 'onepress_before_section' ) ) {
 				$args = wp_parse_args(
 					$args,
 					array(
-						'video_url' => '',
+						'video_url'      => '',
 						'video_webm_url' => '',
-						'video_ogv_url' => '',
-						'image' => '',
+						'video_ogv_url'  => '',
+						'image'          => '',
 					)
 				);
 				extract( $args );
 				if ( $video_url || $video_webm_url || $video_ogv_url ) {
+					$fallback = get_theme_mod( 'onepress_hero_mobile_img' ) ? 'true' : 'false';
 					?>
 				<div class="video-section"
-					 data-fallback="<?php echo get_theme_mod( 'onepress_hero_mobile_img' ) ? 'true' : 'false'; ?>"
+					 data-fallback="<?php echo esc_attr( $fallback ); ?>"
 					 data-mp4="<?php echo esc_url( $video_url ); ?>"
 					 data-webm="<?php echo esc_url( $video_webm_url ); ?>"
 					 data-ogv="<?php echo esc_url( $video_ogv_url ); ?>"
@@ -305,8 +303,8 @@ if ( ! function_exists( 'onepress_before_section' ) ) {
 				$args = wp_parse_args(
 					$args,
 					array(
-						'image' => '',
-						'alpha' => '',
+						'image'           => '',
+						'alpha'           => '',
 						'enable_parallax' => '',
 					)
 				);
@@ -353,9 +351,9 @@ if ( ! function_exists( 'onepress_after_section' ) ) {
 				$args = wp_parse_args(
 					$args,
 					array(
-						'video_url' => '',
+						'video_url'      => '',
 						'video_webm_url' => '',
-						'video_ogv_url' => '',
+						'video_ogv_url'  => '',
 					)
 				);
 				extract( $args );
@@ -479,7 +477,7 @@ if ( onepress_is_wc_active() ) {
 
 					<?php do_action( 'woocommerce_no_products_found' ); ?>
 
-				<?php
+					<?php
 				endif;
 
 			}

@@ -1,3 +1,12 @@
+# BEGIN iThemes Security - Do not modify or remove this line
+# iThemes Security Config Details: 2
+	# Pass through Authorization header.
+	<IfModule mod_rewrite.c>
+		RewriteEngine On
+		RewriteCond %{HTTP:Authorization} ^(.*)
+		RewriteRule .* - [e=HTTP_AUTHORIZATION:%1]
+	</IfModule>
+# END iThemes Security - Do not modify or remove this line
 
 # BEGIN WordPress
 # As diretrizes (linhas) entre "BEGIN WordPress" e "END WordPress" são
